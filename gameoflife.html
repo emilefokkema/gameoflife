@@ -1,0 +1,73 @@
+<html>
+<body style="padding:0px;margin:0px"></body>
+<script>
+(function(){
+	var space = (function(){
+		var w = document.body.offsetWidth,
+			h = document.body.offsetHeight,
+			size = 20,
+			nx = Math.ceil(w / size),
+			ny = Math.ceil(h / size),
+			direction = {
+				RIGHT: 0,
+				TOP: 1,
+				LEFT: 2,
+				BOTTOM: 3
+			},
+			createPositions = function(nx, ny){
+				var currentPosition,
+					previousPosition,
+					positionAbove,
+					position = function(x,y){
+						var arr = [];
+						arr.x = x;
+						arr.y = y;
+						return arr;
+					},
+					array = Array.apply(null, new Array(nx)).map(function(){
+						return Array.apply(null, new Array(ny));
+					}),
+					currentX = 0,
+					currentY = 0,
+					nCreated = 0,
+					nToCreate = nx * ny;
+				while(nCreated < nToCreate){
+					previousPosition = currentPosition;
+					currentPosition = position(currentX, currentY);
+					array[currentX][currentY] = currentPosition;
+					nCreated++;
+					if(currentY > 0){
+						positionAbove = array[currentX][currentY - 1];
+						currentPosition[direction.TOP] = positionAbove;
+						positionAbove[direction.BOTTOM] = currentPosition;
+					}
+					if(currentY % 2 == 0){
+						if(currentX > 0){
+							currentPosition[direction.LEFT] = previousPosition;
+							previousPosition[direction.RIGHT] = currentPosition;
+						}
+						if(currentX < nx - 1){
+							currentX++;
+						}else{
+							currentY++;
+						}
+					}else{
+						if(currentX < nx - 1){
+							currentPosition[direction.RIGHT] = previousPosition;
+							previousPosition[direction.LEFT] = currentPosition;
+						}
+						if(currentX > 0){
+							currentX--;
+						}else{
+							currentY++;
+						}
+					}
+				}
+				return currentPosition;
+			};
+		console.log(createPositions(4,4));
+
+	})();
+})();
+</script>
+</html>
