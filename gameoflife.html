@@ -8,64 +8,41 @@
 			size = 20,
 			nx = Math.ceil(w / size),
 			ny = Math.ceil(h / size),
-			direction = {
-				RIGHT: 0,
-				TOP: 1,
-				LEFT: 2,
-				BOTTOM: 3
+			context = (function(){
+				var canvas = document.createElement("canvas");
+				canvas.setAttribute("width", w);
+				canvas.setAttribute("height", h);
+				document.body.appendChild(canvas);
+				var context = canvas.getContext("2d");
+				context.strokeStyle = '#000';
+				context.lineWidth = 0.1;
+				context.fillStyle = '#000';
+				return context;
+			})(),
+			drawVerticalLine = function(x){
+				context.beginPath();
+				context.moveTo(x,0);
+				context.lineTo(x,h);
+				context.stroke();
 			},
-			createPositions = function(nx, ny){
-				var currentPosition,
-					previousPosition,
-					positionAbove,
-					position = function(x,y){
-						var arr = [];
-						arr.x = x;
-						arr.y = y;
-						return arr;
-					},
-					array = Array.apply(null, new Array(nx)).map(function(){
-						return Array.apply(null, new Array(ny));
-					}),
-					currentX = 0,
-					currentY = 0,
-					nCreated = 0,
-					nToCreate = nx * ny;
-				while(nCreated < nToCreate){
-					previousPosition = currentPosition;
-					currentPosition = position(currentX, currentY);
-					array[currentX][currentY] = currentPosition;
-					nCreated++;
-					if(currentY > 0){
-						positionAbove = array[currentX][currentY - 1];
-						currentPosition[direction.TOP] = positionAbove;
-						positionAbove[direction.BOTTOM] = currentPosition;
-					}
-					if(currentY % 2 == 0){
-						if(currentX > 0){
-							currentPosition[direction.LEFT] = previousPosition;
-							previousPosition[direction.RIGHT] = currentPosition;
-						}
-						if(currentX < nx - 1){
-							currentX++;
-						}else{
-							currentY++;
-						}
-					}else{
-						if(currentX < nx - 1){
-							currentPosition[direction.RIGHT] = previousPosition;
-							previousPosition[direction.LEFT] = currentPosition;
-						}
-						if(currentX > 0){
-							currentX--;
-						}else{
-							currentY++;
-						}
-					}
+			mousePositionToPosition = function(mX, mY){
+
+			},
+			drawHorizontalLine = function(y){
+				context.beginPath();
+				context.moveTo(0,y);
+				context.lineTo(w,y);
+				context.stroke();
+			},
+			drawAll = function(){
+				for(var i = 0;i<nx;i++){
+					drawVerticalLine(i * size);
 				}
-				return currentPosition;
+				for(var i = 0;i<ny;i++){
+					drawHorizontalLine(i * size);
+				}
 			};
-		console.log(createPositions(4,4));
+		drawAll();
 
 	})();
 })();
