@@ -8,17 +8,25 @@
 			size = 20,
 			nx = Math.ceil(w / size),
 			ny = Math.ceil(h / size),
-			context = (function(){
+			c = (function(){
 				var canvas = document.createElement("canvas");
 				canvas.setAttribute("width", w);
 				canvas.setAttribute("height", h);
 				document.body.appendChild(canvas);
 				var context = canvas.getContext("2d");
-				context.strokeStyle = '#000';
-				context.lineWidth = 0.1;
-				context.fillStyle = '#000';
-				return context;
+				var initializeContext = function(){
+					context.strokeStyle = '#000';
+					context.lineWidth = 0.1;
+					context.fillStyle = '#000';
+				};
+				initializeContext();
+				return {
+					context:context,
+					clear:function(){canvas.width = w;initializeContext();}
+				};
 			})(),
+			context = c.context,
+			clear = c.clear,
 			drawVerticalLine = function(x){
 				context.beginPath();
 				context.moveTo(x,0);
@@ -26,7 +34,40 @@
 				context.stroke();
 			},
 			mousePositionToPosition = function(mX, mY){
-
+				return position(Math.floor(mX / size), Math.floor(mY / size));
+			},
+			position = (function(){
+				var all = [];
+				var makeNew = function(x,y){
+					return {
+						x:x,
+						y:y,
+						neighbors: []
+					};
+				};
+				var getExistingNeighbors = function(p){
+					return all.filter(function(pp){return Math.abs(p.x - pp.x) < 2 && Math.abs(p.y - pp.y) < 2;});
+				};
+				var get = function(x,y){
+					var known = all.find(function(p){return p.x == x && p.y == y;});
+					if(known){
+						return known;
+					}else{
+						var newOne = makeNew(x,y);
+						var neighbors = getExistingNeighbors(newOne);
+						newOne.neighbors = neighbors;
+						neighbors.map(function(p){p.neighbors.push(newOne);})
+						all.push(newOne);
+						return newOne;
+					}
+				};
+				return get;
+			})(),
+			positionToMousePosition = function(p){
+				return {
+					x:p.x * size,
+					y:p.y * size
+				};
 			},
 			drawHorizontalLine = function(y){
 				context.beginPath();
@@ -34,16 +75,29 @@
 				context.lineTo(w,y);
 				context.stroke();
 			},
+			cell = function(p){
+				return {
+					draw: function(){
+						var mousePosition = positionToMousePosition(p);
+						context.fillRect(mousePosition.x,mousePosition.y,size,size);
+					}
+				}
+			},
+			liveCells = [cell(position(1,1)),cell(position(1,2)),cell(position(1,3))],
 			drawAll = function(){
+				clear();
 				for(var i = 0;i<nx;i++){
 					drawVerticalLine(i * size);
 				}
 				for(var i = 0;i<ny;i++){
 					drawHorizontalLine(i * size);
 				}
+				liveCells.map(function(c){c.draw();});
 			};
 		drawAll();
-
+		window.doStep = function(){
+			drawAll();
+		};
 	})();
 })();
 </script>
