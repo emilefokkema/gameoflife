@@ -20,6 +20,10 @@
 					context.fillStyle = '#000';
 				};
 				initializeContext();
+				canvas.addEventListener('click',function(e){
+					cells.add(mousePositionToPosition(e.clientX, e.clientY));
+					drawAll();
+				});
 				return {
 					context:context,
 					clear:function(){canvas.width = w;initializeContext();}
@@ -42,11 +46,27 @@
 					return {
 						x:x,
 						y:y,
-						neighbors: []
+						neighbors: [],
+						createNeighbors: function(){createNeighborsOf(this);}
 					};
 				};
 				var getExistingNeighbors = function(p){
 					return all.filter(function(pp){return Math.abs(p.x - pp.x) < 2 && Math.abs(p.y - pp.y) < 2;});
+				};
+				var connectToExistingNeighbors = function(p){
+					var neighbors = getExistingNeighbors(p);
+					p.neighbors = neighbors;
+					neighbors.map(function(pp){pp.neighbors.push(p);});
+				};
+				var createNeighborsOf = function(p){
+					get(p.x - 1, p.y - 1);
+					get(p.x - 1, p.y);
+					get(p.x - 1, p.y + 1);
+					get(p.x, p.y - 1);
+					get(p.x, p.y + 1);
+					get(p.x + 1, p.y - 1);
+					get(p.x + 1, p.y);
+					get(p.x + 1, p.y + 1);
 				};
 				var get = function(x,y){
 					var known = all.find(function(p){return p.x == x && p.y == y;});
@@ -54,13 +74,12 @@
 						return known;
 					}else{
 						var newOne = makeNew(x,y);
-						var neighbors = getExistingNeighbors(newOne);
-						newOne.neighbors = neighbors;
-						neighbors.map(function(p){p.neighbors.push(newOne);})
+						connectToExistingNeighbors(newOne);
 						all.push(newOne);
 						return newOne;
 					}
 				};
+				get.all = function(){return all;};
 				return get;
 			})(),
 			positionToMousePosition = function(p){
@@ -75,15 +94,22 @@
 				context.lineTo(w,y);
 				context.stroke();
 			},
-			cell = function(p){
-				return {
-					draw: function(){
-						var mousePosition = positionToMousePosition(p);
-						context.fillRect(mousePosition.x,mousePosition.y,size,size);
+			cells = (function(){
+				var cell = function(p){
+					p.createNeighbors();
+					return {
+						draw: function(){
+							var mousePosition = positionToMousePosition(p);
+							context.fillRect(mousePosition.x,mousePosition.y,size,size);
+						}
 					}
-				}
-			},
-			liveCells = [cell(position(1,1)),cell(position(1,2)),cell(position(1,3))],
+				};
+				var liveCells = [];
+				return {
+					add:function(p){liveCells.push(cell(p));},
+					draw:function(){liveCells.map(function(c){c.draw();});}
+				};
+			})(),
 			drawAll = function(){
 				clear();
 				for(var i = 0;i<nx;i++){
@@ -92,7 +118,8 @@
 				for(var i = 0;i<ny;i++){
 					drawHorizontalLine(i * size);
 				}
-				liveCells.map(function(c){c.draw();});
+				cells.draw();
+				console.log("known positions: ",position.all().length);
 			};
 		drawAll();
 		window.doStep = function(){
