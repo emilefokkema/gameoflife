@@ -21,7 +21,13 @@
 				};
 				initializeContext();
 				canvas.addEventListener('click',function(e){
-					cells.add(mousePositionToPosition(e.clientX, e.clientY));
+					var p = mousePositionToPosition(e.clientX, e.clientY);
+					var existingCell = cells.getCellOnPosition(p);
+					if(existingCell){
+						existingCell.destroy();
+					}else{
+						cells.add(p);
+					}
 					drawAll();
 				});
 				return {
@@ -43,15 +49,40 @@
 			position = (function(){
 				var all = [];
 				var makeNew = function(x,y){
+					var occupied = false;
 					return {
 						x:x,
 						y:y,
-						neighbors: [],
-						createNeighbors: function(){createNeighborsOf(this);}
+						occupy: function(){
+							occupied = true;
+							createNeighborsOf(this);
+						},
+						vacate:function(){
+							occupied = false;
+							var neighborWithoutOccupiedNeighbors;
+							while(neighborWithoutOccupiedNeighbors = this.neighbors.find(function(p){return !p.isOccupied() && hasNoOccupiedNeighbors(p);})){
+								forget(neighborWithoutOccupiedNeighbors);
+							}
+							if(hasNoOccupiedNeighbors(this)){
+								forget(this);
+							}
+						},
+						forgetNeighbor:function(p){
+							this.neighbors.splice(this.neighbors.indexOf(p), 1);
+						},
+						isOccupied:function(){return occupied;},
+						neighbors: []
 					};
 				};
 				var getExistingNeighbors = function(p){
 					return all.filter(function(pp){return Math.abs(p.x - pp.x) < 2 && Math.abs(p.y - pp.y) < 2;});
+				};
+				var forget = function(p){
+					p.neighbors.map(function(pp){pp.forgetNeighbor(p);});
+					all.splice(all.indexOf(p),1);
+				};
+				var hasNoOccupiedNeighbors = function(p){
+					return !p.neighbors.some(function(pp){return pp.isOccupied();});
 				};
 				var connectToExistingNeighbors = function(p){
 					var neighbors = getExistingNeighbors(p);
@@ -96,18 +127,29 @@
 			},
 			cells = (function(){
 				var cell = function(p){
-					p.createNeighbors();
+					console.log("creating cell");
+					p.occupy();
 					return {
 						draw: function(){
 							var mousePosition = positionToMousePosition(p);
 							context.fillRect(mousePosition.x,mousePosition.y,size,size);
-						}
+						},
+						destroy:function(){
+							p.vacate();
+							liveCells.splice(liveCells.indexOf(this), 1);
+						},
+						position:p
 					}
 				};
 				var liveCells = [];
 				return {
-					add:function(p){liveCells.push(cell(p));},
-					draw:function(){liveCells.map(function(c){c.draw();});}
+					add:function(p){
+						if(!p.isOccupied()){
+							liveCells.push(cell(p));
+						}
+					},
+					draw:function(){liveCells.map(function(c){c.draw();});},
+					getCellOnPosition:function(p){return liveCells.find(function(c){return c.position == p;});}
 				};
 			})(),
 			drawAll = function(){
