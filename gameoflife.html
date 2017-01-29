@@ -5,7 +5,7 @@
 	var space = (function(){
 		var w = document.body.offsetWidth,
 			h = document.body.offsetHeight,
-			size = 20,
+			size = 15,
 			nx = Math.ceil(w / size),
 			ny = Math.ceil(h / size),
 			c = (function(){
@@ -71,7 +71,8 @@
 							this.neighbors.splice(this.neighbors.indexOf(p), 1);
 						},
 						isOccupied:function(){return occupied;},
-						neighbors: []
+						neighbors: [],
+						numberOfLiveNeighbors:function(){return this.neighbors.filter(function(p){return p.isOccupied();}).length;}
 					};
 				};
 				var getExistingNeighbors = function(p){
@@ -84,10 +85,24 @@
 				var hasNoOccupiedNeighbors = function(p){
 					return !p.neighbors.some(function(pp){return pp.isOccupied();});
 				};
+				var getPositionsToOccupy = function(){
+					return all.filter(function(p){
+						if(p.isOccupied()){
+							return false;
+						}
+						var liveNeighbors = p.numberOfLiveNeighbors();
+						return liveNeighbors == 3;
+					});
+				};
 				var connectToExistingNeighbors = function(p){
 					var neighbors = getExistingNeighbors(p);
 					p.neighbors = neighbors;
-					neighbors.map(function(pp){pp.neighbors.push(p);});
+					neighbors.map(function(pp){
+						if(pp.neighbors.length == 8){
+							throw new Error("position already has eight neighbors!");
+						}
+						pp.neighbors.push(p);
+					});
 				};
 				var createNeighborsOf = function(p){
 					get(p.x - 1, p.y - 1);
@@ -111,6 +126,7 @@
 					}
 				};
 				get.all = function(){return all;};
+				get.getPositionsToOccupy = getPositionsToOccupy;
 				return get;
 			})(),
 			positionToMousePosition = function(p){
@@ -127,7 +143,6 @@
 			},
 			cells = (function(){
 				var cell = function(p){
-					console.log("creating cell");
 					p.occupy();
 					return {
 						draw: function(){
@@ -142,6 +157,12 @@
 					}
 				};
 				var liveCells = [];
+				var getCellsToKill = function(){
+					return liveCells.filter(function(c){
+						var liveNeighbors = c.position.numberOfLiveNeighbors();
+						return liveNeighbors < 2 || liveNeighbors > 3;
+					});
+				};
 				return {
 					add:function(p){
 						if(!p.isOccupied()){
@@ -149,9 +170,28 @@
 						}
 					},
 					draw:function(){liveCells.map(function(c){c.draw();});},
-					getCellOnPosition:function(p){return liveCells.find(function(c){return c.position == p;});}
+					getCellOnPosition:function(p){return liveCells.find(function(c){return c.position == p;});},
+					getCellsToKill:getCellsToKill
 				};
 			})(),
+			doStep = function(stop){
+				try{
+					var cellsToKill = cells.getCellsToKill();
+					var positionsToOccupy = position.getPositionsToOccupy();
+					console.log("determined what to do");
+					if(cellsToKill.length == 0 && positionsToOccupy.length == 0){
+						stop();
+					}
+					for(var i=0;i<cellsToKill.length;i++){
+						cellsToKill[i].destroy();
+					}
+					positionsToOccupy.map(function(p){cells.add(p);});
+				}catch(e){
+					stop();
+					throw e;
+
+				}
+			},
 			drawAll = function(){
 				clear();
 				for(var i = 0;i<nx;i++){
@@ -161,12 +201,32 @@
 					drawHorizontalLine(i * size);
 				}
 				cells.draw();
-				console.log("known positions: ",position.all().length);
 			};
 		drawAll();
-		window.doStep = function(){
-			drawAll();
+
+		window.go = function(onStop){
+			var interval;
+			var stop = function(){
+				console.log("stopping");
+				window.clearInterval(interval);
+				onStop && onStop();
+			};
+			interval = window.setInterval(function(){
+				doStep(stop);
+				drawAll();
+			},100);
 		};
+		var doTest = function(){
+			cells.add(position(5,5));
+			cells.add(position(5,6));
+			cells.add(position(5,7));
+			cells.add(position(5,8));
+			cells.add(position(5,9));
+			cells.add(position(5,10));
+			cells.add(position(5,11));
+			go(function(){console.log("test stopped");})
+		};
+		doTest();
 	})();
 })();
 </script>
