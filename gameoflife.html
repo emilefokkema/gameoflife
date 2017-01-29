@@ -5,7 +5,7 @@
 	var space = (function(){
 		var w = document.body.offsetWidth,
 			h = document.body.offsetHeight,
-			size = 15,
+			size = 5,
 			nx = Math.ceil(w / size),
 			ny = Math.ceil(h / size),
 			c = (function(){
@@ -57,18 +57,24 @@
 							occupied = true;
 							createNeighborsOf(this);
 						},
-						vacate:function(){
+						vacate:function(cellBeingKilled){
 							occupied = false;
 							var neighborWithoutOccupiedNeighbors;
 							while(neighborWithoutOccupiedNeighbors = this.neighbors.find(function(p){return !p.isOccupied() && hasNoOccupiedNeighbors(p);})){
-								forget(neighborWithoutOccupiedNeighbors);
+								forget(neighborWithoutOccupiedNeighbors, cellBeingKilled);
 							}
 							if(hasNoOccupiedNeighbors(this)){
-								forget(this);
+								forget(this, cellBeingKilled);
 							}
 						},
 						forgetNeighbor:function(p){
-							this.neighbors.splice(this.neighbors.indexOf(p), 1);
+							var index = this.neighbors.indexOf(p);
+							if(index > -1){
+								this.neighbors.splice(this.neighbors.indexOf(p), 1);
+							}else{
+								throw new Error("forgetting neighbor that has already been forgotten");
+							}
+							
 						},
 						isOccupied:function(){return occupied;},
 						neighbors: [],
@@ -78,9 +84,18 @@
 				var getExistingNeighbors = function(p){
 					return all.filter(function(pp){return Math.abs(p.x - pp.x) < 2 && Math.abs(p.y - pp.y) < 2;});
 				};
-				var forget = function(p){
+				var forget = function(p, cellBeingKilled){
+					var cellonxy = cells.getCellOnXY(p.x,p.y);
+					if(cellonxy && cellonxy != cellBeingKilled){
+						throw new Error("forgetting a position that has a cell");
+					}
 					p.neighbors.map(function(pp){pp.forgetNeighbor(p);});
-					all.splice(all.indexOf(p),1);
+					var index = all.indexOf(p);
+					if(index > -1){
+						all.splice(index,1);
+					}else{
+						throw new Error("forgetting one that has already been forgotten");
+					}
 				};
 				var hasNoOccupiedNeighbors = function(p){
 					return !p.neighbors.some(function(pp){return pp.isOccupied();});
@@ -125,8 +140,8 @@
 						return newOne;
 					}
 				};
-				get.all = function(){return all;};
 				get.getPositionsToOccupy = getPositionsToOccupy;
+				get.isKnownPosition = function(p){return all.indexOf(p) > -1;};
 				return get;
 			})(),
 			positionToMousePosition = function(p){
@@ -150,7 +165,10 @@
 							context.fillRect(mousePosition.x,mousePosition.y,size,size);
 						},
 						destroy:function(){
-							p.vacate();
+							if(liveCells.some(function(c){return !position.isKnownPosition(c.position);})){
+								throw new Error("a cell exists but the position is unknown");
+							}
+							p.vacate(this);
 							liveCells.splice(liveCells.indexOf(this), 1);
 						},
 						position:p
@@ -171,6 +189,7 @@
 					},
 					draw:function(){liveCells.map(function(c){c.draw();});},
 					getCellOnPosition:function(p){return liveCells.find(function(c){return c.position == p;});},
+					getCellOnXY:function(x,y){return liveCells.find(function(c){return c.position.x==x&&c.position.y==y});},
 					getCellsToKill:getCellsToKill
 				};
 			})(),
@@ -178,14 +197,13 @@
 				try{
 					var cellsToKill = cells.getCellsToKill();
 					var positionsToOccupy = position.getPositionsToOccupy();
-					console.log("determined what to do");
 					if(cellsToKill.length == 0 && positionsToOccupy.length == 0){
 						stop();
 					}
 					for(var i=0;i<cellsToKill.length;i++){
 						cellsToKill[i].destroy();
 					}
-					positionsToOccupy.map(function(p){cells.add(p);});
+					positionsToOccupy.map(function(p){cells.add(position(p.x,p.y));});
 				}catch(e){
 					stop();
 					throw e;
@@ -214,7 +232,7 @@
 			interval = window.setInterval(function(){
 				doStep(stop);
 				drawAll();
-			},100);
+			},50);
 		};
 		var doTest = function(){
 			cells.add(position(5,5));
@@ -224,9 +242,10 @@
 			cells.add(position(5,9));
 			cells.add(position(5,10));
 			cells.add(position(5,11));
+			drawAll();
 			go(function(){console.log("test stopped");})
 		};
-		doTest();
+		//doTest();
 	})();
 })();
 </script>
