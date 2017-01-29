@@ -221,17 +221,20 @@
 			}
 		},
 		going = false,
+		interval,
+		stop = function(){
+			going = false;
+			console.log("stopping");
+			window.clearInterval(interval);
+		},
 		go = function(onStop){
-			var interval;
-			var stop = function(){
-				going = false;
-				console.log("stopping");
-				window.clearInterval(interval);
+			var sstop = function(){
+				stop();
 				onStop && onStop();
 			};
 			going = true;
 			interval = window.setInterval(function(){
-				doStep(stop);
+				doStep(sstop);
 				drawAll();
 			},50);
 		},
@@ -263,15 +266,16 @@
 	drawAll();
 
 	window.go = go;
-	window.zoomOut = function(){clear();setSize(Math.max(1, Math.floor(size/2)));drawAll();};
-	window.zoomIn = function(){clear();setSize(size * 2);drawAll();};
-	window.left = function(){xShift += Math.floor(nx/4);drawAll();};
-	window.right = function(){xShift -= Math.floor(nx/4);drawAll();};
-	window.up = function(){yShift += Math.floor(ny/4);drawAll();};
-	window.down = function(){yShift -= Math.floor(ny/4);drawAll();};
+	var zoomOut = function(){clear();setSize(Math.max(1, Math.floor(size/2)));drawAll();};
+	var zoomIn = function(){clear();setSize(size * 2);drawAll();};
+	var left = function(){xShift -= Math.floor(nx/4);drawAll();};
+	var right = function(){xShift += Math.floor(nx/4);drawAll();};
+	var up = function(){yShift -= Math.floor(ny/4);drawAll();};
+	var down = function(){yShift += Math.floor(ny/4);drawAll();};
 	window.record = function(){
 		window.location.hash = cells.serialize();
 	};
+	window.alive = function(x,y){cells.add(position(x,y));drawAll();};
 	window.addEventListener("keydown",function(e){
 		if(e.key == "+"){
 			zoomIn();
@@ -291,6 +295,14 @@
 		if(e.key == "ArrowDown"){
 			down();
 		}
+		if(e.key == "g"){
+			if(going){
+				stop();
+			}else{
+				go();
+			}
+		}
+
 	});
 	var doTest = function(){
 		cells.add(position(5,5));
