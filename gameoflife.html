@@ -11,6 +11,18 @@
 			nx = Math.ceil(w / size);
 			ny = Math.ceil(h / size);
 		},
+		zoom = function(factor){
+			var centerLocation = mousePositionToPositionLocation(w/2, h/2);
+			var newSize;
+			if(factor < 1){
+				newSize = Math.max(1, Math.floor(size * factor));
+			}else{
+				newSize = size * factor;
+			}
+			setSize(newSize);
+			xShift = Math.floor(w/(2 * size) - centerLocation.x);
+			yShift = Math.floor(h/(2 * size) - centerLocation.y);
+		},
 		xShift = 0,
 		yShift = 0,
 		c = (function(){
@@ -48,8 +60,15 @@
 			context.lineTo(x,h);
 			context.stroke();
 		},
+		mousePositionToPositionLocation = function(mX,mY){
+			return {
+				x:Math.floor(mX / size) - xShift,
+				y:Math.floor(mY / size) - yShift
+			};
+		},
 		mousePositionToPosition = function(mX, mY){
-			return position(Math.floor(mX / size) + xShift, Math.floor(mY / size) + yShift);
+			var positionLocation = mousePositionToPositionLocation(mX,mY);
+			return position(positionLocation.x, positionLocation.y);
 		},
 		position = (function(){
 			var all = [];
@@ -148,12 +167,13 @@
 			};
 			get.getPositionsToOccupy = getPositionsToOccupy;
 			get.isKnownPosition = function(p){return all.indexOf(p) > -1;};
+			get.count = function(){return all.length;};
 			return get;
 		})(),
 		positionToMousePosition = function(p){
 			return {
-				x:(p.x - xShift) * size,
-				y:(p.y - yShift) * size
+				x:(p.x + xShift) * size,
+				y:(p.y + yShift) * size
 			};
 		},
 		drawHorizontalLine = function(y){
@@ -171,9 +191,9 @@
 						context.fillRect(mousePosition.x,mousePosition.y,size,size);
 					},
 					destroy:function(){
-						if(liveCells.some(function(c){return !position.isKnownPosition(c.position);})){
-							throw new Error("a cell exists but the position is unknown");
-						}
+						// if(liveCells.some(function(c){return !position.isKnownPosition(c.position);})){
+						// 	throw new Error("a cell exists but the position is unknown");
+						// }
 						p.vacate(this);
 						liveCells.splice(liveCells.indexOf(this), 1);
 					},
@@ -205,7 +225,8 @@
 				getCellOnXY:function(x,y){return liveCells.find(function(c){return c.position.x==x&&c.position.y==y});},
 				getCellsToKill:getCellsToKill,
 				serialize:serialize,
-				destroyAll:destroyAll
+				destroyAll:destroyAll,
+				count:function(){return liveCells.length;}
 			};
 		})(),
 		doStep = function(stop){
@@ -248,9 +269,9 @@
 			if(!hash){
 				return;
 			}
-			var matches = hash.substr(1).match(/\(\d+,\d+\)/g);
+			var matches = hash.substr(1).match(/\(-?\d+,-?\d+\)/g);
 			matches.map(function(m){
-				var match = m.match(/^\((\d+),(\d+)\)$/);
+				var match = m.match(/^\((-?\d+),(-?\d+)\)$/);
 				var x = parseInt(match[1]);
 				var y = parseInt(match[2]);
 				cells.add(position(x,y));
@@ -271,15 +292,16 @@
 	drawAll();
 
 	window.go = go;
-	var zoomOut = function(){clear();setSize(Math.max(1, Math.floor(size/2)));drawAll();};
-	var zoomIn = function(){clear();setSize(size * 2);drawAll();};
-	var left = function(){xShift -= Math.floor(nx/4);drawAll();};
-	var right = function(){xShift += Math.floor(nx/4);drawAll();};
-	var up = function(){yShift -= Math.floor(ny/4);drawAll();};
-	var down = function(){yShift += Math.floor(ny/4);drawAll();};
+	var zoomOut = function(){clear();zoom(0.5);drawAll();};
+	var zoomIn = function(){clear();zoom(2);drawAll();};
+	var left = function(){xShift += Math.floor(nx/4);drawAll();};
+	var right = function(){xShift -= Math.floor(nx/4);drawAll();};
+	var up = function(){yShift += Math.floor(ny/4);drawAll();};
+	var down = function(){yShift -= Math.floor(ny/4);drawAll();};
 	window.record = function(){
 		window.location.hash = cells.serialize();
 	};
+	window.health = function(){return position.count() / cells.count();};
 	window.alive = function(x,y){cells.add(position(x,y));drawAll();};
 	window.addEventListener("keydown",function(e){
 		if(e.key == "+"){
