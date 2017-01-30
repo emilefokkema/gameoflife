@@ -190,6 +190,10 @@
 			var serialize = function(){
 				return liveCells.map(function(c){return c.position.toString();}).join("");
 			};
+			var destroyAll = function(){
+				var toDestroy = liveCells.slice();
+				toDestroy.map(function(c){c.destroy();});
+			};
 			return {
 				add:function(p){
 					if(!p.isOccupied()){
@@ -200,7 +204,8 @@
 				getCellOnPosition:function(p){return liveCells.find(function(c){return c.position == p;});},
 				getCellOnXY:function(x,y){return liveCells.find(function(c){return c.position.x==x&&c.position.y==y});},
 				getCellsToKill:getCellsToKill,
-				serialize:serialize
+				serialize:serialize,
+				destroyAll:destroyAll
 			};
 		})(),
 		doStep = function(stop){
@@ -301,6 +306,10 @@
 			}else{
 				go();
 			}
+		}
+		if(e.key == "c"){
+			cells.destroyAll();
+			drawAll();
 		}
 
 	});
