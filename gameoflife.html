@@ -39,11 +39,11 @@
 			initializeContext();
 			canvas.addEventListener('click',function(e){
 				var p = mousePositionToPosition(e.clientX, e.clientY);
-				var existingCell = cells.getCellOnPosition(p);
-				if(existingCell){
-					existingCell.destroy();
+				
+				if(p.isOccupied()){
+					p.vacate();
 				}else{
-					cells.add(p);
+					p.occupy();
 				}
 				drawAll();
 			});
@@ -82,6 +82,11 @@
 						occupied = true;
 						createNeighborsOf(this);
 					},
+					draw:function(){
+						if(!occupied){return;}
+						var mousePosition = positionToMousePosition(this);
+						context.fillRect(mousePosition.x,mousePosition.y,size,size);
+					},
 					vacate:function(cellBeingKilled){
 						occupied = false;
 						var neighborWithoutOccupiedNeighbors;
@@ -118,10 +123,6 @@
 				return all.filter(function(pp){return Math.abs(p.x - pp.x) < 2 && Math.abs(p.y - pp.y) < 2;});
 			};
 			var forget = function(p, cellBeingKilled){
-				var cellonxy = cells.getCellOnXY(p.x,p.y);
-				if(cellonxy && cellonxy != cellBeingKilled){
-					throw new Error("forgetting a position that has a cell");
-				}
 				p.neighbors.map(function(pp){pp.forgetNeighbor(p);});
 				var index = all.indexOf(p);
 				if(index > -1){
@@ -133,14 +134,26 @@
 			var hasNoOccupiedNeighbors = function(p){
 				return !p.neighbors.some(function(pp){return pp.isOccupied();});
 			};
-			var getPositionsToOccupy = function(){
-				return all.filter(function(p){
-					if(p.isOccupied()){
-						return false;
-					}
+
+			var getDiagnosis = function(){
+				var positionsToVacate = [];
+				var positionsToOccupy = [];
+				all.map(function(p){
 					var liveNeighbors = p.numberOfLiveNeighbors();
-					return liveNeighbors == 3;
+					if(p.isOccupied()){
+						if(liveNeighbors < 2 || liveNeighbors > 3){
+							positionsToVacate.push(p);
+						}
+					}else{
+						if(liveNeighbors == 3){
+							positionsToOccupy.push(p);
+						}
+					}
 				});
+				return {
+					positionsToOccupy:positionsToOccupy,
+					positionsToVacate:positionsToVacate
+				};
 			};
 			var connectToExistingNeighbors = function(p){
 				var neighbors = getExistingNeighbors(p);
@@ -173,9 +186,22 @@
 					return newOne;
 				}
 			};
-			get.getPositionsToOccupy = getPositionsToOccupy;
+			var vacateAll = function(){
+				var occupied = all.filter(function(p){return p.isOccupied();});
+				occupied.map(function(p){p.vacate();});
+			};
+			var serialize = function(){
+				return all.filter(function(p){return p.isOccupied();}).map(function(p){return p.toString();}).join("");
+			};
+			get.draw = function(){
+				all.map(function(p){p.draw();});
+			};
+			get.vacateAll = vacateAll;
+			get.serialize = serialize;
+			get.getDiagnosis = getDiagnosis;
 			get.isKnownPosition = function(p){return all.indexOf(p) > -1;};
-			get.count = function(){return all.length;};
+			get.countAll = function(){return all.length;};
+			get.countAlive = function(){return all.filter(function(p){return p.isOccupied();}).length;};
 			return get;
 		})(),
 		positionToMousePosition = function(p){
@@ -190,62 +216,18 @@
 			context.lineTo(w,y);
 			context.stroke();
 		},
-		cells = (function(){
-			var cell = function(p){
-				p.occupy();
-				return {
-					draw: function(){
-						var mousePosition = positionToMousePosition(p);
-						context.fillRect(mousePosition.x,mousePosition.y,size,size);
-					},
-					destroy:function(){
-						p.vacate(this);
-						liveCells.splice(liveCells.indexOf(this), 1);
-					},
-					position:p
-				}
-			};
-			var liveCells = [];
-			var cellIsKilled = function(c){
-				var liveNeighbors = c.position.numberOfLiveNeighbors();
-				return liveNeighbors < 2 || liveNeighbors > 3;
-			};
-			var getCellsToKill = function(){
-				return liveCells.filter(cellIsKilled);
-			};
-			var serialize = function(){
-				return liveCells.map(function(c){return c.position.toString();}).join("");
-			};
-			var destroyAll = function(){
-				var toDestroy = liveCells.slice();
-				toDestroy.map(function(c){c.destroy();});
-			};
-			return {
-				add:function(p){
-					if(!p.isOccupied()){
-						liveCells.push(cell(p));
-					}
-				},
-				draw:function(){liveCells.map(function(c){c.draw();});},
-				getCellOnPosition:function(p){return liveCells.find(function(c){return c.position == p;});},
-				getCellOnXY:function(x,y){return liveCells.find(function(c){return c.position.x==x&&c.position.y==y});},
-				getCellsToKill:getCellsToKill,
-				serialize:serialize,
-				destroyAll:destroyAll,
-				count:function(){return liveCells.length;}
-			};
-		})(),
 		doStep = function(stop){
 			try{
-				var cellsToKill = cells.getCellsToKill();
-				var positionsToOccupy = position.getPositionsToOccupy();
-				if(cellsToKill.length == 0 && positionsToOccupy.length == 0){
+				var diagnosis = position.getDiagnosis();
+				var positionsToVacate = diagnosis.positionsToVacate;
+				var positionsToOccupy = diagnosis.positionsToOccupy;
+				if(positionsToVacate.length == 0 && positionsToOccupy.length == 0){
 					stop();
 				}
-				for(var i=0;i<cellsToKill.length;i++){
-					cellsToKill[i].destroy();
+				for(var i=0;i<positionsToVacate.length;i++){
+					positionsToVacate[i].vacate();
 				}
-				positionsToOccupy.map(function(p){cells.add(position(p.x,p.y));});
+				positionsToOccupy.map(function(p){position(p.x,p.y).occupy();});
 			}catch(e){
 				stop();
 				throw e;
@@ -280,7 +262,7 @@
 				var match = m.match(/^\((-?\d+),(-?\d+)\)$/);
 				var x = parseInt(match[1]);
 				var y = parseInt(match[2]);
-				cells.add(position(x,y));
+				position(x,y).occupy();
 			});
 		},
 		drawAll = function(){
@@ -291,7 +273,7 @@
 			for(var i = 0;i<ny;i++){
 				drawHorizontalLine(i * size);
 			}
-			cells.draw();
+			position.draw();
 		};
 	setSize(15);
 	readHash();
@@ -305,10 +287,18 @@
 	var up = function(){yShift += Math.floor(ny/4);drawAll();};
 	var down = function(){yShift -= Math.floor(ny/4);drawAll();};
 	window.record = function(){
-		window.location.hash = cells.serialize();
+		window.location.hash = position.serialize();
 	};
-	window.health = function(){return position.count() / cells.count();};
-	window.alive = function(x,y){cells.add(position(x,y));drawAll();};
+	window.health = function(){
+		var all = position.countAll();
+		var alive = position.countAlive();
+		return {
+			all:all,
+			alive:alive,
+			ratio:all/alive
+		};
+	};
+	window.alive = function(x,y){position(x,y).occupy();drawAll();};
 	window.addEventListener("keydown",function(e){
 		if(e.key == "+"){
 			zoomIn();
@@ -336,23 +326,11 @@
 			}
 		}
 		if(e.key == "c"){
-			cells.destroyAll();
+			position.vacateAll();
 			drawAll();
 		}
 
 	});
-	var doTest = function(){
-		cells.add(position(5,5));
-		cells.add(position(5,6));
-		cells.add(position(5,7));
-		cells.add(position(5,8));
-		cells.add(position(5,9));
-		cells.add(position(5,10));
-		cells.add(position(5,11));
-		drawAll();
-		go(function(){console.log("test stopped");})
-	};
-	//doTest();
 })();
 </script>
 </html>
