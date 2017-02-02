@@ -70,37 +70,76 @@
 			var positionLocation = mousePositionToPositionLocation(mX,mY);
 			return position(positionLocation.x, positionLocation.y);
 		},
-		makeDimension = function(){
-			var all = [];
-			var connectToExistingNeighbors = function(d){
-				all.map(function(dd){
-					if(Math.abs(dd.coordinate - d.coordinate) < 2){
-						d.neighbors.push(dd);
-						dd.neighbors.push(d);
+		column = (function(){
+			var allColumns = [];
+			var connectToNeighboringColumns = function(c){
+				allColumns.map(function(cc){
+					if(Math.abs(cc.x - c.x) < 2){
+						c.neighbors.push(cc);
+						cc.neighbors.push(c);
 					}
 				});
 			};
-			var makeNew = function(coordinate){
-				var newOne = {
-					coordinate: coordinate,
-					neighbors:[]
+			var makeNewColumn = function(x, forget){
+				var newOne;
+				var all = [];
+				var neighbors = [];
+				var forgetThis = function(){
+					neighbors.map(function(c){c.forgetNeighbor(newOne);});
+					forget();
 				};
-				connectToExistingNeighbors(newOne);
-				all.push(newOne);
+				var connectToNeighboringPositions = function(p){
+					all.map(function(pp){
+						if(Math.abs(pp.y - p.y) < 2){
+							p.neighbors.push(pp);
+							pp.neighbors.push(p);
+						}
+					});
+					if(p.x == x){
+						neighbors.map(function(c){c.connectToNeighboringPositions(p);});
+					}
+				};
+				var makeNewPosition = function(y){
+					var occupied = false;
+					var newPosition = {
+						x:x,
+						y:y
+
+					};
+					return newPosition;
+				};
+				newOne = function(y){
+					var known = all.find(function(p){return p.y == y});
+					if(known){
+						return known;
+					}
+					var newPosition = makeNewPosition(y);
+					connectToNeighboringPositions(newPosition);
+					all.push(newPosition);
+					return newPosition;
+				};
+				newOne.neighbors = neighbors;
+				newOne.forgetNeighbor = function(c){neighbors.splice(neighbors.indexOf(c), 1);};
+				newOne.connectToNeighboringPositions = connectToNeighboringPositions;
 				return newOne;
 			};
-			var get = function(coordinate){
-				var known = all.find(function(d){return d.coordinate == coordinate});
+			var get = function(x){
+				var known = allColumns.find(function(c){return c.x == x});
 				if(known){
 					return known;
 				}
-
+				var newOne;
+				var forget = function(){allColumns.splice(allColumns.indexOf(newOne), 1);};
+				newOne = makeNewColumn(x, forget);
+				connectToNeighboringColumns(newOne);
+				allColumns.push(newOne);
+				return newOne;
 			};
 			return get;
-		},
+		})(),
 		position = (function(){
 
-			var all = [], column = makeDimension();
+			var all = [];
 			var makeNew = function(x,y){
 				var occupied = false;
 				var newOne = {
