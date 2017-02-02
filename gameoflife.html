@@ -87,14 +87,14 @@
 						var mousePosition = positionToMousePosition(this);
 						context.fillRect(mousePosition.x,mousePosition.y,size,size);
 					},
-					vacate:function(cellBeingKilled){
+					vacate:function(){
 						occupied = false;
 						var neighborWithoutOccupiedNeighbors;
 						while(neighborWithoutOccupiedNeighbors = this.neighbors.find(function(p){return !p.isOccupied() && hasNoOccupiedNeighbors(p);})){
 							forget(neighborWithoutOccupiedNeighbors, cellBeingKilled);
 						}
 						if(hasNoOccupiedNeighbors(this)){
-							forget(this, cellBeingKilled);
+							forget(this);
 						}
 					},
 					forgetNeighbor:function(p){
@@ -119,10 +119,7 @@
 					}
 				};
 			};
-			var getExistingNeighbors = function(p){
-				return all.filter(function(pp){return Math.abs(p.x - pp.x) < 2 && Math.abs(p.y - pp.y) < 2;});
-			};
-			var forget = function(p, cellBeingKilled){
+			var forget = function(p){
 				p.neighbors.map(function(pp){pp.forgetNeighbor(p);});
 				var index = all.indexOf(p);
 				if(index > -1){
@@ -156,13 +153,11 @@
 				};
 			};
 			var connectToExistingNeighbors = function(p){
-				var neighbors = getExistingNeighbors(p);
-				p.neighbors = neighbors;
-				neighbors.map(function(pp){
-					if(pp.neighbors.length == 8){
-						throw new Error("position already has eight neighbors!");
+				all.map(function(pp){
+					if(Math.abs(p.x - pp.x) < 2 && Math.abs(p.y - pp.y) < 2){
+						pp.neighbors.push(p);
+						p.neighbors.push(pp);
 					}
-					pp.neighbors.push(p);
 				});
 			};
 			var createNeighborsOf = function(p){
