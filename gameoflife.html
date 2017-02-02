@@ -74,7 +74,7 @@
 			var all = [];
 			var makeNew = function(x,y){
 				var occupied = false;
-				return {
+				var newOne = {
 					x:x,
 					y:y,
 					toString:function(){return "("+x+","+y+")";},
@@ -90,11 +90,11 @@
 					vacate:function(){
 						occupied = false;
 						var neighborWithoutOccupiedNeighbors;
-						while(neighborWithoutOccupiedNeighbors = this.neighbors.find(function(p){return !p.isOccupied() && hasNoOccupiedNeighbors(p);})){
-							forget(neighborWithoutOccupiedNeighbors, cellBeingKilled);
+						while(neighborWithoutOccupiedNeighbors = this.neighbors.find(function(p){return !p.isOccupied() && p.hasNoOccupiedNeighbors();})){
+							neighborWithoutOccupiedNeighbors.forget();
 						}
-						if(hasNoOccupiedNeighbors(this)){
-							forget(this);
+						if(this.hasNoOccupiedNeighbors()){
+							this.forget();
 						}
 					},
 					forgetNeighbor:function(p){
@@ -108,6 +108,10 @@
 					},
 					isOccupied:function(){return occupied;},
 					neighbors: [],
+					beForgottenByNeighbors:function(){
+						var self = this;
+						this.neighbors.map(function(pp){pp.forgetNeighbor(self);});
+					},
 					numberOfLiveNeighbors:function(){
 						var n = 0;
 						for(var i=0;i<this.neighbors.length;i++){
@@ -116,22 +120,24 @@
 							}
 						}
 						return n;
+					},
+					hasNoOccupiedNeighbors:function(){
+						return !this.neighbors.some(function(pp){return pp.isOccupied();});
+					},
+					forget:function(){
+						this.beForgottenByNeighbors();
+						var index = all.indexOf(this);
+						if(index > -1){
+							all.splice(index,1);
+						}else{
+							throw new Error("forgetting one that has already been forgotten");
+						}
 					}
 				};
+				connectToExistingNeighbors(newOne);
+				all.push(newOne);
+				return newOne;
 			};
-			var forget = function(p){
-				p.neighbors.map(function(pp){pp.forgetNeighbor(p);});
-				var index = all.indexOf(p);
-				if(index > -1){
-					all.splice(index,1);
-				}else{
-					throw new Error("forgetting one that has already been forgotten");
-				}
-			};
-			var hasNoOccupiedNeighbors = function(p){
-				return !p.neighbors.some(function(pp){return pp.isOccupied();});
-			};
-
 			var getDiagnosis = function(){
 				var positionsToVacate = [];
 				var positionsToOccupy = [];
@@ -175,10 +181,7 @@
 				if(known){
 					return known;
 				}else{
-					var newOne = makeNew(x,y);
-					connectToExistingNeighbors(newOne);
-					all.push(newOne);
-					return newOne;
+					return makeNew(x,y);
 				}
 			};
 			var vacateAll = function(){
