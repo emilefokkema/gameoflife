@@ -70,8 +70,37 @@
 			var positionLocation = mousePositionToPositionLocation(mX,mY);
 			return position(positionLocation.x, positionLocation.y);
 		},
-		position = (function(){
+		makeDimension = function(){
 			var all = [];
+			var connectToExistingNeighbors = function(d){
+				all.map(function(dd){
+					if(Math.abs(dd.coordinate - d.coordinate) < 2){
+						d.neighbors.push(dd);
+						dd.neighbors.push(d);
+					}
+				});
+			};
+			var makeNew = function(coordinate){
+				var newOne = {
+					coordinate: coordinate,
+					neighbors:[]
+				};
+				connectToExistingNeighbors(newOne);
+				all.push(newOne);
+				return newOne;
+			};
+			var get = function(coordinate){
+				var known = all.find(function(d){return d.coordinate == coordinate});
+				if(known){
+					return known;
+				}
+
+			};
+			return get;
+		},
+		position = (function(){
+
+			var all = [], column = makeDimension();
 			var makeNew = function(x,y){
 				var occupied = false;
 				var newOne = {
