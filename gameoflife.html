@@ -68,10 +68,11 @@
 		},
 		mousePositionToPosition = function(mX, mY){
 			var positionLocation = mousePositionToPositionLocation(mX,mY);
-			return position(positionLocation.x, positionLocation.y);
+			return position(positionLocation.x)(positionLocation.y);
 		},
-		column = (function(){
+		position = (function(){
 			var allColumns = [];
+			var get;
 			var connectToNeighboringColumns = function(c){
 				allColumns.map(function(cc){
 					if(Math.abs(cc.x - c.x) < 2){
@@ -81,10 +82,11 @@
 				});
 			};
 			var makeNewColumn = function(x, forget){
+				console.log("making new column with x = "+x);
 				var newOne;
 				var all = [];
 				var neighbors = [];
-				var forgetThis = function(){
+				var forgetColumn = function(){
 					neighbors.map(function(c){c.forgetNeighbor(newOne);});
 					forget();
 				};
@@ -99,14 +101,93 @@
 						neighbors.map(function(c){c.connectToNeighboringPositions(p);});
 					}
 				};
+				var getDiagnosis = function(){
+					var positionsToVacate = [];
+					var positionsToOccupy = [];
+					all.map(function(p){
+						var liveNeighbors = p.numberOfLiveNeighbors();
+						if(p.isOccupied()){
+							if(liveNeighbors < 2 || liveNeighbors > 3){
+								positionsToVacate.push(p);
+							}
+						}else{
+							if(liveNeighbors == 3){
+								positionsToOccupy.push(p);
+							}
+						}
+					});
+					return {
+						positionsToOccupy:positionsToOccupy,
+						positionsToVacate:positionsToVacate
+					};
+				};
 				var makeNewPosition = function(y){
 					var occupied = false;
 					var newPosition = {
 						x:x,
-						y:y
-
+						y:y,
+						toString:function(){return "("+x+","+y+")";},
+						occupy:function(){
+							occupied = true;
+							createNeighborsOf(this);
+						},
+						draw:function(){
+							if(!occupied){return;}
+							var mousePosition = positionToMousePosition(this);
+							context.fillRect(mousePosition.x,mousePosition.y,size,size);
+						},
+						vacate:function(){
+							occupied = false;
+							var neighborWithoutOccupiedNeighbors;
+							while(neighborWithoutOccupiedNeighbors = this.neighbors.find(function(p){return !p.isOccupied() && p.hasNoOccupiedNeighbors();})){
+								neighborWithoutOccupiedNeighbors.forget();
+							}
+							if(this.hasNoOccupiedNeighbors()){
+								this.forget();
+							}
+						},
+						forgetNeighbor:function(p){
+							var index = this.neighbors.indexOf(p);
+							if(index > -1){
+								this.neighbors.splice(this.neighbors.indexOf(p), 1);
+							}else{
+								throw new Error("forgetting neighbor that has already been forgotten");
+							}
+							
+						},
+						isOccupied:function(){return occupied;},
+						neighbors: [],
+						beForgottenByNeighbors:function(){
+							var self = this;
+							this.neighbors.map(function(pp){pp.forgetNeighbor(self);});
+						},
+						numberOfLiveNeighbors:function(){
+							var n = 0;
+							for(var i=0;i<this.neighbors.length;i++){
+								if(this.neighbors[i].isOccupied()){
+									n++;
+								}
+							}
+							return n;
+						},
+						hasNoOccupiedNeighbors:function(){
+							return !this.neighbors.some(function(pp){return pp.isOccupied();});
+						},
+						forget:function(){
+							this.beForgottenByNeighbors();
+							all.splice(all.indexOf(this),1);
+							if(all.length == 0){
+								forgetColumn();
+							}
+						}
 					};
 					return newPosition;
+				};
+				var draw = function(){
+					all.map(function(p){p.draw();});
+				};
+				var getAllOccupiedPositions = function(){
+					return all.filter(function(p){return p.isOccupied();});
 				};
 				newOne = function(y){
 					var known = all.find(function(p){return p.y == y});
@@ -118,12 +199,56 @@
 					all.push(newPosition);
 					return newPosition;
 				};
+				newOne.x = x;
+				newOne.count = function(){return all.length;};
 				newOne.neighbors = neighbors;
+				newOne.draw = draw;
 				newOne.forgetNeighbor = function(c){neighbors.splice(neighbors.indexOf(c), 1);};
+				newOne.getAllOccupiedPositions = getAllOccupiedPositions;
+				newOne.getDiagnosis = getDiagnosis;
 				newOne.connectToNeighboringPositions = connectToNeighboringPositions;
 				return newOne;
 			};
-			var get = function(x){
+			var createNeighborsOf = function(p){
+				var c = get(p.x - 1);
+				c(p.y - 1);
+				c(p.y);
+				c(p.y + 1);
+				c = get(p.x);
+				c(p.y - 1);
+				c(p.y + 1);
+				c = get(p.x + 1);
+				c(p.y - 1);
+				c(p.y);
+				c(p.y + 1);
+			};
+			var getDiagnosis = function(){
+				var positionsToVacate = [];
+				var positionsToOccupy = [];
+				allColumns.map(function(c){
+					var diagnosis = c.getDiagnosis();
+					diagnosis.positionsToVacate.map(function(p){positionsToVacate.push(p);});
+					diagnosis.positionsToOccupy.map(function(p){positionsToOccupy.push(p);});
+				});
+				return {
+					positionsToVacate:positionsToVacate,
+					positionsToOccupy:positionsToOccupy
+				};
+			};
+			var getAllOccupiedPositions = function(){
+				var allOccupiedPositions = [];
+				allColumns.map(function(c){
+					c.getAllOccupiedPositions().map(function(p){allOccupiedPositions.push(p);});
+				});
+				return allOccupiedPositions;
+			};
+			var serialize = function(){
+				return getAllOccupiedPositions().map(function(p){return p.toString();}).join("");
+			};
+			var vacateAll = function(){
+				getAllOccupiedPositions().map(function(p){p.vacate();});
+			};
+			get = function(x){
 				var known = allColumns.find(function(c){return c.x == x});
 				if(known){
 					return known;
@@ -135,139 +260,16 @@
 				allColumns.push(newOne);
 				return newOne;
 			};
-			return get;
-		})(),
-		position = (function(){
-
-			var all = [];
-			var makeNew = function(x,y){
-				var occupied = false;
-				var newOne = {
-					x:x,
-					y:y,
-					toString:function(){return "("+x+","+y+")";},
-					occupy: function(){
-						occupied = true;
-						createNeighborsOf(this);
-					},
-					draw:function(){
-						if(!occupied){return;}
-						var mousePosition = positionToMousePosition(this);
-						context.fillRect(mousePosition.x,mousePosition.y,size,size);
-					},
-					vacate:function(){
-						occupied = false;
-						var neighborWithoutOccupiedNeighbors;
-						while(neighborWithoutOccupiedNeighbors = this.neighbors.find(function(p){return !p.isOccupied() && p.hasNoOccupiedNeighbors();})){
-							neighborWithoutOccupiedNeighbors.forget();
-						}
-						if(this.hasNoOccupiedNeighbors()){
-							this.forget();
-						}
-					},
-					forgetNeighbor:function(p){
-						var index = this.neighbors.indexOf(p);
-						if(index > -1){
-							this.neighbors.splice(this.neighbors.indexOf(p), 1);
-						}else{
-							throw new Error("forgetting neighbor that has already been forgotten");
-						}
-						
-					},
-					isOccupied:function(){return occupied;},
-					neighbors: [],
-					beForgottenByNeighbors:function(){
-						var self = this;
-						this.neighbors.map(function(pp){pp.forgetNeighbor(self);});
-					},
-					numberOfLiveNeighbors:function(){
-						var n = 0;
-						for(var i=0;i<this.neighbors.length;i++){
-							if(this.neighbors[i].isOccupied()){
-								n++;
-							}
-						}
-						return n;
-					},
-					hasNoOccupiedNeighbors:function(){
-						return !this.neighbors.some(function(pp){return pp.isOccupied();});
-					},
-					forget:function(){
-						this.beForgottenByNeighbors();
-						var index = all.indexOf(this);
-						if(index > -1){
-							all.splice(index,1);
-						}else{
-							throw new Error("forgetting one that has already been forgotten");
-						}
-					}
-				};
-				connectToExistingNeighbors(newOne);
-				all.push(newOne);
-				return newOne;
-			};
-			var getDiagnosis = function(){
-				var positionsToVacate = [];
-				var positionsToOccupy = [];
-				all.map(function(p){
-					var liveNeighbors = p.numberOfLiveNeighbors();
-					if(p.isOccupied()){
-						if(liveNeighbors < 2 || liveNeighbors > 3){
-							positionsToVacate.push(p);
-						}
-					}else{
-						if(liveNeighbors == 3){
-							positionsToOccupy.push(p);
-						}
-					}
-				});
-				return {
-					positionsToOccupy:positionsToOccupy,
-					positionsToVacate:positionsToVacate
-				};
-			};
-			var connectToExistingNeighbors = function(p){
-				all.map(function(pp){
-					if(Math.abs(p.x - pp.x) < 2 && Math.abs(p.y - pp.y) < 2){
-						pp.neighbors.push(p);
-						p.neighbors.push(pp);
-					}
-				});
-			};
-			var createNeighborsOf = function(p){
-				get(p.x - 1, p.y - 1);
-				get(p.x - 1, p.y);
-				get(p.x - 1, p.y + 1);
-				get(p.x, p.y - 1);
-				get(p.x, p.y + 1);
-				get(p.x + 1, p.y - 1);
-				get(p.x + 1, p.y);
-				get(p.x + 1, p.y + 1);
-			};
-			var get = function(x,y){
-				var known = all.find(function(p){return p.x == x && p.y == y;});
-				if(known){
-					return known;
-				}else{
-					return makeNew(x,y);
-				}
-			};
-			var vacateAll = function(){
-				var occupied = all.filter(function(p){return p.isOccupied();});
-				occupied.map(function(p){p.vacate();});
-			};
-			var serialize = function(){
-				return all.filter(function(p){return p.isOccupied();}).map(function(p){return p.toString();}).join("");
-			};
-			get.draw = function(){
-				all.map(function(p){p.draw();});
-			};
+			get.getDiagnosis = getDiagnosis;
 			get.vacateAll = vacateAll;
 			get.serialize = serialize;
-			get.getDiagnosis = getDiagnosis;
-			get.isKnownPosition = function(p){return all.indexOf(p) > -1;};
-			get.countAll = function(){return all.length;};
-			get.countAlive = function(){return all.filter(function(p){return p.isOccupied();}).length;};
+			get.countAlive = function(){return getAllOccupiedPositions().length;};
+			get.countAll = function(){
+				var n = 0;
+				allColumns.map(function(c){n += c.count();});
+				return n;
+			};
+			get.draw = function(){allColumns.map(function(c){c.draw();});};
 			return get;
 		})(),
 		positionToMousePosition = function(p){
