@@ -383,7 +383,7 @@
 			ratio:all/alive
 		};
 	};
-	window.alive = function(x,y){position(x,y).occupy();drawAll();};
+	window.alive = function(x,y){position(x)(y).occupy();drawAll();};
 	window.addEventListener("keydown",function(e){
 		if(e.key == "+"){
 			zoomIn();
