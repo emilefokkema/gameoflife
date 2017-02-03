@@ -47,6 +47,12 @@
 				}
 				drawAll();
 			});
+			canvas.addEventListener('contextmenu',function(e){
+				e.preventDefault();
+				var loc = mousePositionToPositionLocation(e.clientX, e.clientY);
+				console.log(position.getIfExistsOnXY(loc.x, loc.y));
+				return false;
+			});
 			return {
 				context:context,
 				clear:function(){canvas.width = w;initializeContext();}
@@ -82,7 +88,6 @@
 				});
 			};
 			var makeNewColumn = function(x, forget){
-				console.log("making new column with x = "+x);
 				var newOne;
 				var all = [];
 				var neighbors = [];
@@ -189,6 +194,9 @@
 				var getAllOccupiedPositions = function(){
 					return all.filter(function(p){return p.isOccupied();});
 				};
+				var getIfExistsOnY = function(y){
+					return all.find(function(p){return p.y == y});
+				};
 				newOne = function(y){
 					var known = all.find(function(p){return p.y == y});
 					if(known){
@@ -203,6 +211,7 @@
 				newOne.count = function(){return all.length;};
 				newOne.neighbors = neighbors;
 				newOne.draw = draw;
+				newOne.getIfExistsOnY = getIfExistsOnY;
 				newOne.forgetNeighbor = function(c){neighbors.splice(neighbors.indexOf(c), 1);};
 				newOne.getAllOccupiedPositions = getAllOccupiedPositions;
 				newOne.getDiagnosis = getDiagnosis;
@@ -248,6 +257,13 @@
 			var vacateAll = function(){
 				getAllOccupiedPositions().map(function(p){p.vacate();});
 			};
+			var getIfExistsOnXY = function(x,y){
+				var col = allColumns.find(function(c){return c.x == x});
+				if(!col){
+					return col;
+				}
+				return col.getIfExistsOnY(y);
+			};
 			get = function(x){
 				var known = allColumns.find(function(c){return c.x == x});
 				if(known){
@@ -263,6 +279,7 @@
 			get.getDiagnosis = getDiagnosis;
 			get.vacateAll = vacateAll;
 			get.serialize = serialize;
+			get.getIfExistsOnXY = getIfExistsOnXY;
 			get.countAlive = function(){return getAllOccupiedPositions().length;};
 			get.countAll = function(){
 				var n = 0;
@@ -290,14 +307,14 @@
 				var positionsToVacate = diagnosis.positionsToVacate;
 				var positionsToOccupy = diagnosis.positionsToOccupy;
 				if(positionsToVacate.length == 0 && positionsToOccupy.length == 0){
-					stop();
+					stop && stop();
 				}
 				for(var i=0;i<positionsToVacate.length;i++){
 					positionsToVacate[i].vacate();
 				}
-				positionsToOccupy.map(function(p){position(p.x,p.y).occupy();});
+				positionsToOccupy.map(function(p){position(p.x)(p.y).occupy();});
 			}catch(e){
-				stop();
+				stop && stop();
 				throw e;
 
 			}
@@ -330,7 +347,7 @@
 				var match = m.match(/^\((-?\d+),(-?\d+)\)$/);
 				var x = parseInt(match[1]);
 				var y = parseInt(match[2]);
-				position(x,y).occupy();
+				position(x)(y).occupy();
 			});
 		},
 		drawAll = function(){
@@ -397,7 +414,10 @@
 			position.vacateAll();
 			drawAll();
 		}
-
+		if(e.key == "s"){
+			doStep();
+			drawAll();
+		}
 	});
 })();
 </script>
