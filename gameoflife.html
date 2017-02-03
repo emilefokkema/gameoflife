@@ -389,24 +389,23 @@
 	window.alive = function(x,y){position(x)(y).occupy();drawAll();};
 	window.parseRLEBody = function(body){
 		position.vacateAll();
-		var lines = body.replace(/\s*/g,"").match(/(\d*[bo])*[\$!]/g);
-		for(var i=0;i<lines.length;i++){
-			var three = lines[i].match(/\d*[bo]/g);
-			if(!three){continue;}
-			var currentX = 0;
-			for(var j=0;j<three.length;j++){
-				var four = three[j].match(/^(\d*)([bo])$/);
-				var number = four[1] ? parseInt(four[1]) : 1;
-				if(four[2] == "b"){
-					currentX += number;
+		var parts = body.replace(/\s*/g,"").match(/\d*[bo\$]/g);
+		var x = 0, y = 0;
+		parts.map(function(p){
+			var match = p.match(/^(\d*)([bo\$])$/);
+			var number = match[1] ? parseInt(match[1]) : 1;
+			for(var i=0;i<number;i++){
+				if(match[2] == "$"){
+					x = 0;
+					y++;
 				}else{
-					for(var k=0;k<number;k++){
-						currentX++;
-						position(currentX)(i).occupy();
+					if(match[2] == "o"){
+						position(x)(y).occupy();
 					}
-				}
+					x++;
+				} 
 			}
-		}
+		});
 		drawAll();
 	};
 	window.parseRLE = function(rle){
