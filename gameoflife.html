@@ -301,6 +301,7 @@
 			context.lineTo(w,y);
 			context.stroke();
 		},
+		stepCount = 0,
 		doStep = function(stop){
 			try{
 				var diagnosis = position.getDiagnosis();
@@ -313,6 +314,7 @@
 					positionsToVacate[i].vacate();
 				}
 				positionsToOccupy.map(function(p){position(p.x)(p.y).occupy();});
+				stepCount++;
 			}catch(e){
 				stop && stop();
 				throw e;
@@ -323,7 +325,7 @@
 		interval,
 		stop = function(){
 			going = false;
-			console.log("stopping");
+			console.log("stopping at " + stepCount);
 			window.clearInterval(interval);
 		},
 		go = function(onStop){
@@ -374,6 +376,8 @@
 	window.record = function(){
 		window.location.hash = position.serialize();
 	};
+	window.getStepCount = function(){return stepCount;};
+	window.resetStepCount = function(){stepCount = 0;}
 	window.health = function(){
 		var all = position.countAll();
 		var alive = position.countAlive();
@@ -412,11 +416,13 @@
 		}
 		if(e.key == "c"){
 			position.vacateAll();
+			stepCount = 0;
 			drawAll();
 		}
 		if(e.key == "s"){
 			doStep();
 			drawAll();
+			console.log("now at step "+stepCount);
 		}
 	});
 })();
