@@ -3,7 +3,17 @@
 <script>
 (function(){
 	
-	var w = document.body.offsetWidth,
+	var throttle = function(f, interval){
+			var going = false;
+			return function(){
+				if(!going){
+					going = true;
+					f.apply(null, arguments);
+					setTimeout(function(){going = false;}, interval);
+				}
+			};
+		},
+		w = document.body.offsetWidth,
 		h = document.body.offsetHeight,
 		size, nx, ny,
 		setSize = function(s){
@@ -110,6 +120,8 @@
 					var positionsToVacate = [];
 					var positionsToOccupy = [];
 					all.map(function(p){
+						if(!p.environmentHasChanged()){return;}
+						p.noEnvironmentChange();
 						var liveNeighbors = p.numberOfLiveNeighbors();
 						if(p.isOccupied()){
 							if(liveNeighbors < 2 || liveNeighbors > 3){
@@ -128,6 +140,7 @@
 				};
 				var makeNewPosition = function(y){
 					var occupied = false;
+					var environmentChanged = true;
 					var newPosition = {
 						x:x,
 						y:y,
@@ -135,6 +148,7 @@
 						occupy:function(){
 							occupied = true;
 							createNeighborsOf(this);
+							this.neighbors.map(function(p){p.notifyEnvironmentChange();});
 						},
 						draw:function(){
 							if(!occupied){return;}
@@ -150,6 +164,7 @@
 							if(this.hasNoOccupiedNeighbors()){
 								this.forget();
 							}
+							this.neighbors.map(function(p){p.notifyEnvironmentChange();});
 						},
 						forgetNeighbor:function(p){
 							var index = this.neighbors.indexOf(p);
@@ -178,6 +193,9 @@
 						hasNoOccupiedNeighbors:function(){
 							return !this.neighbors.some(function(pp){return pp.isOccupied();});
 						},
+						environmentHasChanged: function(){return environmentChanged;},
+						noEnvironmentChange: function(){environmentChanged = false;},
+						notifyEnvironmentChange: function(){environmentChanged = true;},
 						forget:function(){
 							this.beForgottenByNeighbors();
 							all.splice(all.indexOf(this),1);
@@ -367,7 +385,7 @@
 			}
 			parseRLEBody(hash.substr(1));
 		},
-		drawAll = function(){
+		drawAll = throttle(function(){
 			clear();
 			for(var i = 0;i<nx;i++){
 				drawVerticalLine(i * size);
@@ -376,7 +394,7 @@
 				drawHorizontalLine(i * size);
 			}
 			position.draw();
-		};
+		}, 30);
 	setSize(15);
 	readHash();
 	drawAll();
