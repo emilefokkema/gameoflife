@@ -3,17 +3,7 @@
 <script>
 (function(){
 	
-	var throttle = function(f, interval){
-			var going = false;
-			return function(){
-				if(!going){
-					going = true;
-					f.apply(null, arguments);
-					setTimeout(function(){going = false;}, interval);
-				}
-			};
-		},
-		w = document.body.offsetWidth,
+	var w = document.body.offsetWidth,
 		h = document.body.offsetHeight,
 		size, nx, ny,
 		setSize = function(s){
@@ -385,7 +375,7 @@
 			}
 			parseRLEBody(hash.substr(1));
 		},
-		drawAll = throttle(function(){
+		drawAll = function(){
 			clear();
 			for(var i = 0;i<nx;i++){
 				drawVerticalLine(i * size);
@@ -394,7 +384,7 @@
 				drawHorizontalLine(i * size);
 			}
 			position.draw();
-		}, 30);
+		};
 	setSize(15);
 	readHash();
 	drawAll();
