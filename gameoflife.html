@@ -1,4 +1,26 @@
 <html>
+<head>
+	<style>
+		body{overflow: hidden;}
+		.menu{
+			position:absolute;
+			display:none;
+			width:150px;
+			background-color: #fff;
+			min-height: 30px;
+			border: 1pt solid #000;
+		}
+		.option{
+			height: 30px;
+			padding:3px;
+			font-family: Arial;
+			cursor: pointer;
+		}
+		.option:hover{
+			background-color:#ccc;
+		}
+	</style>
+</head>
 <body style="padding:0px;margin:0px"></body>
 <script>
 (function(){
@@ -38,6 +60,7 @@
 			};
 			initializeContext();
 			canvas.addEventListener('click',function(e){
+				menu.hide();
 				var p = mousePositionToPosition(e.clientX, e.clientY);
 				
 				if(p.isOccupied()){
@@ -49,14 +72,43 @@
 			});
 			canvas.addEventListener('contextmenu',function(e){
 				e.preventDefault();
-				var loc = mousePositionToPositionLocation(e.clientX, e.clientY);
-				console.log(position.getIfExistsOnXY(loc.x, loc.y));
+				menu.show(e.clientX, e.clientY);
 				return false;
 			});
 			return {
 				context:context,
 				clear:function(){canvas.width = w;initializeContext();}
 			};
+		})(),
+		menu = (function(){
+			var currentX, currentY;
+			var div = document.createElement("div");
+			div.setAttribute("class","menu");
+			document.body.appendChild(div);
+			var addOption = function(text, f){
+				var option = document.createElement('div');
+				option.setAttribute("class","option");
+				option.appendChild(document.createTextNode(text));
+				option.addEventListener('click', function(){
+					hide();
+					f(currentX, currentY);
+				});
+				div.appendChild(option);
+			};
+			var show = function(x,y){
+				var loc = mousePositionToPositionLocation(x,y);
+				currentX = loc.x;
+				currentY = loc.y;
+				div.style.display = "initial";
+				div.style.left = x + "px";
+				div.style.top = y + "px";
+			};
+			var hide = function(){div.style.display = "none"};
+			return {
+				addOption:addOption,
+				show:show,
+				hide:hide
+			}
 		})(),
 		context = c.context,
 		clear = c.clear,
@@ -385,6 +437,10 @@
 			}
 			position.draw();
 		};
+	menu.addOption('log position',function(x,y){
+		var p = position.getIfExistsOnXY(x,y);
+		console.log(p);
+	});
 	setSize(15);
 	readHash();
 	drawAll();
