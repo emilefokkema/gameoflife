@@ -60,7 +60,14 @@
 			};
 			initializeContext();
 			canvas.addEventListener('click',function(e){
+				if(e.shiftKey){
+					var loc = mousePositionToPositionLocation(e.clientX, e.clientY);
+					selection.select(loc.x, loc.y);
+					drawAll();
+					return;
+				}
 				menu.hide();
+				selection.clear();
 				var p = mousePositionToPosition(e.clientX, e.clientY);
 				
 				if(p.isOccupied()){
@@ -94,6 +101,7 @@
 					f(currentX, currentY);
 				});
 				div.appendChild(option);
+				return function(){div.removeChild(option);}
 			};
 			var show = function(x,y){
 				var loc = mousePositionToPositionLocation(x,y);
@@ -109,6 +117,52 @@
 				show:show,
 				hide:hide
 			}
+		})(),
+		selection = (function(){
+			var present = false, removeMenuOption = null, minX, minY, maxX, maxY;
+			var select = function(x,y){
+				if(!present){
+					minX = maxX = x;
+					minY = maxY = y;
+					present = true;
+				}else{
+					if(x > minX){
+						maxX = x;
+					}else{
+						maxX = minX;
+						minX = x;
+					}
+					if(y > minY){
+						maxY = y;
+					}else{
+						maxY = minY;
+						minY = y;
+					}
+				}
+				!removeMenuOption && (removeMenuOption = menu.addOption('log selection',function(){console.log("selection");}));
+			};
+			var draw = function(){
+				if(!present){return;}
+				var style = context.strokeStyle;
+				var lineWidth = context.lineWidth;
+				context.strokeStyle = '#00f';
+				context.lineWidth = 2;
+				var minLoc = positionToMousePosition({x:minX,y:minY});
+				var maxLoc = positionToMousePosition({x:maxX + 1,y:maxY + 1});
+				context.strokeRect(minLoc.x, minLoc.y, maxLoc.x - minLoc.x, maxLoc.y - minLoc.y);
+				context.strokeStyle = style;
+				context.lineWidth = lineWidth;
+			};
+			var clear = function(){
+				present = false;
+				removeMenuOption && removeMenuOption();
+				removeMenuOption = null;
+			};
+			return {
+				select:select,
+				draw:draw,
+				clear:clear
+			};
 		})(),
 		context = c.context,
 		clear = c.clear,
@@ -435,6 +489,7 @@
 			for(var i = 0;i<ny;i++){
 				drawHorizontalLine(i * size);
 			}
+			selection.draw();
 			position.draw();
 		};
 	menu.addOption('log position',function(x,y){
