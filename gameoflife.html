@@ -172,6 +172,18 @@
 				clear:clear
 			};
 		})(),
+		clipboard = (function(){
+			var paste, relativePositions, removePasteOption;
+			var copy = function(_relativePositions){
+				relativePositions = _relativePositions;
+				!removeMenuOption && (removeMenuOption = menu.addOption('paste', paste));
+			};
+			paste = function(x, y){
+				removeMenuOption && removeMenuOption();
+				removeMenuOption = null;
+			};
+			return {copy:copy};
+		})(),
 		context = c.context,
 		clear = c.clear,
 		drawVerticalLine = function(x){
