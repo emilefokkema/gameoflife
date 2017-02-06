@@ -120,6 +120,33 @@
 		})(),
 		selection = (function(){
 			var present = false, removeMenuOption = null, minX, minY, maxX, maxY;
+			var addMenuOptions = function(){
+				var remove1 = menu.addOption('log selection',
+					function(){
+						console.log(position.getAllInBox({
+							minX:minX,
+							maxX:maxX,
+							minY:minY,
+							maxY:maxY
+						}));
+					});
+				var remove2 = menu.addOption('copy',function(x,y){
+					var positions = position.getAllInBox({
+							minX:minX,
+							maxX:maxX,
+							minY:minY,
+							maxY:maxY
+						});
+					clipboard.copy(positions.map(function(p){return {
+							x: p.x - minX,
+							y: p.y - minY
+						};}));
+				});
+				return function(){
+					remove1 && remove1();
+					remove2 && remove2();
+				};
+			};
 			var select = function(x,y){
 				if(!present){
 					minX = maxX = x;
@@ -139,15 +166,7 @@
 						minY = y;
 					}
 				}
-				!removeMenuOption && (removeMenuOption = menu.addOption('log selection',
-					function(){
-						console.log(position.getAllInBox({
-							minX:minX,
-							maxX:maxX,
-							minY:minY,
-							maxY:maxY
-						}));
-					}));
+				!removeMenuOption && (removeMenuOption = addMenuOptions());
 			};
 			var draw = function(){
 				if(!present){return;}
@@ -173,15 +192,18 @@
 			};
 		})(),
 		clipboard = (function(){
-			var paste, relativePositions, removePasteOption;
+			var relativePositions, removeMenuOption;
+			var paste = function(x, y){
+				relativePositions.map(function(p){
+					position(x + p.x,y + p.y).occupy();
+				});
+				drawAll();
+			};
 			var copy = function(_relativePositions){
 				relativePositions = _relativePositions;
 				!removeMenuOption && (removeMenuOption = menu.addOption('paste', paste));
 			};
-			paste = function(x, y){
-				removeMenuOption && removeMenuOption();
-				removeMenuOption = null;
-			};
+			
 			return {copy:copy};
 		})(),
 		context = c.context,
@@ -556,6 +578,13 @@
 	window.parseRLEBody = function(body){
 		parseRLEBody(body, function(x,y){position(x,y).occupy();});
 		drawAll();
+	};
+	window.copyFromRLE = function(body){
+		var relativePositions = [];
+		parseRLEBody(body, function(x,y){
+			relativePositions.push({x:x,y:y});
+		});
+		clipboard.copy(relativePositions);
 	};
 	window.addEventListener("keydown",function(e){
 		if(e.key == "+"){
