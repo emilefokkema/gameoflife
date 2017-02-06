@@ -139,7 +139,15 @@
 						minY = y;
 					}
 				}
-				!removeMenuOption && (removeMenuOption = menu.addOption('log selection',function(){console.log("selection");}));
+				!removeMenuOption && (removeMenuOption = menu.addOption('log selection',
+					function(){
+						console.log(position.getAllInBox({
+							minX:minX,
+							maxX:maxX,
+							minY:minY,
+							maxY:maxY
+						}));
+					}));
 			};
 			var draw = function(){
 				if(!present){return;}
@@ -311,6 +319,9 @@
 				var getIfExistsOnY = function(y){
 					return all.find(function(p){return p.y == y});
 				};
+				var getAllBetween = function(yMin, yMax){
+					return all.filter(function(p){return p.isOccupied() && p.y >= yMin && p.y <= yMax;});
+				};
 				newOne = function(y){
 					var known = all.find(function(p){return p.y == y});
 					if(known){
@@ -325,6 +336,7 @@
 				newOne.count = function(){return all.length;};
 				newOne.neighbors = neighbors;
 				newOne.draw = draw;
+				newOne.getAllBetween = getAllBetween;
 				newOne.getIfExistsOnY = getIfExistsOnY;
 				newOne.forgetNeighbor = function(c){neighbors.splice(neighbors.indexOf(c), 1);};
 				newOne.getAllOccupiedPositions = getAllOccupiedPositions;
@@ -378,6 +390,13 @@
 				}
 				return col.getIfExistsOnY(y);
 			};
+			var getAllInBox = function(box){
+				var all = [];
+				allColumns.filter(function(c){return c.x >= box.minX && c.x <= box.maxX;}).map(function(c){
+					c.getAllBetween(box.minY, box.maxY).map(function(p){all.push(p);});
+				});
+				return all;
+			};
 			getColumn = function(x){
 				var known = allColumns.find(function(c){return c.x == x});
 				if(known){
@@ -396,6 +415,7 @@
 			get.getDiagnosis = getDiagnosis;
 			get.vacateAll = vacateAll;
 			get.serialize = serialize;
+			get.getAllInBox = getAllInBox;
 			get.getIfExistsOnXY = getIfExistsOnXY;
 			get.countAlive = function(){return getAllOccupiedPositions().length;};
 			get.countAll = function(){
@@ -456,7 +476,7 @@
 				drawAll();
 			},50);
 		},
-		parseRLEBody = function(body){
+		parseRLEBody = function(body, occupy){
 			position.vacateAll();
 			var parts = body.replace(/\s*/g,"").match(/\d*[bo\$]/g);
 			var x = 0, y = 0;
@@ -469,13 +489,12 @@
 						y++;
 					}else{
 						if(match[2] == "o"){
-							position(x,y).occupy();
+							occupy(x,y);
 						}
 						x++;
 					} 
 				}
 			});
-			drawAll();
 		},
 		readHash = function(){
 			var hash = window.location.hash;
@@ -522,7 +541,10 @@
 		};
 	};
 	window.alive = function(x,y){position(x,y).occupy();};
-	window.parseRLEBody = parseRLEBody;
+	window.parseRLEBody = function(body){
+		parseRLEBody(body, function(x,y){position(x,y).occupy();});
+		drawAll();
+	};
 	window.addEventListener("keydown",function(e){
 		if(e.key == "+"){
 			zoomIn();
