@@ -180,11 +180,11 @@
 		},
 		mousePositionToPosition = function(mX, mY){
 			var positionLocation = mousePositionToPositionLocation(mX,mY);
-			return position(positionLocation.x)(positionLocation.y);
+			return position(positionLocation.x,positionLocation.y);
 		},
 		position = (function(){
 			var allColumns = [];
-			var get;
+			var get, getColumn;
 			var connectToNeighboringColumns = function(c){
 				allColumns.map(function(cc){
 					if(Math.abs(cc.x - c.x) < 2){
@@ -333,14 +333,14 @@
 				return newOne;
 			};
 			var createNeighborsOf = function(p){
-				var c = get(p.x - 1);
+				var c = getColumn(p.x - 1);
 				c(p.y - 1);
 				c(p.y);
 				c(p.y + 1);
-				c = get(p.x);
+				c = getColumn(p.x);
 				c(p.y - 1);
 				c(p.y + 1);
-				c = get(p.x + 1);
+				c = getColumn(p.x + 1);
 				c(p.y - 1);
 				c(p.y);
 				c(p.y + 1);
@@ -378,7 +378,7 @@
 				}
 				return col.getIfExistsOnY(y);
 			};
-			get = function(x){
+			getColumn = function(x){
 				var known = allColumns.find(function(c){return c.x == x});
 				if(known){
 					return known;
@@ -389,6 +389,9 @@
 				connectToNeighboringColumns(newOne);
 				allColumns.push(newOne);
 				return newOne;
+			};
+			get = function(x,y){
+				return getColumn(x)(y);
 			};
 			get.getDiagnosis = getDiagnosis;
 			get.vacateAll = vacateAll;
@@ -427,7 +430,7 @@
 				for(var i=0;i<positionsToVacate.length;i++){
 					positionsToVacate[i].vacate();
 				}
-				positionsToOccupy.map(function(p){position(p.x)(p.y).occupy();});
+				positionsToOccupy.map(function(p){position(p.x,p.y).occupy();});
 				stepCount++;
 			}catch(e){
 				stop && stop();
@@ -466,7 +469,7 @@
 						y++;
 					}else{
 						if(match[2] == "o"){
-							position(x)(y).occupy();
+							position(x,y).occupy();
 						}
 						x++;
 					} 
@@ -507,9 +510,6 @@
 	var right = function(){xShift -= Math.floor(nx/4);drawAll();};
 	var up = function(){yShift += Math.floor(ny/4);drawAll();};
 	var down = function(){yShift -= Math.floor(ny/4);drawAll();};
-	window.record = function(){
-		window.location.hash = position.serialize();
-	};
 	window.getStepCount = function(){return stepCount;};
 	window.resetStepCount = function(){stepCount = 0;}
 	window.health = function(){
@@ -521,12 +521,8 @@
 			ratio:all/alive
 		};
 	};
-	window.alive = function(x,y){position(x)(y).occupy();drawAll();};
+	window.alive = function(x,y){position(x,y).occupy();};
 	window.parseRLEBody = parseRLEBody;
-	window.parseRLE = function(rle){
-		var one = rle.match(/^(.*)([^,]*)$/);
-		window.parseRLEBody(one[2]);
-	};
 	window.addEventListener("keydown",function(e){
 		if(e.key == "+"){
 			zoomIn();
