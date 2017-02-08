@@ -121,7 +121,8 @@
 		selection = (function(){
 			var present = false, removeMenuOption = null, minX, minY, maxX, maxY;
 			var addMenuOptions = function(){
-				var remove1 = menu.addOption('log selection',
+				var remove = [];
+				remove.push(menu.addOption('log selection',
 					function(){
 						console.log(position.getAllInBox({
 							minX:minX,
@@ -129,8 +130,8 @@
 							minY:minY,
 							maxY:maxY
 						}));
-					});
-				var remove2 = menu.addOption('copy',function(x,y){
+					}));
+				remove.push(menu.addOption('copy',function(x,y){
 					var positions = position.getAllInBox({
 							minX:minX,
 							maxX:maxX,
@@ -141,10 +142,18 @@
 							x: p.x - minX,
 							y: p.y - minY
 						};}));
-				});
+				}));
+				remove.push(menu.addOption('alive', function(){
+					for(var x=minX;x<=maxX;x++){
+						for(var y=minY;y<=maxY;y++){
+							position(x,y).occupy();
+						}
+					}
+					drawAll();
+				}));
 				return function(){
-					remove1 && remove1();
-					remove2 && remove2();
+					remove.map(function(f){f();});
+					remove = [];
 				};
 			};
 			var select = function(x,y){
@@ -526,7 +535,7 @@
 			if(!hash){
 				return;
 			}
-			parseRLEBody(hash.substr(1));
+			parseRLEBody(hash.substr(1), function(x,y){position(x,y).occupy()});
 		},
 		drawAll = function(){
 			clear();
