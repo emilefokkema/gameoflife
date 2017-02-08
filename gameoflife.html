@@ -511,7 +511,6 @@
 			},50);
 		},
 		parseRLEBody = function(body, occupy){
-			position.vacateAll();
 			var parts = body.replace(/\s*/g,"").match(/\d*[bo\$]/g);
 			var x = 0, y = 0;
 			parts.map(function(p){
@@ -576,6 +575,7 @@
 	};
 	window.alive = function(x,y){position(x,y).occupy();};
 	window.parseRLEBody = function(body){
+		position.vacateAll();
 		parseRLEBody(body, function(x,y){position(x,y).occupy();});
 		drawAll();
 	};
