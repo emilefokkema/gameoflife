@@ -19,6 +19,26 @@
 		.option:hover{
 			background-color:#ccc;
 		}
+		.input {
+			position: fixed;
+			left:50%;
+			top:50%;
+			width:400px;
+			height: 300px;
+			background-color: #ddd;
+			transform: translate(-50%,-50%);
+		}
+		.input textarea{
+			position: absolute;
+			left:0px;
+			top:0px;
+			width: 100%;
+			height: 80%;
+		}
+		.input input[type="button"]{
+			position: absolute;
+			bottom: 0px;
+		}
 	</style>
 </head>
 <body style="padding:0px;margin:0px"></body>
@@ -199,6 +219,40 @@
 				draw:draw,
 				clear:clear
 			};
+		})(),
+		input = (function(){
+			var open = false;
+			var div = document.createElement('div');
+			div.setAttribute("class","input");
+			var text = document.createElement('textarea');
+			var button = document.createElement('input');
+			button.setAttribute('type','button');
+			button.setAttribute('value','OK');
+			div.appendChild(text);
+			div.appendChild(button);
+			var show = function(){
+				open = true;
+				div.style.display = 'initial';
+			};
+			var hide = function(){
+				open = false;
+				div.style.display = 'none';
+			};
+			var handler = function(v){};
+			document.body.appendChild(div);
+			button.addEventListener('click',function(){
+				handler(text.value);
+			});
+			hide();
+			var f = function(resultHandler){
+				show();
+				handler = function(v){
+					hide();
+					resultHandler(v);
+				};
+			};
+			f.isOpen = function(){return open;};
+			return f;
 		})(),
 		clipboard = (function(){
 			var relativePositions, removeMenuOption;
@@ -548,9 +602,13 @@
 			selection.draw();
 			position.draw();
 		};
-	menu.addOption('log position',function(x,y){
-		var p = position.getIfExistsOnXY(x,y);
-		console.log(p);
+	menu.addOption('parse RLE',function(x,y){
+		input(function(v){
+			if(!v){return;}
+			position.vacateAll();
+			parseRLEBody(v, function(xx,yy){position(xx+x,yy+y).occupy();});
+			drawAll();
+		});
 	});
 	setSize(15);
 	readHash();
@@ -588,6 +646,7 @@
 		clipboard.copy(relativePositions);
 	};
 	window.addEventListener("keydown",function(e){
+		if(input.isOpen()){return true;}
 		if(e.key == "+"){
 			zoomIn();
 		}
