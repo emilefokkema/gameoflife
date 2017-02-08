@@ -254,9 +254,7 @@
 						neighbors.map(function(c){c.connectToNeighboringPositions(p);});
 					}
 				};
-				var getDiagnosis = function(){
-					var positionsToVacate = [];
-					var positionsToOccupy = [];
+				var getDiagnosis = function(positionsToVacate, positionsToOccupy){
 					all.map(function(p){
 						if(!p.environmentHasChanged()){return;}
 						p.noEnvironmentChange();
@@ -271,10 +269,6 @@
 							}
 						}
 					});
-					return {
-						positionsToOccupy:positionsToOccupy,
-						positionsToVacate:positionsToVacate
-					};
 				};
 				var makeNewPosition = function(y){
 					var occupied = false;
@@ -395,9 +389,7 @@
 				var positionsToVacate = [];
 				var positionsToOccupy = [];
 				allColumns.map(function(c){
-					var diagnosis = c.getDiagnosis();
-					diagnosis.positionsToVacate.map(function(p){positionsToVacate.push(p);});
-					diagnosis.positionsToOccupy.map(function(p){positionsToOccupy.push(p);});
+					c.getDiagnosis(positionsToVacate, positionsToOccupy);
 				});
 				return {
 					positionsToVacate:positionsToVacate,
