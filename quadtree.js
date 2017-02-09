@@ -5,7 +5,27 @@ var position = (function(){
 		SOUTHWEST:2,
 		SOUTHEAST:3
 	};
+	var pointInDirection = [];
+	pointInDirection[direction.NORTHEAST] = {x:1,y:-1};
+	pointInDirection[direction.NORTHWEST] = {x:-1,y:-1};
+	pointInDirection[direction.SOUTHWEST] = {x:-1,y:1};
+	pointInDirection[direction.SOUTHEAST] = {x:1,y:1};
 	var currentTree = null;
+	var getDirection = function(x, y){
+		if(x >= 0){
+			if(y >= 0){
+				return direction.SOUTHEAST;
+			}else{
+				return direction.NORTHEAST;
+			}
+		}else{
+			if(y >= 0){
+				return direction.SOUTHWEST;
+			}else{
+				return direction.NORTHWEST;
+			}
+		}
+	};
 	var tree = function(x, y, size){
 		var minX = x - size, maxX = x + size - 1, minY = y - size, maxY = y + size - 1;
 		var subTrees = [];
@@ -14,14 +34,27 @@ var position = (function(){
 		subTrees[direction.SOUTHWEST] = null;
 		subTrees[direction.SOUTHEAST] = null;
 		var contains = function(xx,yy){return xx >= minX && xx <= maxX && yy >= minY && yy <= maxY;};
+		var makeTreeInDirection = function(dir){
+			var point = pointInDirection[dir];
+			if(size == 1){
+				return {x:x-1/2+point.x/2, y:y-1/2+point.y/2};
+			}else{
+				return tree(x + point.x * size / 2, y + point.y * size /2, size / 2);
+			}
+		};
 		var add = function(xx,yy){
-
+			var dir = getDirection(xx - x, yy - y);
+			var subTree = subTrees[dir] = subTrees[dir] || makeTreeInDirection(dir);
+			if(size == 1){
+				return subTree;
+			}
+			return subTree.add(xx,yy);
 		};
 		return {
 			size:size,
 			subTrees:subTrees,
 			contains:contains,
-			add:function(xx,yy){add(xx,yy);return this;}
+			add:add
 		};
 	}
 	var makeBiggerTree = function(t){
@@ -44,4 +77,6 @@ var position = (function(){
 	};
 
 	console.log(add(5,3));
+	console.log(add(5,2));
+	console.log(currentTree);
 })();
