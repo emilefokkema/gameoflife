@@ -29,6 +29,7 @@ var position = (function(){
 	var tree = function(x, y, size){
 		var minX = x - size, maxX = x + size - 1, minY = y - size, maxY = y + size - 1;
 		var subTrees = [];
+		var self;
 		subTrees[direction.NORTHEAST] = null;
 		subTrees[direction.NORTHWEST] = null;
 		subTrees[direction.SOUTHWEST] = null;
@@ -42,6 +43,12 @@ var position = (function(){
 				return tree(x + point.x * size / 2, y + point.y * size /2, size / 2);
 			}
 		};
+		var makeBiggerTreeInDirection = function(dir){
+			var point = pointInDirection[dir];
+			var biggerTree = tree(x + point.x * size, y + point.y * size, 2*size);
+			biggerTree.subTrees[(dir + 2)%4] = self;
+			return biggerTree;
+		};
 		var add = function(xx,yy){
 			var dir = getDirection(xx - x, yy - y);
 			var subTree = subTrees[dir] = subTrees[dir] || makeTreeInDirection(dir);
@@ -50,18 +57,20 @@ var position = (function(){
 			}
 			return subTree.add(xx,yy);
 		};
-		return {
+		self = {
 			size:size,
 			subTrees:subTrees,
 			contains:contains,
-			add:add
+			add:add,
+			makeBiggerTreeInDirection:makeBiggerTreeInDirection
 		};
+		return self;
 	}
 	var makeBiggerTree = function(t){
 		var newT = tree(0,0,2 * t.size);
 		t.subTrees.map(function(st,i){
 			if(st){
-				newT.subTrees[(i + 2)%4] = st;
+				newT.subTrees[i] = st.makeBiggerTreeInDirection(i);
 			}
 		});
 		return newT;
@@ -76,7 +85,7 @@ var position = (function(){
 		return currentTree.add(x,y);
 	};
 
-	console.log(add(5,3));
-	console.log(add(5,2));
+	console.log(add(1,1));
+	console.log(add(2,2));
 	console.log(currentTree);
 })();
