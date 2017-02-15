@@ -48,7 +48,7 @@
 			var findNeighborsOf = function(x,y,soFar){
 				if(size == 1){
 					subTrees.map(function(p){
-						if(Math.abs(x - p.x) < 2 && Math.abs(y - p.y) < 2){
+						if(p!=null&&Math.abs(x - p.x) < 2 && Math.abs(y - p.y) < 2){
 							soFar.push(p);
 						}
 					});
@@ -80,6 +80,7 @@
 				};
 				findNeighborsOfForChildTree(x,y,neighbors,newOne);
 				newOne.neighbors = neighbors;
+				neighbors.map(function(p){p.neighbors.push(newOne);});
 				return newOne;
 			};
 			var makeBiggerTreeInDirection = function(dir, getParent){
@@ -103,7 +104,8 @@
 				contains:contains,
 				add:add,
 				makeBiggerTreeInDirection:makeBiggerTreeInDirection,
-				findNeighborsOfForChildTree:findNeighborsOfForChildTree
+				findNeighborsOfForChildTree:findNeighborsOfForChildTree,
+				findNeighborsOf:findNeighborsOf
 			};
 			return self;
 		};
@@ -152,7 +154,21 @@
 		var position = positionFactory();
 		var oneOne = position(1,1);
 		var twoTwo = position(2,2);
-		this.assert(oneOne.neighbors.indexOf(twoTwo) > 0);
+		this.assert(oneOne.neighbors.indexOf(twoTwo) > -1);
+	});
+	test('test3',function(){
+		var position = positionFactory();
+		var one = position(1,0);
+		var two = position(2,1);
+		var three = position(1,-1);
+		this.assert(one.neighbors.indexOf(two) > -1);
+		this.assert(two.neighbors.indexOf(one) > -1);
+
+		this.assert(one.neighbors.indexOf(three) > -1);
+		this.assert(three.neighbors.indexOf(one) > -1);
+
+		this.assert(two.neighbors.indexOf(three) == -1);
+		this.assert(three.neighbors.indexOf(two) == -1);
 	});
 })();
 
