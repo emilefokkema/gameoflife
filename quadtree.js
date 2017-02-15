@@ -27,8 +27,7 @@
 				}
 			}
 		};
-		var tree = function(x, y, size, getSiblings){
-			getSiblings = getSiblings || function(){return [];};
+		var tree = function(x, y, size, getParentTree){
 			var minX = x - size, maxX = x + size - 1, minY = y - size, maxY = y + size - 1;
 			var subTrees = [];
 			var self;
@@ -43,23 +42,51 @@
 					var newOne = makeNewPosition(x-1/2+point.x/2, y-1/2+point.y/2);
 					return newOne;
 				}else{
-					return tree(x + point.x * size / 2, y + point.y * size /2, size / 2, function(){return subTrees;});
+					return tree(x + point.x * size / 2, y + point.y * size /2, size / 2, function(){return self;});
 				}
 			};
-			var findNeighborsOf = function(x,y){
-
+			var findNeighborsOf = function(x,y,soFar){
+				if(size == 1){
+					subTrees.map(function(p){
+						if(Math.abs(x - p.x) < 2 && Math.abs(y - p.y) < 2){
+							soFar.push(p);
+						}
+					});
+				}else{
+					subTrees.map(function(t){
+						if(t != null){
+							t.findNeighborsOf(x,y,soFar);
+						}
+					});
+				}
+			};
+			var findNeighborsOfForChildTree = function(x,y,soFar,childTree){
+				if(size > 1){
+					subTrees.map(function(t){
+						if(t != childTree && t != null){
+							t.findNeighborsOf(x,y,soFar);
+						}
+					});
+				}
+				if(getParentTree){
+					getParentTree().findNeighborsOfForChildTree(x,y,soFar,self);
+				}
 			};
 			var makeNewPosition = function(x,y){
-				return {
+				var neighbors = [];
+				var newOne = {
 					x:x,
 					y:y
 				};
+				findNeighborsOfForChildTree(x,y,neighbors,newOne);
+				newOne.neighbors = neighbors;
+				return newOne;
 			};
-			var makeBiggerTreeInDirection = function(dir, getSibs){
+			var makeBiggerTreeInDirection = function(dir, getParent){
 				var point = pointInDirection[dir];
-				var biggerTree = tree(x + point.x * size, y + point.y * size, 2*size, getSibs);
+				var biggerTree = tree(x + point.x * size, y + point.y * size, 2*size, getParent);
 				biggerTree.subTrees[(dir + 2)%4] = self;
-				getSiblings = function(){return biggerTree.subTrees;};
+				getParentTree = function(){return biggerTree;};
 				return biggerTree;
 			};
 			var add = function(xx,yy){
@@ -75,16 +102,17 @@
 				subTrees:subTrees,
 				contains:contains,
 				add:add,
-				makeBiggerTreeInDirection:makeBiggerTreeInDirection
+				makeBiggerTreeInDirection:makeBiggerTreeInDirection,
+				findNeighborsOfForChildTree:findNeighborsOfForChildTree
 			};
 			return self;
 		};
 		var makeBiggerTree = function(t){
 			var newT = tree(0,0,2 * t.size);
-			var getSibs = function(){return newT.subTrees;};
+			var getParent = function(){return newT;};
 			t.subTrees.map(function(st,i){
 				if(st){
-					newT.subTrees[i] = st.makeBiggerTreeInDirection(i, getSibs);
+					newT.subTrees[i] = st.makeBiggerTreeInDirection(i, getParent);
 				}
 			});
 			return newT;
@@ -101,8 +129,9 @@
 		return add;
 	};
 	var test = function(name, t){
-		var fail = function(msg){
+		var fail = function(msg, e){
 			console.error(name+" failed: "+msg);
+			if(e){console.trace(e);}
 		}
 		try{
 			t.apply({
@@ -111,7 +140,7 @@
 				}
 			},[]);
 		}catch(e){
-			fail(e.message);
+			fail(e.message, e);
 		}
 	};
 	test('test1',function(){
