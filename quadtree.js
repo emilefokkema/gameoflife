@@ -276,9 +276,14 @@
 		var position = positionFactory();
 		var p = position(5,5);
 		this.assert(position.count() == 1);
+		var q = position(6,6);
+		this.assert(p.neighbors.indexOf(q) > -1);
 		p.occupy();
 		this.assert(position.count() == 9);
-		this.assert(p.neighbors.length == 8);
+		q.occupy();
+		this.assert(position.count() == 14);
+		q.vacate();
+		this.assert(position.count() == 9);
 		p.vacate();
 		this.assert(position.count() == 0);
 	})
