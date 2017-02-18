@@ -27,7 +27,8 @@
 				}
 			}
 		};
-		var tree = function(x, y, size, getParentTree){
+		var tree = function(x, y, size, getParentTree, forgetTree){
+			forgetTree = forgetTree || function(){};
 			var minX = x - size, maxX = x + size - 1, minY = y - size, maxY = y + size - 1;
 			var subTrees = [];
 			var self;
@@ -36,13 +37,24 @@
 			subTrees[direction.SOUTHWEST] = null;
 			subTrees[direction.SOUTHEAST] = null;
 			var contains = function(xx,yy){return xx >= minX && xx <= maxX && yy >= minY && yy <= maxY;};
-			var makeTreeInDirection = function(dir){
+			var getTreeInDirection = function(dir){
+				var result;
+				if(result = subTrees[dir]){return result;}
 				var point = pointInDirection[dir];
+				var forgetSubTree = function(){
+					subTrees[dir] = null;
+					checkContent();
+				};
 				if(size == 1){
-					var newOne = makeNewPosition(x-1/2+point.x/2, y-1/2+point.y/2);
-					return newOne;
+					result = makeNewPosition(x-1/2+point.x/2, y-1/2+point.y/2, forgetSubTree);
 				}else{
-					return tree(x + point.x * size / 2, y + point.y * size /2, size / 2, function(){return self;});
+					result = tree(x + point.x * size / 2, y + point.y * size /2, size / 2, function(){return self;}, forgetSubTree);
+				}
+				return subTrees[dir] = result;
+			};
+			var checkContent = function(){
+				if(!subTrees.some(function(t){return t!=null;})){
+					forgetTree();
 				}
 			};
 			var findNeighborsOf = function(x,y,soFar){
@@ -67,32 +79,91 @@
 							t.findNeighborsOf(x,y,soFar);
 						}
 					});
+				}else{
+					subTrees.map(function(p){
+						if(p!=childTree && p!=null&&Math.abs(x - p.x) < 2 && Math.abs(y - p.y) < 2){
+							soFar.push(p);
+						}
+					});
 				}
 				if(getParentTree){
 					getParentTree().findNeighborsOfForChildTree(x,y,soFar,self);
 				}
 			};
-			var makeNewPosition = function(x,y){
+			var makeNewPosition = function(x,y,forgetPosition){
 				var neighbors = [];
+				var occupied = false;
 				var newOne = {
 					x:x,
-					y:y
+					y:y,
+					occupy:function(){
+						occupied = true;
+						createNeighborsOf(x,y);
+					},
+					isOccupied:function(){return occupied;},
+					vacate:function(){
+						occupied = false;
+						var neighborWithoutOccupiedNeighbors;
+						while(neighborWithoutOccupiedNeighbors = this.neighbors.find(function(p){return !p.isOccupied() && p.hasNoOccupiedNeighbors();})){
+							neighborWithoutOccupiedNeighbors.forget();
+						}
+						if(this.hasNoOccupiedNeighbors()){
+							this.forget();
+						}
+					},
+					forgetNeighbor:function(p){
+						var index = this.neighbors.indexOf(p);
+						if(index > -1){
+							this.neighbors.splice(this.neighbors.indexOf(p), 1);
+						}else{
+							throw new Error("forgetting neighbor that has already been forgotten");
+						}
+						
+					},
+					beForgottenByNeighbors:function(){
+						var self = this;
+						this.neighbors.map(function(pp){pp.forgetNeighbor(self);});
+					},
+					hasNoOccupiedNeighbors:function(){
+						return !this.neighbors.some(function(pp){return pp.isOccupied();});
+					},
+					forget:function(){
+						this.beForgottenByNeighbors();
+						forgetPosition();
+					}
 				};
 				findNeighborsOfForChildTree(x,y,neighbors,newOne);
 				newOne.neighbors = neighbors;
 				neighbors.map(function(p){p.neighbors.push(newOne);});
 				return newOne;
 			};
-			var makeBiggerTreeInDirection = function(dir, getParent){
+			var makeBiggerTreeInDirection = function(dir, getParent, forgetBiggerTree){
 				var point = pointInDirection[dir];
-				var biggerTree = tree(x + point.x * size, y + point.y * size, 2*size, getParent);
+				var biggerTree = tree(x + point.x * size, y + point.y * size, 2*size, getParent, forgetBiggerTree);
 				biggerTree.subTrees[(dir + 2)%4] = self;
+				forgetTree = function(){
+					biggerTree.subTrees[(dir + 2)%4] = null;
+					biggerTree.checkContent();
+				};
 				getParentTree = function(){return biggerTree;};
 				return biggerTree;
 			};
+			var count = function(){
+				var result = 0;
+				subTrees.map(function(t){
+					if(t != null){
+						if(size == 1){
+							result++;
+						}else{
+							result += t.count();
+						}
+					}
+				});
+				return result;
+			};
 			var add = function(xx,yy){
 				var dir = getDirection(xx - x, yy - y);
-				var subTree = subTrees[dir] = subTrees[dir] || makeTreeInDirection(dir);
+				var subTree = getTreeInDirection(dir);
 				if(size == 1){
 					return subTree;
 				}
@@ -102,6 +173,8 @@
 				size:size,
 				subTrees:subTrees,
 				contains:contains,
+				checkContent:checkContent,
+				count:count,
 				add:add,
 				makeBiggerTreeInDirection:makeBiggerTreeInDirection,
 				findNeighborsOfForChildTree:findNeighborsOfForChildTree,
@@ -109,12 +182,25 @@
 			};
 			return self;
 		};
-		var makeBiggerTree = function(t){
-			var newT = tree(0,0,2 * t.size);
+		var createNeighborsOf = function(x,y){
+			add(x-1,y-1);
+			add(x-1,y);
+			add(x-1,y+1);
+			add(x,y-1);
+			add(x,y+1);
+			add(x+1,y-1);
+			add(x+1,y);
+			add(x+1,y+1);
+		};
+		var makeBiggerTree = function(t, forgetBiggerTree){
+			var newT = tree(0,0,2 * t.size, null, forgetBiggerTree);
 			var getParent = function(){return newT;};
 			t.subTrees.map(function(st,i){
 				if(st){
-					newT.subTrees[i] = st.makeBiggerTreeInDirection(i, getParent);
+					newT.subTrees[i] = st.makeBiggerTreeInDirection(i, getParent, function(){
+						newT.subTrees[i] = null;
+						newT.checkContent();
+					});
 				}
 			});
 			return newT;
@@ -124,10 +210,13 @@
 				currentTree = tree(0,0,1);
 			};
 			while(!currentTree.contains(x,y)){
-				currentTree = makeBiggerTree(currentTree);
+				currentTree = makeBiggerTree(currentTree, function(){
+					currentTree = null;
+				});
 			}
 			return currentTree.add(x,y);
 		};
+		add.count = function(){return currentTree ? currentTree.count() : 0;};
 		return add;
 	};
 	var test = function(name, t){
@@ -170,5 +259,28 @@
 		this.assert(two.neighbors.indexOf(three) == -1);
 		this.assert(three.neighbors.indexOf(two) == -1);
 	});
+	test('testForget',function(){
+		var position = positionFactory();
+		var p = position(5,5);
+		this.assert(position.count() == 1);
+		p.forget();
+		this.assert(position.count() == 0);
+	});
+	test('testNeighbors',function(){
+		var position = positionFactory();
+		var p1 = position(5,5);
+		var p2 = position(4,4);
+		this.assert(p1.neighbors.length == 1);
+	});
+	test('testOccupyVacate',function(){
+		var position = positionFactory();
+		var p = position(5,5);
+		this.assert(position.count() == 1);
+		p.occupy();
+		this.assert(position.count() == 9);
+		this.assert(p.neighbors.length == 8);
+		p.vacate();
+		this.assert(position.count() == 0);
+	})
 })();
 
