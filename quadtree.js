@@ -1,5 +1,5 @@
 (function(){
-	var positionFactory = function(){
+	var positionFactory = function(positionToMousePosition, fillRect){
 		var direction = {
 			NORTHEAST:0,
 			NORTHWEST:1,
@@ -100,6 +100,11 @@
 						occupied = true;
 						createNeighborsOf(x,y);
 					},
+					draw:function(){
+						if(!occupied){return;}
+						var mousePosition = positionToMousePosition(this);
+						fillRect(mousePosition.x,mousePosition.y);
+					},
 					isOccupied:function(){return occupied;},
 					vacate:function(){
 						occupied = false;
@@ -110,6 +115,15 @@
 						if(this.hasNoOccupiedNeighbors()){
 							this.forget();
 						}
+					},
+					numberOfLiveNeighbors:function(){
+						var n = 0;
+						for(var i=0;i<this.neighbors.length;i++){
+							if(this.neighbors[i].isOccupied()){
+								n++;
+							}
+						}
+						return n;
 					},
 					forgetNeighbor:function(p){
 						var index = this.neighbors.indexOf(p);
@@ -148,6 +162,11 @@
 				getParentTree = function(){return biggerTree;};
 				return biggerTree;
 			};
+			var draw = function(){
+				subTrees.map(function(t){
+					if(t != null){t.draw();}
+				});
+			};
 			var count = function(){
 				var result = 0;
 				subTrees.map(function(t){
@@ -176,6 +195,7 @@
 				checkContent:checkContent,
 				count:count,
 				add:add,
+				draw:draw,
 				makeBiggerTreeInDirection:makeBiggerTreeInDirection,
 				findNeighborsOfForChildTree:findNeighborsOfForChildTree,
 				findNeighborsOf:findNeighborsOf
@@ -219,6 +239,7 @@
 		add.count = function(){return currentTree ? currentTree.count() : 0;};
 		return add;
 	};
+	window.quadTreePositionFactory = positionFactory;
 	var test = function(name, t){
 		var fail = function(msg, e){
 			console.error(name+" failed: "+msg);
