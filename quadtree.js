@@ -37,6 +37,9 @@
 			subTrees[direction.SOUTHWEST] = null;
 			subTrees[direction.SOUTHEAST] = null;
 			var contains = function(xx,yy){return xx >= minX && xx <= maxX && yy >= minY && yy <= maxY;};
+			var isOutsideBox = function(box){
+				return box.maxX < minX || box.minX > maxX || box.maxY < minY || box.minY > maxY;
+			};
 			var getTreeInDirection = function(dir){
 				var result;
 				if(result = subTrees[dir]){return result;}
@@ -217,6 +220,26 @@
 				}
 				return subTree.getIfExistsOnXY(xx,yy);
 			};
+			var getAllInBox = function(box){
+				var all = [];
+				if(isOutsideBox(box)){
+					return all;
+				}
+				subTrees.map(function(t){
+					if(t != null){
+						if(size == 1){
+							if(t.x >= box.minX && t.x <= box.maxX && t.y >= box.minY && t.y <= box.maxY){
+								all.push(t);
+							}
+						}else{
+							t.getAllInBox(box).map(function(p){
+								all.push(p);
+							});
+						}
+					}
+				});
+				return all;
+			};
 			self = {
 				size:size,
 				subTrees:subTrees,
@@ -225,6 +248,8 @@
 				checkContent:checkContent,
 				countAll:countAll,
 				getIfExistsOnXY:getIfExistsOnXY,
+				isOutsideBox:isOutsideBox,
+				getAllInBox:getAllInBox,
 				add:add,
 				draw:draw,
 				makeBiggerTreeInDirection:makeBiggerTreeInDirection,
@@ -270,6 +295,10 @@
 		add.countAll = function(){return currentTree ? currentTree.countAll() : 0;};
 		add.countAlive = function(){return currentTree ? currentTree.countOccupied() : 0;};
 		add.getIfExistsOnXY = function(x,y){return currentTree ? currentTree.getIfExistsOnXY(x,y) : null;};
+		add.getAllInBox = function(box){return currentTree ? currentTree.getAllInBox(box) : [];};
+		add.draw = function(){
+			currentTree && currentTree.draw();
+		};
 		return add;
 	};
 	window.quadTreePositionFactory = positionFactory;
