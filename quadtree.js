@@ -167,14 +167,29 @@
 					if(t != null){t.draw();}
 				});
 			};
-			var count = function(){
+			var countAll = function(){
 				var result = 0;
 				subTrees.map(function(t){
 					if(t != null){
 						if(size == 1){
 							result++;
 						}else{
-							result += t.count();
+							result += t.countAll();
+						}
+					}
+				});
+				return result;
+			};
+			var countOccupied = function(){
+				var result = 0;
+				subTrees.map(function(t){
+					if(t != null){
+						if(size == 1){
+							if(t.isOccupied()){
+								result++;
+							}
+						}else{
+							result += t.countOccupied();
 						}
 					}
 				});
@@ -188,12 +203,28 @@
 				}
 				return subTree.add(xx,yy);
 			};
+			var getIfExistsOnXY = function(xx,yy){
+				if(!contains(xx,yy)){
+					return null;
+				}
+				var dir = getDirection(xx - x, yy - y);
+				var subTree = subTrees[dir];
+				if(!subTree){
+					return null;
+				}
+				if(size == 1){
+					return subTree;
+				}
+				return subTree.getIfExistsOnXY(xx,yy);
+			};
 			self = {
 				size:size,
 				subTrees:subTrees,
 				contains:contains,
+				countOccupied:countOccupied,
 				checkContent:checkContent,
-				count:count,
+				countAll:countAll,
+				getIfExistsOnXY:getIfExistsOnXY,
 				add:add,
 				draw:draw,
 				makeBiggerTreeInDirection:makeBiggerTreeInDirection,
@@ -236,7 +267,9 @@
 			}
 			return currentTree.add(x,y);
 		};
-		add.count = function(){return currentTree ? currentTree.count() : 0;};
+		add.countAll = function(){return currentTree ? currentTree.countAll() : 0;};
+		add.countAlive = function(){return currentTree ? currentTree.countOccupied() : 0;};
+		add.getIfExistsOnXY = function(x,y){return currentTree ? currentTree.getIfExistsOnXY(x,y) : null;};
 		return add;
 	};
 	window.quadTreePositionFactory = positionFactory;
@@ -283,9 +316,9 @@
 	test('testForget',function(){
 		var position = positionFactory();
 		var p = position(5,5);
-		this.assert(position.count() == 1);
+		this.assert(position.countAll() == 1);
 		p.forget();
-		this.assert(position.count() == 0);
+		this.assert(position.countAll() == 0);
 	});
 	test('testNeighbors',function(){
 		var position = positionFactory();
@@ -296,17 +329,23 @@
 	test('testOccupyVacate',function(){
 		var position = positionFactory();
 		var p = position(5,5);
-		this.assert(position.count() == 1);
+		this.assert(position.countAll() == 1);
 		var q = position(6,6);
 		this.assert(p.neighbors.indexOf(q) > -1);
 		p.occupy();
-		this.assert(position.count() == 9);
+		this.assert(position.countAll() == 9);
 		q.occupy();
-		this.assert(position.count() == 14);
+		this.assert(position.countAll() == 14);
 		q.vacate();
-		this.assert(position.count() == 9);
+		this.assert(position.countAll() == 9);
 		p.vacate();
-		this.assert(position.count() == 0);
-	})
+		this.assert(position.countAll() == 0);
+	});
+	test('testGetIfExists', function(){
+		var position = positionFactory();
+		var p = position(3,3);
+		this.assert(position.getIfExistsOnXY(3,3) == p);
+		this.assert(position.getIfExistsOnXY(3,4) == null);
+	});
 })();
 
