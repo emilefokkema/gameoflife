@@ -40,6 +40,9 @@
 			var isOutsideBox = function(box){
 				return box.maxX < minX || box.minX > maxX || box.maxY < minY || box.minY > maxY;
 			};
+			var containsNoNeighborOf = function(xx,yy){
+				return xx < minX - 1 || xx > maxX + 1 || yy < minY - 1 || yy > maxY + 1;
+			};
 			var getTreeInDirection = function(dir){
 				var result;
 				if(result = subTrees[dir]){return result;}
@@ -61,6 +64,7 @@
 				}
 			};
 			var findNeighborsOf = function(x,y,soFar){
+				if(containsNoNeighborOf(x,y)){return;}
 				if(size == 1){
 					subTrees.map(function(p){
 						if(p!=null&&Math.abs(x - p.x) < 2 && Math.abs(y - p.y) < 2){
@@ -170,6 +174,26 @@
 					if(t != null){t.draw();}
 				});
 			};
+			var getDiagnosis = function(positionsToVacate, positionsToOccupy){
+				subTrees.map(function(t){
+					if(t!=null){
+						if(size == 1){
+							var liveNeighbors = t.numberOfLiveNeighbors();
+							if(t.isOccupied()){
+								if(liveNeighbors < 2 || liveNeighbors > 3){
+									positionsToVacate.push(t);
+								}
+							}else{
+								if(liveNeighbors == 3){
+									positionsToOccupy.push(t);
+								}
+							}
+						}else{
+							t.getDiagnosis(positionsToVacate, positionsToOccupy);
+						}
+					}
+				});
+			};
 			var countAll = function(){
 				var result = 0;
 				subTrees.map(function(t){
@@ -183,20 +207,22 @@
 				});
 				return result;
 			};
-			var countOccupied = function(){
-				var result = 0;
+			var getAllOccupiedPositions = function(){
+				var all = [];
 				subTrees.map(function(t){
 					if(t != null){
 						if(size == 1){
 							if(t.isOccupied()){
-								result++;
+								all.push(t);
 							}
 						}else{
-							result += t.countOccupied();
+							t.getAllOccupiedPositions().map(function(p){
+								all.push(p);
+							});
 						}
 					}
 				});
-				return result;
+				return all;
 			};
 			var add = function(xx,yy){
 				var dir = getDirection(xx - x, yy - y);
@@ -244,12 +270,13 @@
 				size:size,
 				subTrees:subTrees,
 				contains:contains,
-				countOccupied:countOccupied,
+				getAllOccupiedPositions:getAllOccupiedPositions,
 				checkContent:checkContent,
 				countAll:countAll,
 				getIfExistsOnXY:getIfExistsOnXY,
 				isOutsideBox:isOutsideBox,
 				getAllInBox:getAllInBox,
+				getDiagnosis:getDiagnosis,
 				add:add,
 				draw:draw,
 				makeBiggerTreeInDirection:makeBiggerTreeInDirection,
@@ -293,11 +320,28 @@
 			return currentTree.add(x,y);
 		};
 		add.countAll = function(){return currentTree ? currentTree.countAll() : 0;};
-		add.countAlive = function(){return currentTree ? currentTree.countOccupied() : 0;};
+		add.countAlive = function(){return currentTree ? currentTree.getAllOccupiedPositions().length : 0;};
 		add.getIfExistsOnXY = function(x,y){return currentTree ? currentTree.getIfExistsOnXY(x,y) : null;};
 		add.getAllInBox = function(box){return currentTree ? currentTree.getAllInBox(box) : [];};
 		add.draw = function(){
 			currentTree && currentTree.draw();
+		};
+		add.vacateAll = function(){
+			currentTree && currentTree.getAllOccupiedPositions().map(function(p){p.vacate();});
+		};
+		add.getDiagnosis = function(){
+			var positionsToVacate = [];
+			var positionsToOccupy = [];
+			if(currentTree){
+				currentTree.getDiagnosis(positionsToVacate, positionsToOccupy);
+			}
+			return {
+				positionsToVacate:positionsToVacate,
+				positionsToOccupy:positionsToOccupy
+			};
+		};
+		add.getCurrentTreeSize = function(){
+			return currentTree ? currentTree.size : 0;
 		};
 		return add;
 	};

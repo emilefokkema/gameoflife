@@ -43,7 +43,6 @@
 </head>
 <body style="padding:0px;margin:0px"></body>
 <script src="quadtree.js"></script>
-<script src="columns.js"></script>
 <script>
 (function(){
 	
@@ -298,7 +297,7 @@
 				y:(p.y + yShift) * size
 			};
 		},
-		position = columnPositionFactory(positionToMousePosition, fillRect),
+		position = quadTreePositionFactory(positionToMousePosition, fillRect),
 		drawHorizontalLine = function(y){
 			context.beginPath();
 			context.moveTo(0,y);
@@ -404,10 +403,12 @@
 	window.health = function(){
 		var all = position.countAll();
 		var alive = position.countAlive();
+		var treeSize = position.getCurrentTreeSize();
 		return {
 			all:all,
 			alive:alive,
-			ratio:all/alive
+			ratio:all/alive,
+			treeSize: treeSize
 		};
 	};
 	window.alive = function(x,y){position(x,y).occupy();};
