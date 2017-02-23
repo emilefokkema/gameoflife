@@ -172,6 +172,16 @@
 					}
 					drawAll();
 				}));
+				remove.push(menu.addOption('random', function(){
+					for(var x=minX;x<=maxX;x++){
+						for(var y=minY;y<=maxY;y++){
+							if(Math.random()<0.5){
+								position(x,y).occupy();
+							}
+						}
+					}
+					drawAll();
+				}));
 				return function(){
 					remove.map(function(f){f();});
 					remove = [];

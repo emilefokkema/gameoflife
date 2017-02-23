@@ -254,7 +254,7 @@
 				subTrees.map(function(t){
 					if(t != null){
 						if(size == 1){
-							if(t.x >= box.minX && t.x <= box.maxX && t.y >= box.minY && t.y <= box.maxY){
+							if(t.isOccupied() && t.x >= box.minX && t.x <= box.maxX && t.y >= box.minY && t.y <= box.maxY){
 								all.push(t);
 							}
 						}else{
