@@ -2,6 +2,14 @@
 <head>
 	<style>
 		body{overflow: hidden;}
+		.step-count {
+			position: absolute;
+			top:10px;
+			left:10px;
+			color:#000;
+			font-family: monospace;
+			font-size: 20px;
+		}
 		.menu{
 			position:absolute;
 			display:none;
@@ -335,11 +343,21 @@
 			}
 		},
 		going = false,
-		interval,
+		drawingInterval,
+		setCounterInterval,
+		setCounter = (function(){
+			var a = document.createElement('a');
+			a.setAttribute('class','step-count');
+			document.body.appendChild(a);
+			return function(){
+				a.innerHTML = stepCount;
+			};
+		})(),
 		stop = function(){
 			going = false;
-			console.log("stopping at " + stepCount);
-			window.clearInterval(interval);
+			window.clearInterval(drawingInterval);
+			window.clearInterval(setCounterInterval);
+			setCounter();
 		},
 		go = function(onStop){
 			var sstop = function(){
@@ -347,10 +365,11 @@
 				onStop && onStop();
 			};
 			going = true;
-			interval = window.setInterval(function(){
+			drawingInterval = window.setInterval(function(){
 				doStep(sstop);
 				drawAll();
 			},50);
+			setCounterInterval = window.setInterval(setCounter, 250);
 		},
 		parseRLEBody = function(body, occupy){
 			var parts = body.replace(/\s*/g,"").match(/\d*[bo\$]/g);
@@ -400,7 +419,7 @@
 	setSize(15);
 	readHash();
 	drawAll();
-
+	setCounter();
 	window.go = go;
 	var zoomOut = function(){clear();zoom(0.5);drawAll();};
 	var zoomIn = function(){clear();zoom(2);drawAll();};
@@ -454,7 +473,7 @@
 		if(e.key == "ArrowDown"){
 			down();
 		}
-		if(e.key == "g"){
+		if(e.key == " "){
 			if(going){
 				stop();
 			}else{
@@ -464,12 +483,13 @@
 		if(e.key == "c"){
 			position.vacateAll();
 			stepCount = 0;
+			setCounter();
 			drawAll();
 		}
 		if(e.key == "s"){
 			doStep();
 			drawAll();
-			console.log("now at step "+stepCount);
+			setCounter();
 		}
 	});
 })();
