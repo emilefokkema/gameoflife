@@ -107,6 +107,16 @@
 						occupied = true;
 						createNeighborsOf(x,y);
 					},
+					makeBiggerTreeInDirection:function(dir, getParent, forgetBiggerTree){
+						var point = pointInDirection[dir];
+						var biggerTree = tree(x + (1 + point.x)/2, y + (1+ point.y)/2, 1, getParent, forgetBiggerTree);
+						biggerTree.subTrees[(dir + 2)%4] = this;
+						forgetPosition = function(){
+							biggerTree.subTrees[(dir + 2)%4] = null;
+							biggerTree.checkContent();
+						};
+						return biggerTree;
+					},
 					draw:function(){
 						if(!occupied){return;}
 						var mousePosition = positionToMousePosition(this);

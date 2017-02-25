@@ -149,28 +149,41 @@
 		})(),
 		selection = (function(){
 			var present = false, removeMenuOption = null, minX, minY, maxX, maxY;
-			var addMenuOptions = function(){
-				var remove = [];
-				remove.push(menu.addOption('log selection',
-					function(){
-						console.log(position.getAllInBox({
-							minX:minX,
-							maxX:maxX,
-							minY:minY,
-							maxY:maxY
-						}));
-					}));
-				remove.push(menu.addOption('copy',function(x,y){
-					var positions = position.getAllInBox({
+			var getPositions = function(){
+				return position.getAllInBox({
 							minX:minX,
 							maxX:maxX,
 							minY:minY,
 							maxY:maxY
 						});
-					clipboard.copy(positions.map(function(p){return {
-							x: p.x - minX,
-							y: p.y - minY
-						};}));
+			};
+			var copyPositions = function(positions){
+				clipboard.copy(positions.map(function(p){return {
+						x: p.x - minX,
+						y: p.y - minY
+					};}));
+			};
+			var addMenuOptions = function(){
+				var remove = [];
+				remove.push(menu.addOption('make RLE',
+					function(){
+						input(function(){
+							clear();
+							drawAll();
+						},makeRLE(getPositions()));
+					}));
+				remove.push(menu.addOption('copy',function(x,y){
+					var positions = getPositions();
+					copyPositions(positions);
+					clear();
+					drawAll();
+				}));
+				remove.push(menu.addOption('cut',function(){
+					var positions = getPositions();
+					copyPositions(positions);
+					positions.map(function(p){p.vacate();});
+					clear();
+					drawAll();
 				}));
 				remove.push(menu.addOption('alive', function(){
 					for(var x=minX;x<=maxX;x++){
@@ -178,6 +191,12 @@
 							position(x,y).occupy();
 						}
 					}
+					clear();
+					drawAll();
+				}));
+				remove.push(menu.addOption('dead', function(){
+					getPositions().map(function(p){p.vacate();});
+					clear();
 					drawAll();
 				}));
 				remove.push(menu.addOption('random', function(){
@@ -188,6 +207,7 @@
 							}
 						}
 					}
+					clear();
 					drawAll();
 				}));
 				return function(){
@@ -249,9 +269,12 @@
 			button.setAttribute('value','OK');
 			div.appendChild(text);
 			div.appendChild(button);
-			var show = function(){
+			var show = function(initialText){
 				open = true;
 				div.style.display = 'initial';
+				if(initialText){
+					text.value = initialText;
+				}
 			};
 			var hide = function(){
 				open = false;
@@ -263,8 +286,8 @@
 				handler(text.value);
 			});
 			hide();
-			var f = function(resultHandler){
-				show();
+			var f = function(resultHandler, initialText){
+				show(initialText);
 				handler = function(v){
 					hide();
 					resultHandler(v);
@@ -390,12 +413,87 @@
 				}
 			});
 		},
+		makeRLE = function(positions){
+			var lines = [];
+			var getLineForY = function(y){
+				var result = null;
+				for(var i=0;i<lines.length;i++){
+					if(lines[i].y == y){
+						result = lines[i];
+					}
+				}
+				return result;
+			};
+			var findLineForPosition = function(p){
+				var result = getLineForY(p.y);
+				if(!result){
+					result = {y:p.y,positions:[]};
+					lines.push(result);
+				}
+				return result;
+			};
+			positions.map(function(p){
+				findLineForPosition(p).positions.push(p.x);
+			});
+			lines.sort(function(l1,l2){return l1.y - l2.y;});
+			var ys = lines.map(function(l){return l.y;});
+			var minY = Math.min.apply(null, ys);
+			var maxY = Math.max.apply(null, ys);
+			var lineMinX = function(l){return Math.min.apply(null, l.positions);};
+			var lineMaxX = function(l){return Math.max.apply(null, l.positions);};
+			var minX = Math.min.apply(null, lines.map(lineMinX));
+			var maxX = Math.max.apply(null, lines.map(lineMaxX));
+			var result = (function(){
+				var kind = {ALIVE:0,DEAD:1,NEWLINE:2};
+				var symbol = [];
+				symbol[kind.ALIVE] = "o";
+				symbol[kind.DEAD] = "b";
+				symbol[kind.NEWLINE] = "$";
+				var currentKind = -1;
+				var all = [];
+				var latest = null;
+				var pushKind = function(k){
+					if(k != currentKind){
+						latest = {kind:k,count:0};
+						all.push(latest);
+					}
+					currentKind = k;
+					latest.count++;
+				};
+				var toString = function(){
+					return all.map(function(k){return ""+(k.count > 1 ? k.count : "")+symbol[k.kind];}).join("");
+				};
+				return {
+					alive:function(){pushKind(kind.ALIVE);},
+					dead:function(){pushKind(kind.DEAD);},
+					newLine:function(){pushKind(kind.NEWLINE);},
+					toString:toString
+				};
+			})();
+
+			for(var y=minY;y<=maxY;y++){
+				var line = getLineForY(y);
+				if(line){
+					for(var x=minX;x<=maxX;x++){
+						if(line.positions.indexOf(x) > -1){
+							result.alive();
+						}else{
+							result.dead();
+						}
+					}
+				}
+				result.newLine();
+			}
+			return result.toString();
+		},
 		readHash = function(){
 			var hash = window.location.hash;
 			if(!hash){
 				return;
 			}
-			parseRLEBody(hash.substr(1), function(x,y){position(x,y).occupy()});
+			parseRLEBody(hash.substr(1), function(x,y){
+				position(x,y).occupy()
+			});
 		},
 		drawAll = function(){
 			clear();
