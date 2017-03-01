@@ -2,6 +2,34 @@
 <head>
 	<style>
 		body{overflow: hidden;}
+		.snapshots{
+			position: absolute;
+			right: 0px;
+			top:0px;
+			width:20px;
+			height: 100%;
+			background-color: rgba(0,0,0,0.5);
+			overflow-y: hidden;
+			overflow-x:hidden;
+		}
+		.snapshots:hover{
+			width:150px;
+			overflow-y: scroll;
+			padding-left: 10px;
+			padding-right: 20px;
+		}
+		.snapshot {
+			width:150px;
+			height: 150px;
+			border:1pt solid #000;
+			background-color: #fff;
+			margin-top:10px;
+			display: none;
+			cursor: pointer;
+		}
+		.snapshots:hover .snapshot{
+			display: block;
+		}
 		.step-count {
 			position: absolute;
 			top:10px;
@@ -339,6 +367,67 @@
 			};
 		},
 		position = quadTreePositionFactory(positionToMousePosition, fillRect),
+		snapshots = (function(){
+			var snapshotWidth = 150, snapshotHeight = 150;
+			var makeSnapshot = function(positions, forget){
+				var minX = Math.min.apply(null, positions.map(function(p){return p.x;})),
+					maxX = Math.max.apply(null, positions.map(function(p){return p.x;})),
+					minY = Math.min.apply(null, positions.map(function(p){return p.y;})),
+					maxY = Math.max.apply(null, positions.map(function(p){return p.y;})),
+				positions = positions.map(function(p){
+					return {x:p.x-minX,y:p.y-minY};
+				});
+				var draw = function(ctx){
+					var cellSize = Math.min(snapshotWidth / (maxX - minX + 1), snapshotHeight / (maxY - minY + 1));
+					positions.map(function(p){
+						ctx.fillRect(p.x * cellSize, p.y * cellSize, cellSize, cellSize);
+					});
+				};
+				var restore = function(){
+					position.vacateAll();
+					stepCount = 0;
+					setCounter();
+					positions.map(function(p){
+						position(p.x,p.y).occupy();
+					});
+					drawAll();
+				};
+				return {
+					draw:draw,
+					restore:restore,
+					forget:forget
+				};
+			};
+			var container = document.createElement('div');
+			container.setAttribute('class','snapshots');
+			document.body.appendChild(container);
+			var add = function(positions){
+				var s = document.createElement('div');
+				s.setAttribute('class','snapshot');
+				container.appendChild(s);
+				var canvas = document.createElement('canvas');
+				canvas.setAttribute('width',snapshotWidth);
+				canvas.setAttribute('height',snapshotHeight);
+				s.appendChild(canvas);
+				var newSnapshot = makeSnapshot(positions, function(){
+					container.removeChild(s);
+				});
+				var context = canvas.getContext("2d");
+				context.fillStyle = '#000';
+				newSnapshot.draw(context);
+				s.addEventListener('click',function(){
+					newSnapshot.restore();
+				});
+				s.addEventListener('contextmenu',function(e){
+					e.preventDefault();
+					newSnapshot.forget();
+					return false;
+				});
+			};
+			return {
+				add:add
+			};
+		})(),
 		drawHorizontalLine = function(y){
 			context.beginPath();
 			context.moveTo(0,y);
@@ -588,6 +677,9 @@
 			doStep();
 			drawAll();
 			setCounter();
+		}
+		if(e.key == "r"){
+			snapshots.add(position.getAllAlive());
 		}
 	});
 })();

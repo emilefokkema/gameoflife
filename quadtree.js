@@ -330,6 +330,7 @@
 			return currentTree.add(x,y);
 		};
 		add.countAll = function(){return currentTree ? currentTree.countAll() : 0;};
+		add.getAllAlive = function(){return currentTree ? currentTree.getAllOccupiedPositions() : [];};
 		add.countAlive = function(){return currentTree ? currentTree.getAllOccupiedPositions().length : 0;};
 		add.getIfExistsOnXY = function(x,y){return currentTree ? currentTree.getIfExistsOnXY(x,y) : null;};
 		add.getAllInBox = function(box){return currentTree ? currentTree.getAllInBox(box) : [];};
