@@ -21,11 +21,37 @@
 		.snapshot {
 			width:150px;
 			height: 150px;
-			border:1pt solid #000;
 			background-color: #fff;
 			margin-top:10px;
 			display: none;
+			position: relative;
+		}
+		.snapshot:hover .snapshot-layover{
+			display: block;
+		}
+		.snapshot-option{
+			width: 73px;
+			height: 30px;
+			display: inline-block;
+			margin: 0px;
 			cursor: pointer;
+			background-color: #fff;
+			font-size: 10px;
+			font-family: Verdana;
+			color: #000;
+			border: 1pt solid #000;
+		}
+		.snapshot-option:hover{
+			background-color: #aaa;
+		}
+		.snapshot-layover{
+			display: none;
+			background-color: rgba(255,255,255,0.5);
+			position: absolute;
+			left: 0px;
+			top:0px;
+			width: 100%;
+			height: 100%;
 		}
 		.snapshots:hover .snapshot{
 			display: block;
@@ -189,16 +215,13 @@
 				clipboard.copy(positions.map(function(p){return {
 						x: p.x - minX,
 						y: p.y - minY
-					};}));
+					};}), true);
 			};
 			var addMenuOptions = function(){
 				var remove = [];
 				remove.push(menu.addOption('make RLE',
 					function(){
-						input(function(){
-							clear();
-							drawAll();
-						},makeRLE(getPositions()));
+						alert(makeRLE(getPositions()));
 					}));
 				remove.push(menu.addOption('copy',function(x,y){
 					var positions = getPositions();
@@ -324,6 +347,12 @@
 			f.isOpen = function(){return open;};
 			return f;
 		})(),
+		alert = function(text){
+			input(function(){
+				clear();
+				drawAll();
+			},text);
+		},
 		clipboard = (function(){
 			var relativePositions, removeMenuOption;
 			var paste = function(x, y){
@@ -332,9 +361,12 @@
 				});
 				drawAll();
 			};
-			var copy = function(_relativePositions){
+			var copy = function(_relativePositions, makeSnapshot){
 				relativePositions = _relativePositions;
 				!removeMenuOption && (removeMenuOption = menu.addOption('paste', paste));
+				if(makeSnapshot){
+					snapshots.add(_relativePositions);
+				}
 			};
 			
 			return {copy:copy};
@@ -392,15 +424,26 @@
 					});
 					drawAll();
 				};
+				var copyToClipboard = function(){
+					clipboard.copy(positions);
+				};
 				return {
 					draw:draw,
 					restore:restore,
-					forget:forget
+					forget:forget,
+					copyToClipboard:copyToClipboard
 				};
 			};
 			var container = document.createElement('div');
 			container.setAttribute('class','snapshots');
 			document.body.appendChild(container);
+			var addSnapshotOption = function(layover, name, toDo){
+				var option = document.createElement('div');
+				option.setAttribute('class','snapshot-option');
+				option.appendChild(document.createTextNode(name));
+				option.addEventListener('click',toDo);
+				layover.appendChild(option);
+			};
 			var add = function(positions){
 				var s = document.createElement('div');
 				s.setAttribute('class','snapshot');
@@ -415,13 +458,20 @@
 				var context = canvas.getContext("2d");
 				context.fillStyle = '#000';
 				newSnapshot.draw(context);
-				s.addEventListener('click',function(){
+				var layover = document.createElement('div');
+				layover.setAttribute('class','snapshot-layover');
+				s.appendChild(layover);
+				addSnapshotOption(layover, 'restore',function(){
 					newSnapshot.restore();
 				});
-				s.addEventListener('contextmenu',function(e){
-					e.preventDefault();
+				addSnapshotOption(layover, 'copy',function(){
+					newSnapshot.copyToClipboard();
+				});
+				addSnapshotOption(layover, 'delete',function(){
 					newSnapshot.forget();
-					return false;
+				});
+				addSnapshotOption(layover, 'RLE',function(){
+					alert(makeRLE(positions));
 				});
 			};
 			return {
