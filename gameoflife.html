@@ -150,13 +150,16 @@
 					return;
 				}
 				menu.hide();
-				selection.clear();
-				var p = mousePositionToPosition(e.clientX, e.clientY);
-				
-				if(p.isOccupied()){
-					p.vacate();
+				if(selection.isPresent()){
+					selection.clear();
 				}else{
-					p.occupy();
+					var p = mousePositionToPosition(e.clientX, e.clientY);
+					
+					if(p.isOccupied()){
+						p.vacate();
+					}else{
+						p.occupy();
+					}
 				}
 				drawAll();
 			});
@@ -203,6 +206,7 @@
 		})(),
 		selection = (function(){
 			var present = false, removeMenuOption = null, minX, minY, maxX, maxY;
+			var direction = {UP:0,DOWN:1,LEFT:2,RIGHT:3};
 			var getPositions = function(){
 				return position.getAllInBox({
 							minX:minX,
@@ -304,10 +308,59 @@
 				removeMenuOption && removeMenuOption();
 				removeMenuOption = null;
 			};
+			var moveInDirection = function(dir){
+				if(!present){
+					return;
+				}
+				var selectedPositions = getPositions();
+				selectedPositions.map(function(p){
+					p.vacate();
+				});
+				selectedPositions.map(function(p){
+					if(dir == direction.UP){
+						position(p.x,p.y-1).occupy();
+					}else if(dir == direction.DOWN){
+						position(p.x,p.y+1).occupy();
+					}else if(dir == direction.LEFT){
+						position(p.x-1,p.y).occupy();
+					}else if(dir == direction.RIGHT){
+						position(p.x+1,p.y).occupy();
+					}
+				});
+				if(dir == direction.UP){
+					minY -= 1;
+					maxY -=1;
+				}
+				if(dir == direction.DOWN){
+					minY += 1;
+					maxY +=1;
+				}
+				if(dir == direction.LEFT){
+					minX -= 1;
+					maxX -=1;
+				}
+				if(dir == direction.RIGHT){
+					minX += 1;
+					maxX +=1;
+				}
+			};
 			return {
 				select:select,
 				draw:draw,
-				clear:clear
+				clear:clear,
+				moveLeft:function(){
+					moveInDirection(direction.LEFT);
+				},
+				moveRight:function(){
+					moveInDirection(direction.RIGHT);
+				},
+				moveUp:function(){
+					moveInDirection(direction.UP);
+				},
+				moveDown:function(){
+					moveInDirection(direction.DOWN);
+				},
+				isPresent:function(){return present;}
 			};
 		})(),
 		input = (function(){
@@ -402,25 +455,39 @@
 		snapshots = (function(){
 			var snapshotWidth = 150, snapshotHeight = 150;
 			var makeSnapshot = function(positions, forget){
-				var minX = Math.min.apply(null, positions.map(function(p){return p.x;})),
-					maxX = Math.max.apply(null, positions.map(function(p){return p.x;})),
-					minY = Math.min.apply(null, positions.map(function(p){return p.y;})),
-					maxY = Math.max.apply(null, positions.map(function(p){return p.y;})),
-				positions = positions.map(function(p){
-					return {x:p.x-minX,y:p.y-minY};
-				});
-				var draw = function(ctx){
+				var setPositions = function(){
+					minX = Math.min.apply(null, positions.map(function(p){return p.x;}));
+					maxX = Math.max.apply(null, positions.map(function(p){return p.x;}));
+					minY = Math.min.apply(null, positions.map(function(p){return p.y;}));
+					maxY = Math.max.apply(null, positions.map(function(p){return p.y;}));
+					positions = positions.map(function(p){
+						return {x:p.x-minX,y:p.y-minY};
+					});
+				};
+				var minX, maxX, minY, maxY, origMinX, origMinY;
+				setPositions();
+				origMinX = minX;
+				origMinY = minY;
+				var draw = function(canvas){
+					var ctx = canvas.getContext("2d");
+					ctx.fillStyle = '#000';
 					var cellSize = Math.min(snapshotWidth / (maxX - minX + 1), snapshotHeight / (maxY - minY + 1));
 					positions.map(function(p){
 						ctx.fillRect(p.x * cellSize, p.y * cellSize, cellSize, cellSize);
 					});
+				};
+				var flipHorizontal = function(){
+					positions = positions.map(function(p){
+						return {x:-p.x,y:p.y};
+					});
+					setPositions();
 				};
 				var restore = function(){
 					position.vacateAll();
 					stepCount = 0;
 					setCounter();
 					positions.map(function(p){
-						position(p.x,p.y).occupy();
+						position(origMinX + p.x,origMinY + p.y).occupy();
 					});
 					drawAll();
 				};
@@ -431,6 +498,7 @@
 					draw:draw,
 					restore:restore,
 					forget:forget,
+					flipHorizontal:flipHorizontal,
 					copyToClipboard:copyToClipboard
 				};
 			};
@@ -455,9 +523,8 @@
 				var newSnapshot = makeSnapshot(positions, function(){
 					container.removeChild(s);
 				});
-				var context = canvas.getContext("2d");
-				context.fillStyle = '#000';
-				newSnapshot.draw(context);
+				
+				newSnapshot.draw(canvas);
 				var layover = document.createElement('div');
 				layover.setAttribute('class','snapshot-layover');
 				s.appendChild(layover);
@@ -472,6 +539,11 @@
 				});
 				addSnapshotOption(layover, 'RLE',function(){
 					alert(makeRLE(positions));
+				});
+				addSnapshotOption(layover, 'flip h.',function(){
+					newSnapshot.flipHorizontal();
+					canvas.width = snapshotWidth;
+					newSnapshot.draw(canvas);
 				});
 			};
 			return {
@@ -660,10 +732,10 @@
 	window.go = go;
 	var zoomOut = function(){clear();zoom(0.5);drawAll();};
 	var zoomIn = function(){clear();zoom(2);drawAll();};
-	var left = function(){xShift += Math.floor(nx/4);drawAll();};
-	var right = function(){xShift -= Math.floor(nx/4);drawAll();};
-	var up = function(){yShift += Math.floor(ny/4);drawAll();};
-	var down = function(){yShift -= Math.floor(ny/4);drawAll();};
+	var left = function(){xShift += Math.floor(nx/4);};
+	var right = function(){xShift -= Math.floor(nx/4);};
+	var up = function(){yShift += Math.floor(ny/4);};
+	var down = function(){yShift -= Math.floor(ny/4);};
 	window.getStepCount = function(){return stepCount;};
 	window.resetStepCount = function(){stepCount = 0;}
 	window.health = function(){
@@ -699,16 +771,36 @@
 			zoomOut();
 		}
 		if(e.key == "ArrowLeft"){
-			left();
+			if(selection.isPresent()){
+				selection.moveLeft();
+			}else{
+				left();
+			}
+			drawAll();
 		}
 		if(e.key == "ArrowRight"){
-			right();
+			if(selection.isPresent()){
+				selection.moveRight();
+			}else{
+				right();
+			}
+			drawAll();
 		}
 		if(e.key == "ArrowUp"){
-			up();
+			if(selection.isPresent()){
+				selection.moveUp();
+			}else{
+				up();
+			}
+			drawAll();
 		}
 		if(e.key == "ArrowDown"){
-			down();
+			if(selection.isPresent()){
+				selection.moveDown();
+			}else{
+				down();
+			}
+			drawAll();
 		}
 		if(e.key == " "){
 			if(going){
