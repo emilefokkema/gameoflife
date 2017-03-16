@@ -66,32 +66,36 @@
 			var findNeighborsOf = function(x,y,soFar){
 				if(containsNoNeighborOf(x,y)){return;}
 				if(size == 1){
-					subTrees.map(function(p){
-						if(p!=null&&Math.abs(x - p.x) < 2 && Math.abs(y - p.y) < 2){
+					for(var i=0;i<4;i++){
+						var p = subTrees[i];
+						if(p != null&&Math.abs(x - p.x) < 2 && Math.abs(y - p.y) < 2){
 							soFar.push(p);
 						}
-					});
+					}
 				}else{
-					subTrees.map(function(t){
+					for(var i=0;i<4;i++){
+						var t = subTrees[i];
 						if(t != null){
 							t.findNeighborsOf(x,y,soFar);
 						}
-					});
+					}
 				}
 			};
 			var findNeighborsOfForChildTree = function(x,y,soFar,childTree){
 				if(size > 1){
-					subTrees.map(function(t){
+					for(var i=0;i<4;i++){
+						var t = subTrees[i];
 						if(t != childTree && t != null){
 							t.findNeighborsOf(x,y,soFar);
 						}
-					});
+					}
 				}else{
-					subTrees.map(function(p){
-						if(p!=childTree && p!=null&&Math.abs(x - p.x) < 2 && Math.abs(y - p.y) < 2){
+					for(var i=0;i<4;i++){
+						var p = subTrees[i];
+						if(p != childTree && p != null &&Math.abs(x - p.x) < 2 && Math.abs(y - p.y) < 2){
 							soFar.push(p);
 						}
-					});
+					}
 				}
 				if(getParentTree){
 					getParentTree().findNeighborsOfForChildTree(x,y,soFar,self);
@@ -180,13 +184,17 @@
 				return biggerTree;
 			};
 			var draw = function(){
-				subTrees.map(function(t){
-					if(t != null){t.draw();}
-				});
+				for(var i=0;i<4;i++){
+					var t = subTrees[i];
+					if(t != null){
+						t.draw();
+					}
+				}
 			};
 			var getDiagnosis = function(positionsToVacate, positionsToOccupy){
-				subTrees.map(function(t){
-					if(t!=null){
+				for(var i=0;i<4;i++){
+					var t = subTrees[i];
+					if(t != null){
 						if(size == 1){
 							var liveNeighbors = t.numberOfLiveNeighbors();
 							if(t.isOccupied()){
@@ -202,7 +210,7 @@
 							t.getDiagnosis(positionsToVacate, positionsToOccupy);
 						}
 					}
-				});
+				}
 			};
 			var countAll = function(){
 				var result = 0;
