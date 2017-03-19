@@ -482,6 +482,12 @@
 					});
 					setPositions();
 				};
+				var flipVertical = function(){
+					positions = positions.map(function(p){
+						return {x:p.x,y:-p.y};
+					});
+					setPositions();
+				};
 				var restore = function(){
 					position.vacateAll();
 					stepCount = 0;
@@ -499,6 +505,7 @@
 					restore:restore,
 					forget:forget,
 					flipHorizontal:flipHorizontal,
+					flipVertical:flipVertical,
 					copyToClipboard:copyToClipboard
 				};
 			};
@@ -542,6 +549,11 @@
 				});
 				addSnapshotOption(layover, 'flip h.',function(){
 					newSnapshot.flipHorizontal();
+					canvas.width = snapshotWidth;
+					newSnapshot.draw(canvas);
+				});
+				addSnapshotOption(layover, 'flip v.',function(){
+					newSnapshot.flipVertical();
 					canvas.width = snapshotWidth;
 					newSnapshot.draw(canvas);
 				});
