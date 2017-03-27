@@ -31,6 +31,7 @@
 			forgetTree = forgetTree || function(){};
 			var minX = x - size, maxX = x + size - 1, minY = y - size, maxY = y + size - 1;
 			var subTrees = [];
+			var environmentChanged = false;
 			var self;
 			subTrees[direction.NORTHEAST] = null;
 			subTrees[direction.NORTHWEST] = null;
@@ -110,6 +111,15 @@
 					occupy:function(){
 						occupied = true;
 						createNeighborsOf(x,y);
+						this.change();
+					},
+					notifyEnvironmentChanged:function(){
+						notifyEnvironmentChanged();
+					},
+					change:function(){
+						for(var i=0;i<this.neighbors.length;i++){
+							this.neighbors[i].notifyEnvironmentChanged();
+						}
 					},
 					makeBiggerTreeInDirection:function(dir, getParent, forgetBiggerTree){
 						var point = pointInDirection[dir];
@@ -135,6 +145,8 @@
 						}
 						if(this.hasNoOccupiedNeighbors()){
 							this.forget();
+						}else{
+							this.change();
 						}
 					},
 					numberOfLiveNeighbors:function(){
@@ -181,6 +193,7 @@
 					biggerTree.checkContent();
 				};
 				getParentTree = function(){return biggerTree;};
+				biggerTree.notifyEnvironmentChanged();
 				return biggerTree;
 			};
 			var draw = function(){
@@ -192,6 +205,7 @@
 				}
 			};
 			var getDiagnosis = function(positionsToVacate, positionsToOccupy){
+				if(!environmentChanged){return;}
 				for(var i=0;i<4;i++){
 					var t = subTrees[i];
 					if(t != null){
@@ -284,6 +298,21 @@
 				});
 				return all;
 			};
+			var setEnvironmentUnchanged = function(){
+				environmentChanged = false;
+				if(size == 1){return;}
+				for(var i=0;i<4;i++){
+					var t = subTrees[i];
+					if(t != null){
+						t.setEnvironmentUnchanged();
+					}
+				}
+			};
+			var notifyEnvironmentChanged = function(){
+				environmentChanged = true;
+				var parent = getParentTree && getParentTree();
+				parent && parent.notifyEnvironmentChanged();
+			};
 			self = {
 				size:size,
 				subTrees:subTrees,
@@ -293,6 +322,8 @@
 				countAll:countAll,
 				getIfExistsOnXY:getIfExistsOnXY,
 				isOutsideBox:isOutsideBox,
+				setEnvironmentUnchanged:setEnvironmentUnchanged,
+				notifyEnvironmentChanged:notifyEnvironmentChanged,
 				getAllInBox:getAllInBox,
 				getDiagnosis:getDiagnosis,
 				add:add,
@@ -353,6 +384,7 @@
 			var positionsToOccupy = [];
 			if(currentTree){
 				currentTree.getDiagnosis(positionsToVacate, positionsToOccupy);
+				currentTree.setEnvironmentUnchanged();
 			}
 			return {
 				positionsToVacate:positionsToVacate,
