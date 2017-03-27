@@ -138,6 +138,7 @@
 					},
 					isOccupied:function(){return occupied;},
 					vacate:function(){
+						this.change();
 						occupied = false;
 						var neighborWithoutOccupiedNeighbors;
 						while(neighborWithoutOccupiedNeighbors = this.neighbors.find(function(p){return !p.isOccupied() && p.hasNoOccupiedNeighbors();})){
@@ -145,8 +146,6 @@
 						}
 						if(this.hasNoOccupiedNeighbors()){
 							this.forget();
-						}else{
-							this.change();
 						}
 					},
 					numberOfLiveNeighbors:function(){
