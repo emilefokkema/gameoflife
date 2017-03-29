@@ -569,6 +569,7 @@
 			context.stroke();
 		},
 		stepCount = 0,
+		timeCount = 0,
 		doStep = function(stop, done){
 			try{
 				var diagnosis = position.getDiagnosis();
@@ -601,6 +602,8 @@
 		})(),
 		stop = function(){
 			going = false;
+			var timeDiff = +new Date() - timeCount;
+			console.log("time diff:", timeDiff);
 			window.clearInterval(setCounterInterval);
 			setCounter();
 		},
@@ -610,6 +613,7 @@
 				onStop && onStop();
 			};
 			going = true;
+			timeCount = +new Date();
 			var afterStep = function(){
 				drawAll();
 				if(going){
