@@ -308,6 +308,7 @@
 				}
 			};
 			var notifyEnvironmentChanged = function(){
+				if(environmentChanged){return;}
 				environmentChanged = true;
 				var parent = getParentTree && getParentTree();
 				parent && parent.notifyEnvironmentChanged();
