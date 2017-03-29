@@ -569,7 +569,7 @@
 			context.stroke();
 		},
 		stepCount = 0,
-		doStep = function(stop){
+		doStep = function(stop, done){
 			try{
 				var diagnosis = position.getDiagnosis();
 				var positionsToVacate = diagnosis.positionsToVacate;
@@ -582,6 +582,7 @@
 				}
 				positionsToOccupy.map(function(p){position(p.x,p.y).occupy();});
 				stepCount++;
+				done && done();
 			}catch(e){
 				stop && stop();
 				throw e;
@@ -589,7 +590,6 @@
 			}
 		},
 		going = false,
-		drawingInterval,
 		setCounterInterval,
 		setCounter = (function(){
 			var a = document.createElement('a');
@@ -601,7 +601,6 @@
 		})(),
 		stop = function(){
 			going = false;
-			window.clearInterval(drawingInterval);
 			window.clearInterval(setCounterInterval);
 			setCounter();
 		},
@@ -611,10 +610,15 @@
 				onStop && onStop();
 			};
 			going = true;
-			drawingInterval = window.setInterval(function(){
-				doStep(sstop);
+			var afterStep = function(){
 				drawAll();
-			},50);
+				if(going){
+					window.setTimeout(function(){
+						doStep(sstop, afterStep);
+					},50);
+				}
+			};
+			afterStep();
 			setCounterInterval = window.setInterval(setCounter, 250);
 		},
 		parseRLEBody = function(body, occupy){
