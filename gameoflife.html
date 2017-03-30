@@ -750,12 +750,6 @@
 	drawAll();
 	setCounter();
 	window.go = go;
-	var zoomOut = function(){clear();zoom(0.5);drawAll();};
-	var zoomIn = function(){clear();zoom(2);drawAll();};
-	var left = function(){xShift += Math.floor(nx/4);};
-	var right = function(){xShift -= Math.floor(nx/4);};
-	var up = function(){yShift += Math.floor(ny/4);};
-	var down = function(){yShift -= Math.floor(ny/4);};
 	window.getStepCount = function(){return stepCount;};
 	window.resetStepCount = function(){stepCount = 0;}
 	window.health = function(){
@@ -782,67 +776,198 @@
 		});
 		clipboard.copy(relativePositions);
 	};
+	var actions = [
+		{
+			events:[
+				{
+					name:"keydown",
+					condition:function(e){return e.key == "+" || e.key == "-";},
+					value:function(e){
+						if(e.key == "+"){
+							return 2;
+						}
+						return 0.5;
+					}
+				},
+				{
+					name:"wheel",
+					condition:function(){return true;},
+					value:function(e){
+						return Math.pow(2, -e.deltaY / 400);
+					}
+				}
+			],
+			action:function(v){
+				clear();
+				zoom(v);
+				drawAll();
+			}
+		},
+		{
+			events:[
+				{
+					name:"keydown",
+					condition:function(e){return !selection.isPresent() && e.key == "ArrowLeft";}
+				}
+			],
+			action:function(){
+				xShift += Math.floor(nx/4);
+				drawAll();
+			}
+		},
+		{
+			events:[
+				{
+					name:"keydown",
+					condition:function(e){return selection.isPresent() && e.key == "ArrowLeft";}
+				}
+			],
+			action:function(){
+				selection.moveLeft();
+				drawAll();
+			}
+		},
+		{
+			events:[
+				{
+					name:"keydown",
+					condition:function(e){return !selection.isPresent() && e.key == "ArrowRight";}
+				}
+			],
+			action:function(){
+				xShift -= Math.floor(nx/4);
+				drawAll();
+			}
+		},
+		{
+			events:[
+				{
+					name:"keydown",
+					condition:function(e){return selection.isPresent() && e.key == "ArrowRight";}
+				}
+			],
+			action:function(){
+				selection.moveRight();
+				drawAll();
+			}
+		},
+		{
+			events:[
+				{
+					name:"keydown",
+					condition:function(e){return !selection.isPresent() && e.key == "ArrowUp";}
+				}
+			],
+			action:function(){
+				yShift += Math.floor(ny/4);
+				drawAll();
+			}
+		},
+		{
+			events:[
+				{
+					name:"keydown",
+					condition:function(e){return selection.isPresent() && e.key == "ArrowUp";}
+				}
+			],
+			action:function(){
+				selection.moveUp();
+				drawAll();
+			}
+		},
+		{
+			events:[
+				{
+					name:"keydown",
+					condition:function(e){return !selection.isPresent() && e.key == "ArrowDown";}
+				}
+			],
+			action:function(){
+				yShift -= Math.floor(ny/4);
+				drawAll();
+			}
+		},
+		{
+			events:[
+				{
+					name:"keydown",
+					condition:function(e){return selection.isPresent() && e.key == "ArrowDown";}
+				}
+			],
+			action:function(){
+				selection.moveDown();
+				drawAll();
+			}
+		},
+		{
+			events:[
+				{
+					name:"keydown",
+					condition:function(e){return e.key == " ";}
+				}
+			],
+			action:function(){
+				if(going){
+					stop();
+				}else{
+					go();
+				}
+			}
+		},
+		{
+			events:[
+				{
+					name:"keydown",
+					condition:function(e){return e.key == "c";}
+				}
+			],
+			action:function(){
+				position.vacateAll();
+				stepCount = 0;
+				setCounter();
+				drawAll();
+			}
+		},
+		{
+			events:[
+				{
+					name:"keydown",
+					condition:function(e){return e.key == "s";}
+				}
+			],
+			action:function(){
+				doStep();
+				drawAll();
+				setCounter();
+			}
+		},
+		{
+			events:[
+				{
+					name:"keydown",
+					condition:function(e){return e.key == "r";}
+				}
+			],
+			action:function(){
+				snapshots.add(position.getAllAlive());
+			}
+		}
+	];
+	var doAction = function(eventName, e){
+		for(var i=0;i<actions.length;i++){
+			var event = actions[i].events.find(function(ev){return ev.name == eventName;});
+			if(event && event.condition(e)){
+				actions[i].action(event.value && event.value(e));
+				break;
+			}
+		}
+	};
 	window.addEventListener("keydown",function(e){
 		if(input.isOpen()){return true;}
-		if(e.key == "+"){
-			zoomIn();
-		}
-		if(e.key == "-"){
-			zoomOut();
-		}
-		if(e.key == "ArrowLeft"){
-			if(selection.isPresent()){
-				selection.moveLeft();
-			}else{
-				left();
-			}
-			drawAll();
-		}
-		if(e.key == "ArrowRight"){
-			if(selection.isPresent()){
-				selection.moveRight();
-			}else{
-				right();
-			}
-			drawAll();
-		}
-		if(e.key == "ArrowUp"){
-			if(selection.isPresent()){
-				selection.moveUp();
-			}else{
-				up();
-			}
-			drawAll();
-		}
-		if(e.key == "ArrowDown"){
-			if(selection.isPresent()){
-				selection.moveDown();
-			}else{
-				down();
-			}
-			drawAll();
-		}
-		if(e.key == " "){
-			if(going){
-				stop();
-			}else{
-				go();
-			}
-		}
-		if(e.key == "c"){
-			position.vacateAll();
-			stepCount = 0;
-			setCounter();
-			drawAll();
-		}
-		if(e.key == "s"){
-			doStep();
-			drawAll();
-			setCounter();
-		}
-		if(e.key == "r"){
-			snapshots.add(position.getAllAlive());
-		}
+		doAction("keydown",e);
+	});
+	window.addEventListener("wheel", function(e){
+		doAction("wheel", e);
 	});
 })();
 </script>
