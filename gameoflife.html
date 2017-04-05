@@ -791,9 +791,8 @@
 				},
 				{
 					name:"wheel",
-					condition:function(){return true;},
 					value:function(e){
-						return Math.pow(2, -e.deltaY / 400);
+						return e.deltaY < 0 ? 2 : 0.5;
 					}
 				}
 			],
@@ -956,7 +955,7 @@
 	var doAction = function(eventName, e){
 		for(var i=0;i<actions.length;i++){
 			var event = actions[i].events.find(function(ev){return ev.name == eventName;});
-			if(event && event.condition(e)){
+			if(event && (!event.condition || event.condition(e))){
 				actions[i].action(event.value && event.value(e));
 				break;
 			}
