@@ -116,17 +116,19 @@
 			nx = Math.ceil(w / size);
 			ny = Math.ceil(h / size);
 		},
-		zoom = function(factor){
-			var centerLocation = mousePositionToPositionLocation(w/2, h/2);
+		zoom = function(factor, centerX, centerY){
+			var pCenter = mousePositionToPositionLocation(centerX, centerY);
 			var newSize;
 			if(factor < 1){
 				newSize = Math.max(1, Math.floor(size * factor));
 			}else{
 				newSize = size * factor;
 			}
-			setSize(newSize);
-			xShift = Math.floor(w/(2 * size) - centerLocation.x);
-			yShift = Math.floor(h/(2 * size) - centerLocation.y);
+			if(newSize != size){
+				setSize(newSize);
+				xShift = Math.floor(centerX/size - pCenter.x);
+				yShift = Math.floor(centerY/size - pCenter.y);
+			}
 		},
 		xShift = 0,
 		yShift = 0,
@@ -783,22 +785,27 @@
 					name:"keydown",
 					condition:function(e){return e.key == "+" || e.key == "-";},
 					value:function(e){
-						if(e.key == "+"){
-							return 2;
-						}
-						return 0.5;
+						return {
+							factor:e.key == "+" ? 2 : 0.5,
+							centerX:w/2,
+							centerY:h/2
+						};
 					}
 				},
 				{
 					name:"wheel",
 					value:function(e){
-						return e.deltaY < 0 ? 2 : 0.5;
+						return {
+							factor:e.deltaY < 0 ? 2 : 0.5,
+							centerX:e.clientX,
+							centerY:e.clientY
+						};
 					}
 				}
 			],
 			action:function(v){
 				clear();
-				zoom(v);
+				zoom(v.factor, v.centerX, v.centerY);
 				drawAll();
 			}
 		},
