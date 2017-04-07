@@ -132,7 +132,25 @@
 		},
 		xShift = 0,
 		yShift = 0,
+		draggerFactory = (function(){
+			var make = function(startMouseX, startMouseY){
+				var origXShift = xShift, origYShift = yShift;
+				var dragTo = function(mouseX, mouseY){
+					xShift = origXShift + Math.floor((mouseX - startMouseX) / size);
+					yShift = origYShift + Math.floor((mouseY - startMouseY) / size);
+					drawAll();
+				};
+				return {
+					dragTo:dragTo
+				};
+			};
+			return {
+				make:make
+			};
+		})(),
 		c = (function(){
+			var dragger = null;
+			var dragHappened = false;
 			var canvas = document.createElement("canvas");
 			canvas.setAttribute("width", w);
 			canvas.setAttribute("height", h);
@@ -145,6 +163,10 @@
 			};
 			initializeContext();
 			canvas.addEventListener('click',function(e){
+				if(dragHappened){
+					dragHappened = false;
+					return true;
+				}
 				if(e.shiftKey){
 					var loc = mousePositionToPositionLocation(e.clientX, e.clientY);
 					selection.select(loc.x, loc.y);
@@ -164,6 +186,19 @@
 					}
 				}
 				drawAll();
+			});
+			canvas.addEventListener('mousedown',function(e){
+				dragger = draggerFactory.make(e.clientX, e.clientY);
+			});
+			canvas.addEventListener('mousemove',function(e){
+				if(dragger){
+					dragger.dragTo(e.clientX, e.clientY);
+					dragHappened = true;
+				}
+				return true;
+			});
+			canvas.addEventListener('mouseup',function(){
+				dragger = null;
 			});
 			canvas.addEventListener('contextmenu',function(e){
 				e.preventDefault();
