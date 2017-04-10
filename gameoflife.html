@@ -6,7 +6,12 @@
 <script src="quadtree.js"></script>
 <script>
 (function(){
-	
+	var interpolation = function(y0, x1, c){
+		var a = y0 / (1 - Math.exp(-c*x1)), b = y0 - a;
+		return function(x){
+			return a * Math.exp(-c*x) + b;
+		};
+	};
 	var w = document.body.offsetWidth,
 		h = document.body.offsetHeight,
 		size, nx, ny,
@@ -360,6 +365,18 @@
 			
 			return {copy:copy};
 		})(),
+		speedRange = (function(){
+			var getLength = interpolation(1000,100,0.05);
+			var range = document.createElement('input');
+			range.setAttribute('type','range');
+			range.setAttribute('class','speed-range');
+			document.body.appendChild(range);
+			range.addEventListener('input',function(){
+				var newLength = getLength(range.value);
+				console.log(newLength);
+				intervalLength = Math.max(1, newLength); 
+			});
+		})(),
 		context = c.context,
 		clear = c.clear,
 		fillRect = function(screenX, screenY){
@@ -387,7 +404,7 @@
 				y:(p.y + yShift) * size
 			};
 		},
-		position = quadTreePositionFactory(positionToMousePosition, fillRect),
+		position = quadTreePositionFactory(),
 		snapshots = (function(){
 			var snapshotWidth = 150, snapshotHeight = 150;
 			var makeSnapshot = function(positions, forget){
@@ -543,6 +560,7 @@
 			window.clearInterval(setCounterInterval);
 			setCounter();
 		},
+		intervalLength = 75,
 		go = function(onStop){
 			var sstop = function(){
 				stop();
@@ -555,7 +573,7 @@
 				if(going){
 					window.setTimeout(function(){
 						doStep(sstop, afterStep);
-					},20);
+					},intervalLength);
 				}
 			};
 			afterStep();
@@ -671,7 +689,10 @@
 				drawHorizontalLine(i * size);
 			}
 			selection.draw();
-			position.draw();
+			position.draw(function(p){
+				var mousePosition = positionToMousePosition(p);
+				fillRect(mousePosition.x,mousePosition.y);
+			});
 		};
 	menu.addOption('parse RLE',function(x,y){
 		input(function(v){

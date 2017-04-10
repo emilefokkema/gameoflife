@@ -1,5 +1,5 @@
 (function(){
-	var positionFactory = function(positionToMousePosition, fillRect){
+	var positionFactory = function(){
 		var direction = {
 			NORTHEAST:0,
 			NORTHWEST:1,
@@ -131,10 +131,9 @@
 						};
 						return biggerTree;
 					},
-					draw:function(){
+					draw:function(drawer){
 						if(!occupied){return;}
-						var mousePosition = positionToMousePosition(this);
-						fillRect(mousePosition.x,mousePosition.y);
+						drawer(this);
 					},
 					isOccupied:function(){return occupied;},
 					vacate:function(){
@@ -195,11 +194,11 @@
 				biggerTree.notifyEnvironmentChanged();
 				return biggerTree;
 			};
-			var draw = function(){
+			var draw = function(drawer){
 				for(var i=0;i<4;i++){
 					var t = subTrees[i];
 					if(t != null){
-						t.draw();
+						t.draw(drawer);
 					}
 				}
 			};
@@ -373,8 +372,8 @@
 		add.countAlive = function(){return currentTree ? currentTree.getAllOccupiedPositions().length : 0;};
 		add.getIfExistsOnXY = function(x,y){return currentTree ? currentTree.getIfExistsOnXY(x,y) : null;};
 		add.getAllInBox = function(box){return currentTree ? currentTree.getAllInBox(box) : [];};
-		add.draw = function(){
-			currentTree && currentTree.draw();
+		add.draw = function(draw){
+			currentTree && currentTree.draw(draw);
 		};
 		add.vacateAll = function(){
 			currentTree && currentTree.getAllOccupiedPositions().map(function(p){p.vacate();});

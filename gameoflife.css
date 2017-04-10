@@ -61,6 +61,11 @@ body{overflow: hidden;}
 	font-family: monospace;
 	font-size: 20px;
 }
+.speed-range {
+	position: absolute;
+	top:10px;
+	left:40px;
+}
 .menu{
 	position:absolute;
 	display:none;
