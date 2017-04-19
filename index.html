@@ -95,7 +95,8 @@
 				dragger = draggerFactory.make(e.clientX, e.clientY);
 			});
 			canvas.addEventListener('mousemove',function(e){
-				if(dragger){
+
+				if(dragger && (e.movementX != 0 || e.movementY != 0) ){
 					dragger.dragTo(e.clientX, e.clientY);
 					dragHappened = true;
 				}
