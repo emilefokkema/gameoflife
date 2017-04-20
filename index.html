@@ -535,18 +535,30 @@
 			var addButton = function(className, action){
 				var div = document.createElement('div');
 				div.setAttribute('class','button fa '+className);
-				div.addEventListener('click',action);
+				div.addEventListener('click',function(){
+					var newClassName = action();
+					if(newClassName){
+						div.setAttribute('class','button fa '+newClassName);
+					}
+				});
 				container.appendChild(div);
 			};
 			addButton("fa-play",function(){
 				if(going){
 					stop();
+					return "fa-play";
 				}else{
 					go();
+					return "fa-pause";
 				}
 			});
 			addButton("fa-eraser",function(){
 				reset();
+			});
+			addButton("fa-step-forward",function(){
+				doStep();
+				drawAll();
+				setCounter();
 			});
 		})(),
 		speedRange = (function(){
