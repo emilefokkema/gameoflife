@@ -123,6 +123,29 @@
 				}
 				drawAll();
 			});
+			canvas.addEventListener('touchstart',function(e){
+				var list = e.touches;
+				if(list.length == 1){
+					var touch = list.item(0);
+					console.log("making dragger");
+					dragger = draggerFactory.make(touch.clientX, touch.clientY);
+				}
+			});
+			canvas.addEventListener('touchend',function(e){
+				var list = e.touches;
+				if(list.length == 0){
+					dragger.end();
+					dragger = null;
+				}
+			});
+			canvas.addEventListener('touchmove',function(e){
+				var list = e.touches;
+				if(list.length == 1){
+					var touch = list.item(0);
+					dragger.dragTo(touch.clientX, touch.clientY);
+					dragHappened = true;
+				}
+			});
 			canvas.addEventListener('mousedown',function(e){
 				dragger = draggerFactory.make(e.clientX, e.clientY);
 			});
