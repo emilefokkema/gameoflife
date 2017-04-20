@@ -1,6 +1,7 @@
 <html>
 <head>
 	<LINK href="gameoflife.css" rel="stylesheet" type="text/css" />
+	<LINK href="font-awesome.min.css" rel="stylesheet" type="text/css" />
 	 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
 </head>
 <body style="padding:0px;margin:0px"></body>
@@ -24,12 +25,7 @@
 		zoom = function(factor, centerX, centerY){
 			clear();
 			var pCenter = mousePositionToPositionLocation(centerX, centerY);
-			var newSize;
-			if(factor < 1){
-				newSize = size * factor;
-			}else{
-				newSize = size * factor;
-			}
+			var newSize = size * factor;
 			if(newSize != size){
 				setSize(newSize);
 				setXShift(centerX/size - pCenter.x);
@@ -532,6 +528,27 @@
 			
 			return {copy:copy};
 		})(),
+		controls = (function(){
+			var container = document.createElement('div');
+			container.setAttribute('class','controls');
+			document.body.appendChild(container);
+			var addButton = function(className, action){
+				var div = document.createElement('div');
+				div.setAttribute('class','button fa '+className);
+				div.addEventListener('click',action);
+				container.appendChild(div);
+			};
+			addButton("fa-play",function(){
+				if(going){
+					stop();
+				}else{
+					go();
+				}
+			});
+			addButton("fa-eraser",function(){
+				reset();
+			});
+		})(),
 		speedRange = (function(){
 			var getLength = interpolation(1000,100,0.05);
 			var range = document.createElement('input');
@@ -746,6 +763,12 @@
 			afterStep();
 			setCounterInterval = window.setInterval(setCounter, 250);
 		},
+		reset = function(){
+			position.vacateAll();
+			stepCount = 0;
+			setCounter();
+			drawAll();
+		},
 		parseRLEBody = function(body, occupy){
 			var parts = body.replace(/\s*/g,"").match(/\d*[bo\$]/g);
 			var x = 0, y = 0;
@@ -936,12 +959,7 @@
 			}
 		},{
 			key:"c",
-			action:function(){
-				position.vacateAll();
-				stepCount = 0;
-				setCounter();
-				drawAll();
-			}
+			action:reset
 		},{
 			key:" ",
 			action:function(){
