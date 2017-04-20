@@ -39,22 +39,18 @@
 		},
 		xShift = 0,
 		yShift = 0,
-		draggerFactory = (function(){
-			var make = function(startMouseX, startMouseY){
-				var origXShift = xShift, origYShift = yShift;
-				var dragTo = function(mouseX, mouseY){
-					xShift = origXShift + Math.floor((mouseX - startMouseX) / size);
-					yShift = origYShift + Math.floor((mouseY - startMouseY) / size);
-					drawAll();
-				};
-				return {
-					dragTo:dragTo
-				};
-			};
+		currentDrag = null,
+		makeDrag = function(){
+			var origXShift = xShift;
+			var origYShift = yShift;
 			return {
-				make:make
+				drag:function(dx, dy){
+					xShift = origXShift + Math.floor(dx / size);
+					yShift = origYShift + Math.floor(dy / size);
+					drawAll();
+				}
 			};
-		})(),
+		},
 		c = (function(){
 			var dragger = null;
 			var dragHappened = false;
@@ -67,6 +63,40 @@
 				context.strokeStyle = '#000';
 				context.fillStyle = '#000';
 			};
+			var draggerFactory = (function(){
+				var dispatchDragStart = function(x,y){
+					var event = new CustomEvent('positiondragstart',{'detail':{x:x,y:y}});
+					canvas.dispatchEvent(event);
+				};
+				var dispatchDragMove = function(origX, origY, toX, toY){
+					var event = new CustomEvent('positiondragmove',{
+						'detail':{
+							origX:origX,
+							origY:origY,
+							toX:toX,
+							toY:toY
+						}
+					});
+					canvas.dispatchEvent(event);
+				};
+				var dispatchDragEnd = function(){
+					var event = new CustomEvent('positiondragend');
+					canvas.dispatchEvent(event);
+				};
+				var make = function(startMouseX, startMouseY){
+					dispatchDragStart(startMouseX, startMouseY);
+					var dragTo = function(mouseX, mouseY){
+						dispatchDragMove(startMouseX, startMouseY, mouseX, mouseY);
+					};
+					return {
+						dragTo:dragTo,
+						end:dispatchDragEnd
+					};
+				};
+				return {
+					make:make
+				};
+			})();
 			initializeContext();
 			canvas.addEventListener('click',function(e){
 				if(dragHappened){
@@ -97,7 +127,6 @@
 				dragger = draggerFactory.make(e.clientX, e.clientY);
 			});
 			canvas.addEventListener('mousemove',function(e){
-
 				if(dragger && (e.movementX != 0 || e.movementY != 0) ){
 					dragger.dragTo(e.clientX, e.clientY);
 					dragHappened = true;
@@ -105,6 +134,7 @@
 				return true;
 			});
 			canvas.addEventListener('mouseup',function(){
+				dragger.end();
 				dragger = null;
 			});
 			canvas.addEventListener('contextmenu',function(e){
@@ -114,7 +144,8 @@
 			});
 			return {
 				context:context,
-				clear:function(){canvas.width = w;initializeContext();}
+				clear:function(){canvas.width = w;initializeContext();},
+				addEventListener:function(name, handler){canvas.addEventListener(name, handler);}
 			};
 		})(),
 		menu = (function(){
@@ -302,7 +333,11 @@
 				moveDown:function(){
 					moveInDirection(direction.DOWN);
 				},
-				isPresent:function(){return present;}
+				isPresent:function(){return present;},
+				containsMousePosition:function(mouseX, mouseY){
+					var pos = mousePositionToPositionLocation(mouseX, mouseY);
+					return pos.x >= minX && pos.x <= maxX && pos.y >= minY && pos.y <= maxY;
+				}
 			};
 		})(),
 		input = (function(){
@@ -699,6 +734,21 @@
 				fillRect(mousePosition.x,mousePosition.y);
 			});
 		};
+	c.addEventListener('positiondragstart',function(e){
+		if(selection.isPresent() && selection.containsMousePosition(e.detail.x, e.detail.y)){
+
+		}else{
+			currentDrag = makeDrag();
+		}
+	});
+	c.addEventListener('positiondragmove',function(e){
+		if(currentDrag){
+			currentDrag.drag(e.detail.toX - e.detail.origX, e.detail.toY - e.detail.origY);
+		}
+	});
+	c.addEventListener('positiondragend',function(){
+		currentDrag = null;
+	});
 	menu.addOption('parse RLE',function(x,y){
 		input(function(v){
 			if(!v){return;}
@@ -712,9 +762,6 @@
 	readHash();
 	drawAll();
 	setCounter();
-	window.go = go;
-	window.getStepCount = function(){return stepCount;};
-	window.resetStepCount = function(){stepCount = 0;}
 	window.health = function(){
 		var all = position.countAll();
 		var alive = position.countAlive();
@@ -726,151 +773,30 @@
 			treeSize: treeSize
 		};
 	};
-	window.alive = function(x,y){position(x,y).occupy();};
-	window.parseRLEBody = function(body){
-		position.vacateAll();
-		parseRLEBody(body, function(x,y){position(x,y).occupy();});
-		drawAll();
-	};
-	window.copyFromRLE = function(body){
-		var relativePositions = [];
-		parseRLEBody(body, function(x,y){
-			relativePositions.push({x:x,y:y});
-		});
-		clipboard.copy(relativePositions);
-	};
-	var actions = [
+
+	var shortcuts = [
 		{
-			events:[
-				{
-					name:"keydown",
-					condition:function(e){return e.key == "+" || e.key == "-";},
-					value:function(e){
-						return {
-							factor:e.key == "+" ? 2 : 0.5,
-							centerX:w/2,
-							centerY:h/2
-						};
-					}
-				},
-				{
-					name:"wheel",
-					value:function(e){
-						return {
-							factor:Math.pow(2, -e.deltaY / 200),
-							centerX:e.clientX,
-							centerY:e.clientY
-						};
-					}
-				}
-			],
-			action:function(v){
-				zoom(v.factor, v.centerX, v.centerY);
-			}
-		},
-		{
-			events:[
-				{
-					name:"keydown",
-					condition:function(e){return !selection.isPresent() && e.key == "ArrowLeft";}
-				}
-			],
+			key:"s",
 			action:function(){
-				xShift += Math.floor(nx/4);
+				doStep();
+				drawAll();
+				setCounter();
+			}
+		},{
+			key: "r",
+			action:function(){
+				snapshots.add(position.getAllAlive());
+			}
+		},{
+			key:"c",
+			action:function(){
+				position.vacateAll();
+				stepCount = 0;
+				setCounter();
 				drawAll();
 			}
-		},
-		{
-			events:[
-				{
-					name:"keydown",
-					condition:function(e){return selection.isPresent() && e.key == "ArrowLeft";}
-				}
-			],
-			action:function(){
-				selection.moveLeft();
-				drawAll();
-			}
-		},
-		{
-			events:[
-				{
-					name:"keydown",
-					condition:function(e){return !selection.isPresent() && e.key == "ArrowRight";}
-				}
-			],
-			action:function(){
-				xShift -= Math.floor(nx/4);
-				drawAll();
-			}
-		},
-		{
-			events:[
-				{
-					name:"keydown",
-					condition:function(e){return selection.isPresent() && e.key == "ArrowRight";}
-				}
-			],
-			action:function(){
-				selection.moveRight();
-				drawAll();
-			}
-		},
-		{
-			events:[
-				{
-					name:"keydown",
-					condition:function(e){return !selection.isPresent() && e.key == "ArrowUp";}
-				}
-			],
-			action:function(){
-				yShift += Math.floor(ny/4);
-				drawAll();
-			}
-		},
-		{
-			events:[
-				{
-					name:"keydown",
-					condition:function(e){return selection.isPresent() && e.key == "ArrowUp";}
-				}
-			],
-			action:function(){
-				selection.moveUp();
-				drawAll();
-			}
-		},
-		{
-			events:[
-				{
-					name:"keydown",
-					condition:function(e){return !selection.isPresent() && e.key == "ArrowDown";}
-				}
-			],
-			action:function(){
-				yShift -= Math.floor(ny/4);
-				drawAll();
-			}
-		},
-		{
-			events:[
-				{
-					name:"keydown",
-					condition:function(e){return selection.isPresent() && e.key == "ArrowDown";}
-				}
-			],
-			action:function(){
-				selection.moveDown();
-				drawAll();
-			}
-		},
-		{
-			events:[
-				{
-					name:"keydown",
-					condition:function(e){return e.key == " ";}
-				}
-			],
+		},{
+			key:" ",
 			action:function(){
 				if(going){
 					stop();
@@ -878,62 +804,17 @@
 					go();
 				}
 			}
-		},
-		{
-			events:[
-				{
-					name:"keydown",
-					condition:function(e){return e.key == "c";}
-				}
-			],
-			action:function(){
-				position.vacateAll();
-				stepCount = 0;
-				setCounter();
-				drawAll();
-			}
-		},
-		{
-			events:[
-				{
-					name:"keydown",
-					condition:function(e){return e.key == "s";}
-				}
-			],
-			action:function(){
-				doStep();
-				drawAll();
-				setCounter();
-			}
-		},
-		{
-			events:[
-				{
-					name:"keydown",
-					condition:function(e){return e.key == "r";}
-				}
-			],
-			action:function(){
-				snapshots.add(position.getAllAlive());
-			}
 		}
 	];
-	var doAction = function(eventName, e){
-		for(var i=0;i<actions.length;i++){
-			var event = actions[i].events.find(function(ev){return ev.name == eventName;});
-			if(event && (!event.condition || event.condition(e))){
-				actions[i].action(event.value && event.value(e));
-				break;
+	window.addEventListener('keydown',function(e){
+		shortcuts.map(function(s){
+			if(e.key == s.key){
+				s.action();
 			}
-		}
-	};
-	window.addEventListener("keydown",function(e){
-		if(input.isOpen()){return true;}
-		doAction("keydown",e);
+		});
 	});
-	window.addEventListener("wheel", function(e){
-		if(input.isOpen()){return true;}
-		doAction("wheel", e);
+	window.addEventListener('wheel',function(e){
+		zoom(Math.pow(2, -e.deltaY / 200), e.clientX, e.clientY);
 	});
 })();
 </script>
