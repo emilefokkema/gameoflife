@@ -40,19 +40,35 @@
 		xShift = 0,
 		yShift = 0,
 		currentDrag = null,
-		makeDrag = function(){
+		makeDrag = function(startMouseX, startMouseY){
 			var origXShift = xShift;
 			var origYShift = yShift;
+			var currentMouseX = startMouseX;
+			var currentMouseY = startMouseY;
+			var origR;
 			return {
-				drag:function(dx, dy){
-					xShift = origXShift + Math.floor(dx / size);
-					yShift = origYShift + Math.floor(dy / size);
+				drag:function(toX, toY){
+					currentMouseX = toX;
+					currentMouseY = toY;
+					xShift = origXShift + Math.floor((toX - startMouseX) / size);
+					yShift = origYShift + Math.floor((toY - startMouseY) / size);
 					drawAll();
+				},
+				startZoom:function(r){
+					origR = r;
+				},
+				changeZoom:function(r){
+					
+					
+				},
+				endZoom:function(){
+					origR = undefined;
 				}
 			};
 		},
 		c = (function(){
 			var dragger = null;
+			var zoomer = null;
 			var dragHappened = false;
 			var canvas = document.createElement("canvas");
 			canvas.setAttribute("width", w);
@@ -68,11 +84,9 @@
 					var event = new CustomEvent('positiondragstart',{'detail':{x:x,y:y}});
 					canvas.dispatchEvent(event);
 				};
-				var dispatchDragMove = function(origX, origY, toX, toY){
+				var dispatchDragMove = function(toX, toY){
 					var event = new CustomEvent('positiondragmove',{
 						'detail':{
-							origX:origX,
-							origY:origY,
 							toX:toX,
 							toY:toY
 						}
@@ -83,21 +97,63 @@
 					var event = new CustomEvent('positiondragend');
 					canvas.dispatchEvent(event);
 				};
-				var make = function(startMouseX, startMouseY){
-					dispatchDragStart(startMouseX, startMouseY);
-					var dragTo = function(mouseX, mouseY){
-						dispatchDragMove(startMouseX, startMouseY, mouseX, mouseY);
+				var dispatchStartZoom = function(r){
+					var event = new CustomEvent('startzoom', {'detail':{r:r}});
+					canvas.dispatchEvent(event);
+				};
+				var dispatchEndZoom = function(){
+					var event = new CustomEvent('endzoom');
+					canvas.dispatchEvent(event);
+				};
+				var dispatchChangeZoom = function(r){
+					var event = new CustomEvent('changezoom', {'detail':{r:r}});
+					canvas.dispatchEvent(event);
+				};
+				var make = function(startX, startY, startId){
+					dispatchDragStart(startX, startY);
+					var firstTouch = {x:startX,y:startY,id:startId};
+					var secondTouch;
+					var getDistance = function(){
+						return Math.sqrt(Math.pow(firstTouch.x - secondTouch.x,2) + Math.pow(firstTouch.y - secondTouch.y,2));
+					};
+					var moveTo = function(x, y, id){
+						if(id == undefined || id == firstTouch.id){
+							dispatchDragMove(x, y);
+						}else if(secondTouch && id == secondTouch.id){
+							dispatchChangeZoom(getDistance());
+						}
+					};
+					var end = function(id){
+						if(id == undefined || id == firstTouch.id){
+							dispatchDragEnd();
+						}else if(secondTouch && id == secondTouch.id){
+							dispatchEndZoom();
+							secondTouch = null;
+						}
+					};
+					var add = function(x, y, id){
+						if(id != firstTouch.id && !secondTouch){
+							secondTouch = {x:x,y:y,id:id};
+							dispatchStartZoom(getDistance());
+						}
 					};
 					return {
-						dragTo:dragTo,
-						end:dispatchDragEnd
+						moveTo:moveTo,
+						end:end,
+						add:add
 					};
 				};
 				return {
 					make:make
 				};
 			})();
+			
 			initializeContext();
+			var mapTouchList = function(touchList, mapper){
+				for(var i=0;i<touchList.length;i++){
+					mapper(touchList.item(i));
+				}
+			};
 			canvas.addEventListener('click',function(e){
 				if(dragHappened){
 					dragHappened = false;
@@ -124,34 +180,34 @@
 				drawAll();
 			});
 			canvas.addEventListener('touchstart',function(e){
-				var list = e.touches;
-				if(list.length == 1){
-					var touch = list.item(0);
-					console.log("making dragger");
-					dragger = draggerFactory.make(touch.clientX, touch.clientY);
-				}
+				mapTouchList(e.changedTouches, function(touch){
+					if(!dragger){
+						dragger = draggerFactory.make(touch.clientX, touch.clientY, touch.identifier);
+					}else{
+						dragger.add(touch.clientX, touch.clientY, touch.identifier);
+					}
+				});
 			});
 			canvas.addEventListener('touchend',function(e){
-				var list = e.touches;
-				if(list.length == 0){
-					dragger.end();
+				mapTouchList(e.changedTouches, function(touch){
+					dragger.end(touch.identifier);
+				});
+				if(e.touches.length == 0){
 					dragger = null;
 				}
 			});
 			canvas.addEventListener('touchmove',function(e){
-				var list = e.touches;
-				if(list.length == 1){
-					var touch = list.item(0);
-					dragger.dragTo(touch.clientX, touch.clientY);
-					dragHappened = true;
-				}
+				mapTouchList(e.changedTouches,function(touch){
+					dragger.moveTo(touch.clientX, touch.clientY, touch.identifier);
+				});
+				dragHappened = true;
 			});
 			canvas.addEventListener('mousedown',function(e){
 				dragger = draggerFactory.make(e.clientX, e.clientY);
 			});
 			canvas.addEventListener('mousemove',function(e){
 				if(dragger && (e.movementX != 0 || e.movementY != 0) ){
-					dragger.dragTo(e.clientX, e.clientY);
+					dragger.moveTo(e.clientX, e.clientY);
 					dragHappened = true;
 				}
 				return true;
@@ -761,16 +817,31 @@
 		if(selection.isPresent() && selection.containsMousePosition(e.detail.x, e.detail.y)){
 
 		}else{
-			currentDrag = makeDrag();
+			currentDrag = makeDrag(e.detail.x, e.detail.y);
 		}
 	});
 	c.addEventListener('positiondragmove',function(e){
 		if(currentDrag){
-			currentDrag.drag(e.detail.toX - e.detail.origX, e.detail.toY - e.detail.origY);
+			currentDrag.drag(e.detail.toX, e.detail.toY);
 		}
 	});
 	c.addEventListener('positiondragend',function(){
 		currentDrag = null;
+	});
+	c.addEventListener('startzoom',function(e){
+		if(currentDrag){
+			currentDrag.startZoom(e.detail.r);
+		}
+	});
+	c.addEventListener('changezoom',function(e){
+		if(currentDrag){
+			currentDrag.changeZoom(e.detail.r);
+		}
+	});
+	c.addEventListener('endzoom',function(e){
+		if(currentDrag){
+			currentDrag.endZoom();
+		}
 	});
 	menu.addOption('parse RLE',function(x,y){
 		input(function(v){
