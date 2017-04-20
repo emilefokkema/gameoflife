@@ -32,12 +32,28 @@
 			}
 			if(newSize != size){
 				setSize(newSize);
-				xShift = Math.floor(centerX/size - pCenter.x);
-				yShift = Math.floor(centerY/size - pCenter.y);
+				setXShift(centerX/size - pCenter.x);
+				setYShift(centerY/size - pCenter.y);
 			}
 		},
 		xShift = 0,
 		yShift = 0,
+		xShiftOffset = 0,
+		yShiftOffset = 0,
+		getOffset = function(v){
+			if(v >= 0){
+				return v  - Math.floor(v);
+			}
+			return 1 - getOffset(-v);
+		},
+		setXShift = function(v){
+			xShift = v;
+			xShiftOffset = getOffset(v);
+		},
+		setYShift = function(v){
+			yShift = v;
+			yShiftOffset = getOffset(v);
+		},
 		currentDrag = null,
 		makeDrag = function(startMouseX, startMouseY){
 			var origXShift, origYShift, currentMouseX, currentMouseY, origSize;
@@ -51,16 +67,13 @@
 			resetTo(startMouseX, startMouseY);
 			var origR, currentR;
 			var applyDrag = function(){
-				xShift = origXShift + Math.floor((currentMouseX - startMouseX) / size);
-				yShift = origYShift + Math.floor((currentMouseY - startMouseY) / size);
-				drawAll();
+				setXShift(origXShift + (currentMouseX - startMouseX) / size);
+				setYShift(origYShift + (currentMouseY - startMouseY) / size);
 			};
 			var applyZoomAndDrag = function(){
 				setSize(origSize);
-				xShift = origXShift + Math.floor((currentMouseX - startMouseX) / size);
-				yShift = origYShift + Math.floor((currentMouseY - startMouseY) / size);
+				applyDrag();
 				zoom(currentR / origR, currentMouseX, currentMouseY);
-				drawAll();
 			};
 			return {
 				drag:function(toX, toY){
@@ -71,6 +84,7 @@
 					}else{
 						applyZoomAndDrag();
 					}
+					drawAll();
 				},
 				startZoom:function(r){
 					origR = r;
@@ -79,6 +93,7 @@
 				changeZoom:function(r){
 					currentR = r;
 					applyZoomAndDrag();
+					drawAll();
 				},
 				endZoom:function(){
 					origR = undefined;
@@ -824,10 +839,10 @@
 			context.strokeStyle = '#ddd';
 			context.strokeWidth = 0.2;
 			for(var i = 0;i<nx;i++){
-				drawVerticalLine(i * size);
+				drawVerticalLine(i * size + xShiftOffset * size);
 			}
 			for(var i = 0;i<ny;i++){
-				drawHorizontalLine(i * size);
+				drawHorizontalLine(i * size + yShiftOffset * size);
 			}
 			context.restore();
 			selection.draw();
