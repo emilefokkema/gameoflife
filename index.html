@@ -41,18 +41,24 @@
 		yShift = 0,
 		currentDrag = null,
 		makeDrag = function(startMouseX, startMouseY){
-			var origXShift = xShift;
-			var origYShift = yShift;
-			var currentMouseX = startMouseX;
-			var currentMouseY = startMouseY;
+			var origXShift, origYShift, currentMouseX, currentMouseY;
+			var resetTo = function(x,y){
+				origXShift = xShift;
+				origYShift = yShift;
+				currentMouseX = x;
+				currentMouseY = y;
+			};
+			resetTo(startMouseX, startMouseY);
 			var origR;
 			return {
 				drag:function(toX, toY){
-					currentMouseX = toX;
-					currentMouseY = toY;
-					xShift = origXShift + Math.floor((toX - startMouseX) / size);
-					yShift = origYShift + Math.floor((toY - startMouseY) / size);
-					drawAll();
+					if(origR == undefined){
+						currentMouseX = toX;
+						currentMouseY = toY;
+						xShift = origXShift + Math.floor((toX - startMouseX) / size);
+						yShift = origYShift + Math.floor((toY - startMouseY) / size);
+						drawAll();
+					}
 				},
 				startZoom:function(r){
 					origR = r;
