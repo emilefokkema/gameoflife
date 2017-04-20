@@ -59,6 +59,13 @@
 				},
 				changeZoom:function(r){
 					
+					if(origR != undefined){
+						var factor = r / origR;
+						if(factor > 1.1 || factor < 0.9){
+							zoom(factor, currentMouseX, currentMouseY);
+							origR = r;
+						}
+					}
 					
 				},
 				endZoom:function(){
@@ -120,6 +127,8 @@
 						if(id == undefined || id == firstTouch.id){
 							dispatchDragMove(x, y);
 						}else if(secondTouch && id == secondTouch.id){
+							secondTouch.x = x;
+							secondTouch.y = y;
 							dispatchChangeZoom(getDistance());
 						}
 					};
@@ -829,6 +838,7 @@
 		currentDrag = null;
 	});
 	c.addEventListener('startzoom',function(e){
+		
 		if(currentDrag){
 			currentDrag.startZoom(e.detail.r);
 		}
