@@ -26,7 +26,7 @@
 			var pCenter = mousePositionToPositionLocation(centerX, centerY);
 			var newSize;
 			if(factor < 1){
-				newSize = Math.max(1, Math.floor(size * factor));
+				newSize = size * factor;
 			}else{
 				newSize = size * factor;
 			}
@@ -63,6 +63,8 @@
 				origSize = size;
 				currentMouseX = x;
 				currentMouseY = y;
+				startMouseX = x;
+				startMouseY = y;
 			};
 			resetTo(startMouseX, startMouseY);
 			var origR, currentR;
@@ -155,6 +157,10 @@
 					var moveTo = function(x, y, id){
 						if(id == undefined || id == firstTouch.id){
 							dispatchDragMove(x, y);
+							if(id != undefined && id == firstTouch.id){
+								firstTouch.x = x;
+								firstTouch.y = y;
+							}
 						}else if(secondTouch && id == secondTouch.id){
 							secondTouch.x = x;
 							secondTouch.y = y;
@@ -543,8 +549,8 @@
 		},
 		mousePositionToPositionLocation = function(mX,mY){
 			return {
-				x:Math.floor(mX / size) - xShift,
-				y:Math.floor(mY / size) - yShift
+				x:mX / size - xShift,
+				y:mY / size - yShift
 			};
 		},
 		mousePositionToPosition = function(mX, mY){
