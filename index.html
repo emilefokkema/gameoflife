@@ -35,47 +35,54 @@
 				xShift = Math.floor(centerX/size - pCenter.x);
 				yShift = Math.floor(centerY/size - pCenter.y);
 			}
-			drawAll();
 		},
 		xShift = 0,
 		yShift = 0,
 		currentDrag = null,
 		makeDrag = function(startMouseX, startMouseY){
-			var origXShift, origYShift, currentMouseX, currentMouseY;
+			var origXShift, origYShift, currentMouseX, currentMouseY, origSize;
 			var resetTo = function(x,y){
 				origXShift = xShift;
 				origYShift = yShift;
+				origSize = size;
 				currentMouseX = x;
 				currentMouseY = y;
 			};
 			resetTo(startMouseX, startMouseY);
-			var origR;
+			var origR, currentR;
+			var applyDrag = function(){
+				xShift = origXShift + Math.floor((currentMouseX - startMouseX) / size);
+				yShift = origYShift + Math.floor((currentMouseY - startMouseY) / size);
+				drawAll();
+			};
+			var applyZoomAndDrag = function(){
+				setSize(origSize);
+				xShift = origXShift + Math.floor((currentMouseX - startMouseX) / size);
+				yShift = origYShift + Math.floor((currentMouseY - startMouseY) / size);
+				zoom(currentR / origR, currentMouseX, currentMouseY);
+				drawAll();
+			};
 			return {
 				drag:function(toX, toY){
-					if(origR == undefined){
-						currentMouseX = toX;
-						currentMouseY = toY;
-						xShift = origXShift + Math.floor((toX - startMouseX) / size);
-						yShift = origYShift + Math.floor((toY - startMouseY) / size);
-						drawAll();
+					currentMouseX = toX;
+					currentMouseY = toY;
+					if(currentR == undefined){
+						applyDrag();
+					}else{
+						applyZoomAndDrag();
 					}
 				},
 				startZoom:function(r){
 					origR = r;
+					currentR = r;
 				},
 				changeZoom:function(r){
-					
-					if(origR != undefined){
-						var factor = r / origR;
-						if(factor > 1.1 || factor < 0.9){
-							zoom(factor, currentMouseX, currentMouseY);
-							origR = r;
-						}
-					}
-					
+					currentR = r;
+					applyZoomAndDrag();
 				},
 				endZoom:function(){
 					origR = undefined;
+					currentR = undefined;
 				}
 			};
 		},
@@ -925,6 +932,7 @@
 	});
 	window.addEventListener('wheel',function(e){
 		zoom(Math.pow(2, -e.deltaY / 200), e.clientX, e.clientY);
+		drawAll();
 	});
 })();
 </script>
