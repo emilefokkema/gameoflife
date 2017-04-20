@@ -209,7 +209,10 @@
 					drawAll();
 					return;
 				}
-				menu.hide();
+				if(menu.isOpen()){
+					menu.hide();
+					return;
+				}
 				if(selection.isPresent()){
 					selection.clear();
 				}else{
@@ -272,7 +275,7 @@
 			};
 		})(),
 		menu = (function(){
-			var currentX, currentY;
+			var currentX, currentY,open = false;
 			var div = document.createElement("div");
 			div.setAttribute("class","menu");
 			document.body.appendChild(div);
@@ -294,12 +297,17 @@
 				div.style.display = "initial";
 				div.style.left = x + "px";
 				div.style.top = y + "px";
+				open = true;
 			};
-			var hide = function(){div.style.display = "none"};
+			var hide = function(){
+				div.style.display = "none";
+				open = false;
+			};
 			return {
 				addOption:addOption,
 				show:show,
-				hide:hide
+				hide:hide,
+				isOpen:function(){return open;}
 			}
 		})(),
 		selection = (function(){
