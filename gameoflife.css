@@ -10,16 +10,19 @@ body{overflow: hidden;}
 	overflow-x:hidden;
 }
 body.show-snapshots .snapshots{
-	width:300px;
+	width:350px;
 	overflow-y: scroll;
-	padding-left: 10px;
-	padding-right: 20px;
 }
 .snapshot-button {
 	position: fixed;
 	right: 30px;
 	top:30px;
 	display: none;
+}
+.snapshot-close-button{
+	position: absolute;
+	left: 0px;
+	top:0px;
 }
 body.has-snapshots .snapshot-button{
 	display: initial;
@@ -58,7 +61,11 @@ body.has-snapshots.show-snapshots .snapshot-button{
 		display: initial;
 	}
 	.snapshots{
+		width:0px;
 		height: calc(100% - 50px);
+	}
+	body.show-snapshots .snapshots{
+		width:100%;
 	}
 }
 
@@ -73,16 +80,16 @@ body.has-snapshots.show-snapshots .snapshot-button{
 	display: inline-block;
 	margin: 0px;
 }
-.snapshot canvas{
-	display: inline-block;
-}
+
 .snapshot-part{
 	width: 150px;
 	display: inline-block;
 	position: relative;
 	top:0px;
 }
-
+.snapshot-part:first-child{
+	margin-left: 50px;
+}
 
 .step-count {
 	position: absolute;
