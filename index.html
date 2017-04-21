@@ -335,9 +335,10 @@
 			var getMaxLoc = function(){
 				return positionToMousePosition({x:maxX + 1,y:maxY + 1});
 			};
-			var makeDraggerMaker = function(mX, mY){
+			var makeDraggerMaker = function(mX, mY, howToDrag){
 				var isClose = function(x,y){
-
+					var d = Math.sqrt(Math.pow(mX - x, 2) + Math.pow(mY - y, 2));
+					return d < 10;
 				};
 				var draw = function(){
 					context.save();
@@ -348,7 +349,14 @@
 					context.restore();
 				};
 				var make = function(){
-
+					var drag = function(x,y){
+						var pos = mousePositionToPositionLocation(x,y);
+						howToDrag(pos);
+						drawAll();
+					};
+					return {
+						drag:drag
+					};
 				};
 				return {
 					isClose:isClose,
@@ -358,7 +366,34 @@
 			};
 			var getDraggerMakers = function(minLoc, maxLoc){
 				var result = [];
-				result.push(makeDraggerMaker((minLoc.x + maxLoc.x)/2, minLoc.y));
+				result.push(makeDraggerMaker(
+					(minLoc.x + maxLoc.x)/2,
+					minLoc.y,
+					function(pos){
+						minY = Math.min(maxY, pos.y);
+					}
+				));
+				result.push(makeDraggerMaker(
+					minLoc.x,
+					(minLoc.y + maxLoc.y) / 2,
+					function(pos){
+						minX = Math.min(maxX, pos.x);
+					}
+				));
+				result.push(makeDraggerMaker(
+					(minLoc.x + maxLoc.x)/2,
+					maxLoc.y,
+					function(pos){
+						maxY = Math.max(minY, pos.y);
+					}
+				));
+				result.push(makeDraggerMaker(
+					maxLoc.x,
+					(minLoc.y + maxLoc.y) / 2,
+					function(pos){
+						maxX = Math.max(minX, pos.x);
+					}
+				));
 				return result;
 			};
 			var makeDragger = function(mouseX, mouseY){
@@ -522,7 +557,7 @@
 			addSelectingOption();
 			c.addEventListener('positiondragmove',function(e){
 				if(dragger){
-					dragger.drag(e.detail.x, e.detail.y);
+					dragger.drag(e.detail.toX, e.detail.toY);
 				}
 			});
 			c.addEventListener('positiondragend',function(){
