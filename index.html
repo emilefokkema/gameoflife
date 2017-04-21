@@ -536,20 +536,21 @@
 				var div = document.createElement('div');
 				div.setAttribute('class','button fa '+className);
 				div.addEventListener('click',function(){
-					var newClassName = action();
-					if(newClassName){
-						div.setAttribute('class','button fa '+newClassName);
-					}
+					action(function(newClassName){
+						if(newClassName){
+							div.setAttribute('class','button fa '+newClassName);
+						}
+					});
 				});
 				container.appendChild(div);
 			};
-			addButton("fa-play",function(){
+			addButton("fa-play",function(setNewClassName){
 				if(going){
 					stop();
-					return "fa-play";
+					setNewClassName("fa-play");
 				}else{
-					go();
-					return "fa-pause";
+					go(function(){setNewClassName("fa-play");});
+					setNewClassName("fa-pause");
 				}
 			});
 			addButton("fa-eraser",function(){
