@@ -296,15 +296,16 @@
 			div.setAttribute("class","menu");
 			document.body.appendChild(div);
 			var addOption = function(text, f){
+				var remove = function(){div.removeChild(option);};
 				var option = document.createElement('div');
 				option.setAttribute("class","option");
 				option.appendChild(document.createTextNode(text));
 				option.addEventListener('click', function(){
 					hide();
-					f(currentX, currentY);
+					f(currentX, currentY, remove);
 				});
 				div.appendChild(option);
-				return function(){div.removeChild(option);}
+				return remove;
 			};
 			var show = function(x,y){
 				var loc = mousePositionToPositionLocation(x,y);
@@ -427,6 +428,7 @@
 				present = false;
 				removeMenuOption && removeMenuOption();
 				removeMenuOption = null;
+				addSelectingOption();
 			};
 			var moveInDirection = function(dir){
 				if(!present){
@@ -464,6 +466,14 @@
 					maxX +=1;
 				}
 			};
+			var addSelectingOption = function(){
+				menu.addOption('select', function(x,y,remove){
+					select(x,y);
+					drawAll();
+					remove();
+				});
+			};
+			addSelectingOption();
 			return {
 				select:select,
 				draw:draw,
@@ -512,6 +522,7 @@
 			document.body.appendChild(div);
 			button.addEventListener('click',function(){
 				handler(text.value);
+				text.value = '';
 			});
 			hide();
 			var f = function(resultHandler, initialText){
@@ -618,8 +629,8 @@
 		},
 		mousePositionToPositionLocation = function(mX,mY){
 			return {
-				x:mX / size - xShift,
-				y:mY / size - yShift
+				x:Math.floor(mX / size - xShift),
+				y:Math.floor(mY / size - yShift)
 			};
 		},
 		mousePositionToPosition = function(mX, mY){
@@ -1001,6 +1012,7 @@
 			drawAll();
 		});
 	});
+	
 	input(function(){},"Click on a cell to bring it to life. Hit the space bar to get things moving, or to pause them if they already are. Adjust the slider to make them move faster or slower. Shift-click on a cell to make a selection, and then right-click on the selection to find some options.");
 	setSize(15);
 	readHash();
