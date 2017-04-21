@@ -328,7 +328,48 @@
 			}
 		})(),
 		selection = (function(){
-			var present = false, removeMenuOption = null, minX, minY, maxX, maxY;
+			var present = false, removeMenuOption = null, minX, minY, maxX, maxY, dragger;
+			var getMinLoc = function(){
+				return positionToMousePosition({x:minX,y:minY});
+			};
+			var getMaxLoc = function(){
+				return positionToMousePosition({x:maxX + 1,y:maxY + 1});
+			};
+			var makeDraggerMaker = function(mX, mY){
+				var isClose = function(x,y){
+
+				};
+				var draw = function(){
+					context.save();
+					context.fillStyle = '#00f';
+					context.beginPath();
+					context.arc(mX, mY, 4, 0, 2*Math.PI);
+					context.fill();
+					context.restore();
+				};
+				var make = function(){
+
+				};
+				return {
+					isClose:isClose,
+					draw:draw,
+					make:make
+				};
+			};
+			var getDraggerMakers = function(minLoc, maxLoc){
+				var result = [];
+				result.push(makeDraggerMaker((minLoc.x + maxLoc.x)/2, minLoc.y));
+				return result;
+			};
+			var makeDragger = function(mouseX, mouseY){
+				var draggerMakers = getDraggerMakers(getMinLoc(), getMaxLoc());
+				for(var i=0;i<draggerMakers.length;i++){
+					var draggerMaker = draggerMakers[i];
+					if(draggerMaker.isClose(mouseX, mouseY)){
+						return draggerMaker.make();
+					}
+				}
+			};
 			var direction = {UP:0,DOWN:1,LEFT:2,RIGHT:3};
 			var getPositions = function(){
 				return position.getAllInBox({
@@ -419,9 +460,10 @@
 				context.save();
 				context.strokeStyle = '#00f';
 				context.lineWidth = 2;
-				var minLoc = positionToMousePosition({x:minX,y:minY});
-				var maxLoc = positionToMousePosition({x:maxX + 1,y:maxY + 1});
+				var minLoc = getMinLoc();
+				var maxLoc = getMaxLoc();
 				context.strokeRect(minLoc.x, minLoc.y, maxLoc.x - minLoc.x, maxLoc.y - minLoc.y);
+				getDraggerMakers(minLoc, maxLoc).map(function(d){d.draw();});
 				context.restore();
 			};
 			var clear = function(){
@@ -473,7 +515,19 @@
 					remove();
 				});
 			};
+			var containsMousePosition = function(mouseX, mouseY){
+				var pos = mousePositionToPositionLocation(mouseX, mouseY);
+				return pos.x >= minX && pos.x <= maxX && pos.y >= minY && pos.y <= maxY;
+			};
 			addSelectingOption();
+			c.addEventListener('positiondragmove',function(e){
+				if(dragger){
+					dragger.drag(e.detail.x, e.detail.y);
+				}
+			});
+			c.addEventListener('positiondragend',function(){
+				dragger = null;
+			});
 			return {
 				select:select,
 				draw:draw,
@@ -491,9 +545,10 @@
 					moveInDirection(direction.DOWN);
 				},
 				isPresent:function(){return present;},
-				containsMousePosition:function(mouseX, mouseY){
-					var pos = mousePositionToPositionLocation(mouseX, mouseY);
-					return pos.x >= minX && pos.x <= maxX && pos.y >= minY && pos.y <= maxY;
+				containsMousePosition:containsMousePosition,
+				handleDragStart:function(mouseX, mouseY){
+					dragger = makeDragger(mouseX, mouseY);
+					return !!dragger;
 				}
 			};
 		})(),
@@ -974,9 +1029,7 @@
 			});
 		};
 	c.addEventListener('positiondragstart',function(e){
-		if(selection.isPresent() && selection.containsMousePosition(e.detail.x, e.detail.y)){
-
-		}else{
+		if(!selection.isPresent() || !selection.handleDragStart(e.detail.x, e.detail.y)){
 			currentDrag = makeDrag(e.detail.x, e.detail.y);
 		}
 	});
@@ -989,7 +1042,6 @@
 		currentDrag = null;
 	});
 	c.addEventListener('startzoom',function(e){
-		
 		if(currentDrag){
 			currentDrag.startZoom(e.detail.r);
 		}
