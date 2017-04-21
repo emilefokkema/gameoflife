@@ -3,17 +3,29 @@ body{overflow: hidden;}
 	position: absolute;
 	right: 0px;
 	top:0px;
-	width:20px;
+	width:0px;
 	height: 100%;
 	background-color: rgba(0,0,0,0.5);
 	overflow-y: hidden;
 	overflow-x:hidden;
 }
-.snapshots:hover{
-	width:150px;
+body.show-snapshots .snapshots{
+	width:300px;
 	overflow-y: scroll;
 	padding-left: 10px;
 	padding-right: 20px;
+}
+.snapshot-button {
+	position: fixed;
+	right: 30px;
+	top:30px;
+	display: none;
+}
+body.has-snapshots .snapshot-button{
+	display: initial;
+}
+body.has-snapshots.show-snapshots .snapshot-button{
+	display: none;
 }
 .controls{
 	position: fixed;
@@ -24,64 +36,54 @@ body{overflow: hidden;}
 	background-color: rgba(0,0,0,0.5);
 	display: none;
 }
-.controls .button{
-	display: inline-block;
-	width:30px;
-	margin-bottom: 10px;
-	margin-left:10px;
-	margin-top:10px;
+.button {
 	background-color: #aaa;
 	border: 1pt solid #000;
 	color:#000;
-	padding-top: 5px;
-	padding-left:5px;
-	padding-bottom:5px;
+	cursor: pointer;
+	width:28px;
+	padding-top: 7px;
+	padding-left:9px;
+	padding-bottom:7px;
 	font-size: 20px;
+}
+.controls .button{
+	margin-bottom: 10px;
+	margin-left:10px;
+	margin-top:10px;
+	display: inline-block;
 }
 @media (max-width:900px){
 	.controls{
 		display: initial;
 	}
+	.snapshots{
+		height: calc(100% - 50px);
+	}
 }
 
 .snapshot {
-	width:150px;
+	width:300px;
 	height: 150px;
-	background-color: #fff;
 	margin-top:10px;
-	display: none;
-	position: relative;
+	display: inline-flex;
 }
-.snapshot:hover .snapshot-layover{
-	display: block;
-}
+
 .snapshot-option{
-	width: 73px;
-	height: 30px;
 	display: inline-block;
 	margin: 0px;
-	cursor: pointer;
-	background-color: #fff;
-	font-size: 10px;
-	font-family: Verdana;
-	color: #000;
-	border: 1pt solid #000;
 }
-.snapshot-option:hover{
-	background-color: #aaa;
+.snapshot canvas{
+	display: inline-block;
 }
-.snapshot-layover{
-	display: none;
-	background-color: rgba(255,255,255,0.5);
-	position: absolute;
-	left: 0px;
+.snapshot-part{
+	width: 150px;
+	display: inline-block;
+	position: relative;
 	top:0px;
-	width: 100%;
-	height: 100%;
 }
-.snapshots:hover .snapshot{
-	display: block;
-}
+
+
 .step-count {
 	position: absolute;
 	top:10px;

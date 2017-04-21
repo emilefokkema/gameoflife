@@ -1,8 +1,9 @@
 <html>
 <head>
 	<title>Conway's Game of Life</title>
-	<LINK href="gameoflife.css" rel="stylesheet" type="text/css" />
 	<LINK href="font-awesome.min.css" rel="stylesheet" type="text/css" />
+	<LINK href="gameoflife.css" rel="stylesheet" type="text/css" />
+	
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -16,6 +17,18 @@
 		return function(x){
 			return a * Math.exp(-c*x) + b;
 		};
+	};
+	var addClass = function(el, className){
+		var oldName = el.getAttribute('class') || "";
+		var oldClassNames = oldName.match(/[^\s]+/g);
+		oldClassNames = oldClassNames || [];
+		el.setAttribute('class', oldClassNames.concat([className]).join(" "));
+	};
+	var removeClass = function(el, className){
+		var oldName = el.getAttribute('class') || "";
+		var oldClassNames = oldName.match(/[^\s]+/g);
+		oldClassNames = oldClassNames || [];
+		el.setAttribute('class', oldClassNames.filter(function(n){return n != className;}).join(" "));
 	};
 	var w = document.body.offsetWidth,
 		h = document.body.offsetHeight,
@@ -210,6 +223,10 @@
 				}
 				if(menu.isOpen()){
 					menu.hide();
+					return;
+				}
+				if(snapshots.isShowing()){
+					snapshots.hide();
 					return;
 				}
 				if(selection.isPresent()){
@@ -564,6 +581,9 @@
 				drawAll();
 				setCounter();
 			});
+			addButton("fa-save",function(){
+				snapshots.add(position.getAllAlive());
+			});
 		})(),
 		speedRange = (function(){
 			var getLength = interpolation(1000,100,0.05);
@@ -576,6 +596,14 @@
 				console.log(newLength);
 				intervalLength = Math.max(1, newLength); 
 			});
+		})(),
+		setCounter = (function(){
+		    var a = document.createElement('a');
+		    a.setAttribute('class','step-count');
+		    document.body.appendChild(a);
+		    return function(){
+		            a.innerHTML = stepCount;
+		    };
 		})(),
 		context = c.context,
 		clear = c.clear,
@@ -606,7 +634,8 @@
 		},
 		position = quadTreePositionFactory(),
 		snapshots = (function(){
-			var snapshotWidth = 150, snapshotHeight = 150;
+			var showing = false, count = 0;
+			var snapshotWidth = 120, snapshotHeight = 120;
 			var makeSnapshot = function(positions, forget){
 				var setPositions = function(){
 					minX = Math.min.apply(null, positions.map(function(p){return p.x;}));
@@ -623,6 +652,8 @@
 				origMinY = minY;
 				var draw = function(canvas){
 					var ctx = canvas.getContext("2d");
+					ctx.fillStyle = '#fff';
+					ctx.fillRect(0,0,snapshotWidth,snapshotHeight);
 					ctx.fillStyle = '#000';
 					var cellSize = Math.min(snapshotWidth / (maxX - minX + 1), snapshotHeight / (maxY - minY + 1));
 					positions.map(function(p){
@@ -662,57 +693,87 @@
 					copyToClipboard:copyToClipboard
 				};
 			};
+			var show = function(){
+				addClass(document.body,'show-snapshots');
+				showing = true;
+			};
+			var hide = function(){
+				removeClass(document.body,'show-snapshots');
+				showing = false;
+			};
 			var container = document.createElement('div');
 			container.setAttribute('class','snapshots');
 			document.body.appendChild(container);
 			var addSnapshotOption = function(layover, name, toDo){
 				var option = document.createElement('div');
-				option.setAttribute('class','snapshot-option');
-				option.appendChild(document.createTextNode(name));
+				option.setAttribute('class','button snapshot-option fa '+name);
 				option.addEventListener('click',toDo);
 				layover.appendChild(option);
 			};
 			var add = function(positions){
 				var s = document.createElement('div');
 				s.setAttribute('class','snapshot');
+				var s1 = document.createElement('div');
+				s1.setAttribute('class','snapshot-part');
+				s.appendChild(s1);
+				var s2 = document.createElement('div');
+				s2.setAttribute('class','snapshot-part');
+				s.appendChild(s2);
 				container.appendChild(s);
 				var canvas = document.createElement('canvas');
 				canvas.setAttribute('width',snapshotWidth);
 				canvas.setAttribute('height',snapshotHeight);
-				s.appendChild(canvas);
+				s1.appendChild(canvas);
 				var newSnapshot = makeSnapshot(positions, function(){
 					container.removeChild(s);
+					count--;
+					if(count == 0){
+						removeClass(document.body,'show-snapshots');
+						removeClass(document.body,'has-snapshots');
+					}
 				});
 				
 				newSnapshot.draw(canvas);
-				var layover = document.createElement('div');
-				layover.setAttribute('class','snapshot-layover');
-				s.appendChild(layover);
-				addSnapshotOption(layover, 'restore',function(){
+				
+				addSnapshotOption(s2, 'fa-folder-open',function(){
 					newSnapshot.restore();
 				});
-				addSnapshotOption(layover, 'copy',function(){
+				addSnapshotOption(s2, 'fa-copy',function(){
 					newSnapshot.copyToClipboard();
 				});
-				addSnapshotOption(layover, 'delete',function(){
+				addSnapshotOption(s2, 'fa-trash',function(){
 					newSnapshot.forget();
 				});
-				addSnapshotOption(layover, 'RLE',function(){
+				addSnapshotOption(s2, 'fa-file-code-o',function(){
 					alert(makeRLE(positions));
 				});
-				addSnapshotOption(layover, 'flip h.',function(){
+				addSnapshotOption(s2, 'fa-arrows-h',function(){
 					newSnapshot.flipHorizontal();
 					canvas.width = snapshotWidth;
 					newSnapshot.draw(canvas);
 				});
-				addSnapshotOption(layover, 'flip v.',function(){
+				addSnapshotOption(s2, 'fa-arrows-v',function(){
 					newSnapshot.flipVertical();
 					canvas.width = snapshotWidth;
 					newSnapshot.draw(canvas);
 				});
+				addClass(document.body, 'has-snapshots');
+				count++;
 			};
+			var button = document.createElement('div');
+			button.setAttribute('class','button snapshot-button fa fa-inbox');
+			document.body.appendChild(button);
+			button.addEventListener('click',function(){
+				if(showing){
+					hide();
+				}else{
+					show();
+				}
+			});
 			return {
-				add:add
+				add:add,
+				isShowing:function(){return showing;},
+				hide:hide
 			};
 		})(),
 		drawHorizontalLine = function(y){
@@ -745,14 +806,7 @@
 		},
 		going = false,
 		setCounterInterval,
-		setCounter = (function(){
-			var a = document.createElement('a');
-			a.setAttribute('class','step-count');
-			document.body.appendChild(a);
-			return function(){
-				a.innerHTML = stepCount;
-			};
-		})(),
+		
 		stop = function(){
 			going = false;
 			var timeDiff = +new Date() - timeCount;
