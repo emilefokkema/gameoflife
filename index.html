@@ -328,7 +328,7 @@
 			}
 		})(),
 		selection = (function(){
-			var present = false, removeMenuOption = null, minX, minY, maxX, maxY, dragger;
+			var present = false, removeMenuOption = null, removeSelectOption = null, minX, minY, maxX, maxY, dragger;
 			var getMinLoc = function(){
 				return positionToMousePosition({x:minX,y:minY});
 			};
@@ -396,6 +396,44 @@
 				));
 				return result;
 			};
+			var makeMover = function(mouseX, mouseY){
+				var positions = getPositions();
+				var relativePositions = positions.map(function(p){return {x:p.x - minX,y:p.y-minY};});
+				var startPos = mousePositionToPositionLocation(mouseX, mouseY);
+				var relativePositionX = startPos.x - minX;
+				var relativePositionY = startPos.y - minY;
+				var width = maxX - minX;
+				var height = maxY - minY;
+				var drag = function(x,y){
+					var toPos = mousePositionToPositionLocation(x, y);
+					minX = toPos.x - relativePositionX;
+					maxX = minX + width;
+					minY = toPos.y - relativePositionY;
+					maxY = minY + height;
+					drawAll();
+					draw();
+				};
+				var getNewPositions = function(){
+					return relativePositions.map(function(p){return {x:minX + p.x,y:minY + p.y};});
+				};
+				var draw = function(){
+					context.save();
+					context.fillStyle = 'rgba(0,0,0,0.5)';
+					getNewPositions().map(function(p){
+						var pos = positionToMousePosition(p);
+						context.fillRect(pos.x, pos.y,size,size);
+					});
+				};
+				var end = function(){
+					positions.map(function(p){p.vacate();});
+					getNewPositions().map(function(p){position(p.x,p.y).occupy();});
+					drawAll();
+				};
+				return {
+					drag:drag,
+					end:end
+				};
+			};
 			var makeDragger = function(mouseX, mouseY){
 				var draggerMakers = getDraggerMakers(getMinLoc(), getMaxLoc());
 				for(var i=0;i<draggerMakers.length;i++){
@@ -403,6 +441,9 @@
 					if(draggerMaker.isClose(mouseX, mouseY)){
 						return draggerMaker.make();
 					}
+				}
+				if(containsMousePosition(mouseX, mouseY)){
+					return makeMover(mouseX, mouseY);
 				}
 			};
 			var direction = {UP:0,DOWN:1,LEFT:2,RIGHT:3};
@@ -474,6 +515,7 @@
 					minX = maxX = x;
 					minY = maxY = y;
 					present = true;
+					removeSelectOption && removeSelectOption();
 				}else{
 					if(x > minX){
 						maxX = x;
@@ -544,7 +586,7 @@
 				}
 			};
 			var addSelectingOption = function(){
-				menu.addOption('select', function(x,y,remove){
+				removeSelectOption = menu.addOption('select', function(x,y,remove){
 					select(x,y);
 					drawAll();
 					remove();
@@ -561,6 +603,7 @@
 				}
 			});
 			c.addEventListener('positiondragend',function(){
+				dragger && dragger.end && dragger.end();
 				dragger = null;
 			});
 			return {
