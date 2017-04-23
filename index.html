@@ -252,6 +252,7 @@
 				});
 			});
 			canvas.addEventListener('touchend',function(e){
+				if(!dragger){return;}
 				mapTouchList(e.changedTouches, function(touch){
 					dragger.end(touch.identifier);
 				});
