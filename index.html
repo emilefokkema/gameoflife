@@ -296,7 +296,13 @@
 			div.setAttribute("class","menu");
 			document.body.appendChild(div);
 			var addOption = function(text, f){
-				var remove = function(){div.removeChild(option);};
+				var removed = false;
+				var remove = function(){
+					if(!removed){
+						div.removeChild(option);
+						removed = true;
+					}
+				};
 				var option = document.createElement('div');
 				option.setAttribute("class","option");
 				option.appendChild(document.createTextNode(text));
