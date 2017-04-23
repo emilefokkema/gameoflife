@@ -1,6 +1,12 @@
 <html>
 <head>
+	<title>Conway's Game of Life</title>
+	<LINK href="font-awesome.min.css" rel="stylesheet" type="text/css" />
 	<LINK href="gameoflife.css" rel="stylesheet" type="text/css" />
+	
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 </head>
 <body style="padding:0px;margin:0px"></body>
 <script src="quadtree.js"></script>
@@ -12,6 +18,18 @@
 			return a * Math.exp(-c*x) + b;
 		};
 	};
+	var addClass = function(el, className){
+		var oldName = el.getAttribute('class') || "";
+		var oldClassNames = oldName.match(/[^\s]+/g);
+		oldClassNames = oldClassNames || [];
+		el.setAttribute('class', oldClassNames.concat([className]).join(" "));
+	};
+	var removeClass = function(el, className){
+		var oldName = el.getAttribute('class') || "";
+		var oldClassNames = oldName.match(/[^\s]+/g);
+		oldClassNames = oldClassNames || [];
+		el.setAttribute('class', oldClassNames.filter(function(n){return n != className;}).join(" "));
+	};
 	var w = document.body.offsetWidth,
 		h = document.body.offsetHeight,
 		size, nx, ny,
@@ -21,39 +39,86 @@
 			ny = Math.ceil(h / size);
 		},
 		zoom = function(factor, centerX, centerY){
+			clear();
 			var pCenter = mousePositionToPositionLocation(centerX, centerY);
-			var newSize;
-			if(factor < 1){
-				newSize = Math.max(1, Math.floor(size * factor));
-			}else{
-				newSize = size * factor;
-			}
+			var newSize = size * factor;
 			if(newSize != size){
 				setSize(newSize);
-				xShift = Math.floor(centerX/size - pCenter.x);
-				yShift = Math.floor(centerY/size - pCenter.y);
+				setXShift(centerX/size - pCenter.x);
+				setYShift(centerY/size - pCenter.y);
 			}
 		},
 		xShift = 0,
 		yShift = 0,
-		draggerFactory = (function(){
-			var make = function(startMouseX, startMouseY){
-				var origXShift = xShift, origYShift = yShift;
-				var dragTo = function(mouseX, mouseY){
-					xShift = origXShift + Math.floor((mouseX - startMouseX) / size);
-					yShift = origYShift + Math.floor((mouseY - startMouseY) / size);
-					drawAll();
-				};
-				return {
-					dragTo:dragTo
-				};
+		xShiftOffset = 0,
+		yShiftOffset = 0,
+		getOffset = function(v){
+			if(v >= 0){
+				return v  - Math.floor(v);
+			}
+			return 1 - getOffset(-v);
+		},
+		setXShift = function(v){
+			xShift = v;
+			xShiftOffset = getOffset(v);
+		},
+		setYShift = function(v){
+			yShift = v;
+			yShiftOffset = getOffset(v);
+		},
+		currentDrag = null,
+		makeDrag = function(startMouseX, startMouseY){
+			var origXShift, origYShift, currentMouseX, currentMouseY, origSize;
+			var resetTo = function(x,y){
+				origXShift = xShift;
+				origYShift = yShift;
+				origSize = size;
+				currentMouseX = x;
+				currentMouseY = y;
+				startMouseX = x;
+				startMouseY = y;
+			};
+			resetTo(startMouseX, startMouseY);
+			var origR, currentR;
+			var applyDrag = function(){
+				setXShift(origXShift + (currentMouseX - startMouseX) / size);
+				setYShift(origYShift + (currentMouseY - startMouseY) / size);
+			};
+			var applyZoomAndDrag = function(){
+				setSize(origSize);
+				applyDrag();
+				zoom(currentR / origR, currentMouseX, currentMouseY);
 			};
 			return {
-				make:make
+				drag:function(toX, toY){
+					currentMouseX = toX;
+					currentMouseY = toY;
+					if(currentR == undefined){
+						applyDrag();
+					}else{
+						applyZoomAndDrag();
+					}
+					drawAll();
+				},
+				startZoom:function(r){
+					origR = r;
+					currentR = r;
+				},
+				changeZoom:function(r){
+					currentR = r;
+					applyZoomAndDrag();
+					drawAll();
+				},
+				endZoom:function(){
+					origR = undefined;
+					currentR = undefined;
+					resetTo(currentMouseX, currentMouseY);
+				}
 			};
-		})(),
+		},
 		c = (function(){
 			var dragger = null;
+			var zoomer = null;
 			var dragHappened = false;
 			var canvas = document.createElement("canvas");
 			canvas.setAttribute("width", w);
@@ -62,10 +127,89 @@
 			var context = canvas.getContext("2d");
 			var initializeContext = function(){
 				context.strokeStyle = '#000';
-				context.lineWidth = 0.1;
 				context.fillStyle = '#000';
 			};
+			var draggerFactory = (function(){
+				var dispatchDragStart = function(x,y){
+					var event = new CustomEvent('positiondragstart',{'detail':{x:x,y:y}});
+					canvas.dispatchEvent(event);
+				};
+				var dispatchDragMove = function(toX, toY){
+					var event = new CustomEvent('positiondragmove',{
+						'detail':{
+							toX:toX,
+							toY:toY
+						}
+					});
+					canvas.dispatchEvent(event);
+				};
+				var dispatchDragEnd = function(){
+					var event = new CustomEvent('positiondragend');
+					canvas.dispatchEvent(event);
+				};
+				var dispatchStartZoom = function(r){
+					var event = new CustomEvent('startzoom', {'detail':{r:r}});
+					canvas.dispatchEvent(event);
+				};
+				var dispatchEndZoom = function(){
+					var event = new CustomEvent('endzoom');
+					canvas.dispatchEvent(event);
+				};
+				var dispatchChangeZoom = function(r){
+					var event = new CustomEvent('changezoom', {'detail':{r:r}});
+					canvas.dispatchEvent(event);
+				};
+				var make = function(startX, startY, startId){
+					dispatchDragStart(startX, startY);
+					var firstTouch = {x:startX,y:startY,id:startId};
+					var secondTouch;
+					var getDistance = function(){
+						return Math.sqrt(Math.pow(firstTouch.x - secondTouch.x,2) + Math.pow(firstTouch.y - secondTouch.y,2));
+					};
+					var moveTo = function(x, y, id){
+						if(id == undefined || id == firstTouch.id){
+							dispatchDragMove(x, y);
+							if(id != undefined && id == firstTouch.id){
+								firstTouch.x = x;
+								firstTouch.y = y;
+							}
+						}else if(secondTouch && id == secondTouch.id){
+							secondTouch.x = x;
+							secondTouch.y = y;
+							dispatchChangeZoom(getDistance());
+						}
+					};
+					var end = function(id){
+						if(id == undefined || id == firstTouch.id){
+							dispatchDragEnd();
+						}else if(secondTouch && id == secondTouch.id){
+							dispatchEndZoom();
+							secondTouch = null;
+						}
+					};
+					var add = function(x, y, id){
+						if(id != firstTouch.id && !secondTouch){
+							secondTouch = {x:x,y:y,id:id};
+							dispatchStartZoom(getDistance());
+						}
+					};
+					return {
+						moveTo:moveTo,
+						end:end,
+						add:add
+					};
+				};
+				return {
+					make:make
+				};
+			})();
+			
 			initializeContext();
+			var mapTouchList = function(touchList, mapper){
+				for(var i=0;i<touchList.length;i++){
+					mapper(touchList.item(i));
+				}
+			};
 			canvas.addEventListener('click',function(e){
 				if(dragHappened){
 					dragHappened = false;
@@ -77,7 +221,14 @@
 					drawAll();
 					return;
 				}
-				menu.hide();
+				if(menu.isOpen()){
+					menu.hide();
+					return;
+				}
+				if(snapshots.isShowing()){
+					snapshots.hide();
+					return;
+				}
 				if(selection.isPresent()){
 					selection.clear();
 				}else{
@@ -91,18 +242,41 @@
 				}
 				drawAll();
 			});
+			canvas.addEventListener('touchstart',function(e){
+				mapTouchList(e.changedTouches, function(touch){
+					if(!dragger){
+						dragger = draggerFactory.make(touch.clientX, touch.clientY, touch.identifier);
+					}else{
+						dragger.add(touch.clientX, touch.clientY, touch.identifier);
+					}
+				});
+			});
+			canvas.addEventListener('touchend',function(e){
+				mapTouchList(e.changedTouches, function(touch){
+					dragger.end(touch.identifier);
+				});
+				if(e.touches.length == 0){
+					dragger = null;
+				}
+			});
+			canvas.addEventListener('touchmove',function(e){
+				mapTouchList(e.changedTouches,function(touch){
+					dragger.moveTo(touch.clientX, touch.clientY, touch.identifier);
+				});
+				dragHappened = true;
+			});
 			canvas.addEventListener('mousedown',function(e){
 				dragger = draggerFactory.make(e.clientX, e.clientY);
 			});
 			canvas.addEventListener('mousemove',function(e){
-
 				if(dragger && (e.movementX != 0 || e.movementY != 0) ){
-					dragger.dragTo(e.clientX, e.clientY);
+					dragger.moveTo(e.clientX, e.clientY);
 					dragHappened = true;
 				}
 				return true;
 			});
 			canvas.addEventListener('mouseup',function(){
+				dragger.end();
 				dragger = null;
 			});
 			canvas.addEventListener('contextmenu',function(e){
@@ -112,24 +286,26 @@
 			});
 			return {
 				context:context,
-				clear:function(){canvas.width = w;initializeContext();}
+				clear:function(){canvas.width = w;initializeContext();},
+				addEventListener:function(name, handler){canvas.addEventListener(name, handler);}
 			};
 		})(),
 		menu = (function(){
-			var currentX, currentY;
+			var currentX, currentY,open = false;
 			var div = document.createElement("div");
 			div.setAttribute("class","menu");
 			document.body.appendChild(div);
 			var addOption = function(text, f){
+				var remove = function(){div.removeChild(option);};
 				var option = document.createElement('div');
 				option.setAttribute("class","option");
 				option.appendChild(document.createTextNode(text));
 				option.addEventListener('click', function(){
 					hide();
-					f(currentX, currentY);
+					f(currentX, currentY, remove);
 				});
 				div.appendChild(option);
-				return function(){div.removeChild(option);}
+				return remove;
 			};
 			var show = function(x,y){
 				var loc = mousePositionToPositionLocation(x,y);
@@ -138,16 +314,170 @@
 				div.style.display = "initial";
 				div.style.left = x + "px";
 				div.style.top = y + "px";
+				open = true;
 			};
-			var hide = function(){div.style.display = "none"};
+			var hide = function(){
+				div.style.display = "none";
+				open = false;
+			};
 			return {
 				addOption:addOption,
 				show:show,
-				hide:hide
+				hide:hide,
+				isOpen:function(){return open;}
 			}
 		})(),
 		selection = (function(){
-			var present = false, removeMenuOption = null, minX, minY, maxX, maxY;
+			var present = false, removeMenuOption = null, removeSelectOption = null, minX, minY, maxX, maxY, dragger;
+			var getMinLoc = function(){
+				return positionToMousePosition({x:minX,y:minY});
+			};
+			var getMaxLoc = function(){
+				return positionToMousePosition({x:maxX + 1,y:maxY + 1});
+			};
+			var makeDraggerMaker = function(mX, mY, howToDrag){
+				var isClose = function(x,y){
+					var d = Math.sqrt(Math.pow(mX - x, 2) + Math.pow(mY - y, 2));
+					return d < 10;
+				};
+				var draw = function(){
+					context.save();
+					context.fillStyle = '#00f';
+					context.beginPath();
+					context.arc(mX, mY, 4, 0, 2*Math.PI);
+					context.fill();
+					context.restore();
+				};
+				var make = function(){
+					var drag = function(x,y){
+						var pos = mousePositionToPositionLocation(x,y);
+						howToDrag(pos);
+						drawAll();
+					};
+					return {
+						drag:drag
+					};
+				};
+				return {
+					isClose:isClose,
+					draw:draw,
+					make:make
+				};
+			};
+			var getDraggerMakers = function(minLoc, maxLoc){
+				var result = [];
+				result.push(makeDraggerMaker(
+					(minLoc.x + maxLoc.x)/2,
+					minLoc.y,
+					function(pos){
+						minY = Math.min(maxY, pos.y);
+					}
+				));
+				result.push(makeDraggerMaker(
+					minLoc.x,
+					(minLoc.y + maxLoc.y) / 2,
+					function(pos){
+						minX = Math.min(maxX, pos.x);
+					}
+				));
+				result.push(makeDraggerMaker(
+					(minLoc.x + maxLoc.x)/2,
+					maxLoc.y,
+					function(pos){
+						maxY = Math.max(minY, pos.y);
+					}
+				));
+				result.push(makeDraggerMaker(
+					maxLoc.x,
+					(minLoc.y + maxLoc.y) / 2,
+					function(pos){
+						maxX = Math.max(minX, pos.x);
+					}
+				));
+				result.push(makeDraggerMaker(
+					minLoc.x,
+					minLoc.y,
+					function(pos){
+						minX = Math.min(maxX, pos.x);
+						minY = Math.min(maxY, pos.y);
+					}
+				));
+				result.push(makeDraggerMaker(
+					minLoc.x,
+					maxLoc.y,
+					function(pos){
+						minX = Math.min(maxX, pos.x);
+						maxY = Math.max(minY, pos.y);
+					}
+				));
+				result.push(makeDraggerMaker(
+					maxLoc.x,
+					minLoc.y,
+					function(pos){
+						maxX = Math.max(minX, pos.x);
+						minY = Math.min(maxY, pos.y);
+					}
+				));
+				result.push(makeDraggerMaker(
+					maxLoc.x,
+					maxLoc.y,
+					function(pos){
+						maxX = Math.max(minX, pos.x);
+						maxY = Math.max(minY, pos.y);
+					}
+				));
+				return result;
+			};
+			var makeMover = function(mouseX, mouseY){
+				var positions = getPositions();
+				var relativePositions = positions.map(function(p){return {x:p.x - minX,y:p.y-minY};});
+				var startPos = mousePositionToPositionLocation(mouseX, mouseY);
+				var relativePositionX = startPos.x - minX;
+				var relativePositionY = startPos.y - minY;
+				var width = maxX - minX;
+				var height = maxY - minY;
+				var drag = function(x,y){
+					var toPos = mousePositionToPositionLocation(x, y);
+					minX = toPos.x - relativePositionX;
+					maxX = minX + width;
+					minY = toPos.y - relativePositionY;
+					maxY = minY + height;
+					drawAll();
+					draw();
+				};
+				var getNewPositions = function(){
+					return relativePositions.map(function(p){return {x:minX + p.x,y:minY + p.y};});
+				};
+				var draw = function(){
+					context.save();
+					context.fillStyle = 'rgba(0,0,0,0.5)';
+					getNewPositions().map(function(p){
+						var pos = positionToMousePosition(p);
+						context.fillRect(pos.x, pos.y,size,size);
+					});
+				};
+				var end = function(){
+					positions.map(function(p){p.vacate();});
+					getNewPositions().map(function(p){position(p.x,p.y).occupy();});
+					drawAll();
+				};
+				return {
+					drag:drag,
+					end:end
+				};
+			};
+			var makeDragger = function(mouseX, mouseY){
+				var draggerMakers = getDraggerMakers(getMinLoc(), getMaxLoc());
+				for(var i=0;i<draggerMakers.length;i++){
+					var draggerMaker = draggerMakers[i];
+					if(draggerMaker.isClose(mouseX, mouseY)){
+						return draggerMaker.make();
+					}
+				}
+				if(containsMousePosition(mouseX, mouseY)){
+					return makeMover(mouseX, mouseY);
+				}
+			};
 			var direction = {UP:0,DOWN:1,LEFT:2,RIGHT:3};
 			var getPositions = function(){
 				return position.getAllInBox({
@@ -217,6 +547,7 @@
 					minX = maxX = x;
 					minY = maxY = y;
 					present = true;
+					removeSelectOption && removeSelectOption();
 				}else{
 					if(x > minX){
 						maxX = x;
@@ -235,20 +566,20 @@
 			};
 			var draw = function(){
 				if(!present){return;}
-				var style = context.strokeStyle;
-				var lineWidth = context.lineWidth;
+				context.save();
 				context.strokeStyle = '#00f';
 				context.lineWidth = 2;
-				var minLoc = positionToMousePosition({x:minX,y:minY});
-				var maxLoc = positionToMousePosition({x:maxX + 1,y:maxY + 1});
+				var minLoc = getMinLoc();
+				var maxLoc = getMaxLoc();
 				context.strokeRect(minLoc.x, minLoc.y, maxLoc.x - minLoc.x, maxLoc.y - minLoc.y);
-				context.strokeStyle = style;
-				context.lineWidth = lineWidth;
+				getDraggerMakers(minLoc, maxLoc).map(function(d){d.draw();});
+				context.restore();
 			};
 			var clear = function(){
 				present = false;
 				removeMenuOption && removeMenuOption();
 				removeMenuOption = null;
+				addSelectingOption();
 			};
 			var moveInDirection = function(dir){
 				if(!present){
@@ -286,6 +617,30 @@
 					maxX +=1;
 				}
 			};
+			var addSelectingOption = function(){
+				removeSelectOption = menu.addOption('select', function(x,y,remove){
+					var width = Math.floor(w / (5 * size));
+					var height = Math.floor(h / (5 * size));
+					select(x,y);
+					select(x + width, y + height);
+					drawAll();
+					remove();
+				});
+			};
+			var containsMousePosition = function(mouseX, mouseY){
+				var pos = mousePositionToPositionLocation(mouseX, mouseY);
+				return pos.x >= minX && pos.x <= maxX && pos.y >= minY && pos.y <= maxY;
+			};
+			addSelectingOption();
+			c.addEventListener('positiondragmove',function(e){
+				if(dragger){
+					dragger.drag(e.detail.toX, e.detail.toY);
+				}
+			});
+			c.addEventListener('positiondragend',function(){
+				dragger && dragger.end && dragger.end();
+				dragger = null;
+			});
 			return {
 				select:select,
 				draw:draw,
@@ -302,7 +657,12 @@
 				moveDown:function(){
 					moveInDirection(direction.DOWN);
 				},
-				isPresent:function(){return present;}
+				isPresent:function(){return present;},
+				containsMousePosition:containsMousePosition,
+				handleDragStart:function(mouseX, mouseY){
+					dragger = makeDragger(mouseX, mouseY);
+					return !!dragger;
+				}
 			};
 		})(),
 		input = (function(){
@@ -330,6 +690,7 @@
 			document.body.appendChild(div);
 			button.addEventListener('click',function(){
 				handler(text.value);
+				text.value = '';
 			});
 			hide();
 			var f = function(resultHandler, initialText){
@@ -366,6 +727,43 @@
 			
 			return {copy:copy};
 		})(),
+		controls = (function(){
+			var container = document.createElement('div');
+			container.setAttribute('class','controls');
+			document.body.appendChild(container);
+			var addButton = function(className, action){
+				var div = document.createElement('div');
+				div.setAttribute('class','button fa '+className);
+				div.addEventListener('click',function(){
+					action(function(newClassName){
+						if(newClassName){
+							div.setAttribute('class','button fa '+newClassName);
+						}
+					});
+				});
+				container.appendChild(div);
+			};
+			addButton("fa-play",function(setNewClassName){
+				if(going){
+					stop();
+					setNewClassName("fa-play");
+				}else{
+					go(function(){setNewClassName("fa-play");});
+					setNewClassName("fa-pause");
+				}
+			});
+			addButton("fa-eraser",function(){
+				reset();
+			});
+			addButton("fa-step-forward",function(){
+				doStep();
+				drawAll();
+				setCounter();
+			});
+			addButton("fa-save",function(){
+				snapshots.add(position.getAllAlive());
+			});
+		})(),
 		speedRange = (function(){
 			var getLength = interpolation(1000,100,0.05);
 			var range = document.createElement('input');
@@ -377,6 +775,14 @@
 				console.log(newLength);
 				intervalLength = Math.max(1, newLength); 
 			});
+		})(),
+		setCounter = (function(){
+		    var a = document.createElement('a');
+		    a.setAttribute('class','step-count');
+		    document.body.appendChild(a);
+		    return function(){
+		            a.innerHTML = stepCount;
+		    };
 		})(),
 		context = c.context,
 		clear = c.clear,
@@ -391,8 +797,8 @@
 		},
 		mousePositionToPositionLocation = function(mX,mY){
 			return {
-				x:Math.floor(mX / size) - xShift,
-				y:Math.floor(mY / size) - yShift
+				x:Math.floor(mX / size - xShift),
+				y:Math.floor(mY / size - yShift)
 			};
 		},
 		mousePositionToPosition = function(mX, mY){
@@ -407,7 +813,8 @@
 		},
 		position = quadTreePositionFactory(),
 		snapshots = (function(){
-			var snapshotWidth = 150, snapshotHeight = 150;
+			var showing = false, count = 0;
+			var snapshotWidth = 120, snapshotHeight = 120;
 			var makeSnapshot = function(positions, forget){
 				var setPositions = function(){
 					minX = Math.min.apply(null, positions.map(function(p){return p.x;}));
@@ -424,6 +831,8 @@
 				origMinY = minY;
 				var draw = function(canvas){
 					var ctx = canvas.getContext("2d");
+					ctx.fillStyle = '#fff';
+					ctx.fillRect(0,0,snapshotWidth,snapshotHeight);
 					ctx.fillStyle = '#000';
 					var cellSize = Math.min(snapshotWidth / (maxX - minX + 1), snapshotHeight / (maxY - minY + 1));
 					positions.map(function(p){
@@ -463,57 +872,91 @@
 					copyToClipboard:copyToClipboard
 				};
 			};
+			var show = function(){
+				addClass(document.body,'show-snapshots');
+				showing = true;
+			};
+			var hide = function(){
+				removeClass(document.body,'show-snapshots');
+				showing = false;
+			};
 			var container = document.createElement('div');
 			container.setAttribute('class','snapshots');
 			document.body.appendChild(container);
 			var addSnapshotOption = function(layover, name, toDo){
 				var option = document.createElement('div');
-				option.setAttribute('class','snapshot-option');
-				option.appendChild(document.createTextNode(name));
+				option.setAttribute('class','button snapshot-option fa '+name);
 				option.addEventListener('click',toDo);
 				layover.appendChild(option);
 			};
 			var add = function(positions){
 				var s = document.createElement('div');
 				s.setAttribute('class','snapshot');
+				var s1 = document.createElement('div');
+				s1.setAttribute('class','snapshot-part');
+				s.appendChild(s1);
+				var s2 = document.createElement('div');
+				s2.setAttribute('class','snapshot-part');
+				s.appendChild(s2);
 				container.appendChild(s);
 				var canvas = document.createElement('canvas');
 				canvas.setAttribute('width',snapshotWidth);
 				canvas.setAttribute('height',snapshotHeight);
-				s.appendChild(canvas);
+				s1.appendChild(canvas);
 				var newSnapshot = makeSnapshot(positions, function(){
 					container.removeChild(s);
+					count--;
+					if(count == 0){
+						removeClass(document.body,'show-snapshots');
+						removeClass(document.body,'has-snapshots');
+					}
 				});
 				
 				newSnapshot.draw(canvas);
-				var layover = document.createElement('div');
-				layover.setAttribute('class','snapshot-layover');
-				s.appendChild(layover);
-				addSnapshotOption(layover, 'restore',function(){
+				
+				addSnapshotOption(s2, 'fa-folder-open',function(){
 					newSnapshot.restore();
 				});
-				addSnapshotOption(layover, 'copy',function(){
+				addSnapshotOption(s2, 'fa-copy',function(){
 					newSnapshot.copyToClipboard();
 				});
-				addSnapshotOption(layover, 'delete',function(){
+				addSnapshotOption(s2, 'fa-trash',function(){
 					newSnapshot.forget();
 				});
-				addSnapshotOption(layover, 'RLE',function(){
+				addSnapshotOption(s2, 'fa-file-code-o',function(){
 					alert(makeRLE(positions));
 				});
-				addSnapshotOption(layover, 'flip h.',function(){
+				addSnapshotOption(s2, 'fa-arrows-h',function(){
 					newSnapshot.flipHorizontal();
 					canvas.width = snapshotWidth;
 					newSnapshot.draw(canvas);
 				});
-				addSnapshotOption(layover, 'flip v.',function(){
+				addSnapshotOption(s2, 'fa-arrows-v',function(){
 					newSnapshot.flipVertical();
 					canvas.width = snapshotWidth;
 					newSnapshot.draw(canvas);
 				});
+				addClass(document.body, 'has-snapshots');
+				count++;
 			};
+			var button = document.createElement('div');
+			button.setAttribute('class','button snapshot-button fa fa-inbox');
+			document.body.appendChild(button);
+			button.addEventListener('click',function(){
+				if(showing){
+					hide();
+				}else{
+					show();
+				}
+			});
+			var closeButton = document.createElement('div');
+			closeButton.setAttribute('class','button snapshot-close-button fa fa-close');
+			container.appendChild(closeButton);
+			closeButton.addEventListener('click',hide);
 			return {
-				add:add
+				add:add,
+				isShowing:function(){return showing;},
+				hide:hide
 			};
 		})(),
 		drawHorizontalLine = function(y){
@@ -546,14 +989,7 @@
 		},
 		going = false,
 		setCounterInterval,
-		setCounter = (function(){
-			var a = document.createElement('a');
-			a.setAttribute('class','step-count');
-			document.body.appendChild(a);
-			return function(){
-				a.innerHTML = stepCount;
-			};
-		})(),
+		
 		stop = function(){
 			going = false;
 			var timeDiff = +new Date() - timeCount;
@@ -579,6 +1015,12 @@
 			};
 			afterStep();
 			setCounterInterval = window.setInterval(setCounter, 250);
+		},
+		reset = function(){
+			position.vacateAll();
+			stepCount = 0;
+			setCounter();
+			drawAll();
 		},
 		parseRLEBody = function(body, occupy){
 			var parts = body.replace(/\s*/g,"").match(/\d*[bo\$]/g);
@@ -683,18 +1125,50 @@
 		},
 		drawAll = function(){
 			clear();
+			context.save();
+			context.strokeStyle = '#ddd';
+			context.strokeWidth = 0.2;
 			for(var i = 0;i<nx;i++){
-				drawVerticalLine(i * size);
+				drawVerticalLine(i * size + xShiftOffset * size);
 			}
 			for(var i = 0;i<ny;i++){
-				drawHorizontalLine(i * size);
+				drawHorizontalLine(i * size + yShiftOffset * size);
 			}
+			context.restore();
 			selection.draw();
 			position.draw(function(p){
 				var mousePosition = positionToMousePosition(p);
 				fillRect(mousePosition.x,mousePosition.y);
 			});
 		};
+	c.addEventListener('positiondragstart',function(e){
+		if(!selection.isPresent() || !selection.handleDragStart(e.detail.x, e.detail.y)){
+			currentDrag = makeDrag(e.detail.x, e.detail.y);
+		}
+	});
+	c.addEventListener('positiondragmove',function(e){
+		if(currentDrag){
+			currentDrag.drag(e.detail.toX, e.detail.toY);
+		}
+	});
+	c.addEventListener('positiondragend',function(){
+		currentDrag = null;
+	});
+	c.addEventListener('startzoom',function(e){
+		if(currentDrag){
+			currentDrag.startZoom(e.detail.r);
+		}
+	});
+	c.addEventListener('changezoom',function(e){
+		if(currentDrag){
+			currentDrag.changeZoom(e.detail.r);
+		}
+	});
+	c.addEventListener('endzoom',function(e){
+		if(currentDrag){
+			currentDrag.endZoom();
+		}
+	});
 	menu.addOption('parse RLE',function(x,y){
 		input(function(v){
 			if(!v){return;}
@@ -703,14 +1177,12 @@
 			drawAll();
 		});
 	});
+	
 	input(function(){},"Click on a cell to bring it to life. Hit the space bar to get things moving, or to pause them if they already are. Adjust the slider to make them move faster or slower. Shift-click on a cell to make a selection, and then right-click on the selection to find some options.");
 	setSize(15);
 	readHash();
 	drawAll();
 	setCounter();
-	window.go = go;
-	window.getStepCount = function(){return stepCount;};
-	window.resetStepCount = function(){stepCount = 0;}
 	window.health = function(){
 		var all = position.countAll();
 		var alive = position.countAlive();
@@ -722,153 +1194,25 @@
 			treeSize: treeSize
 		};
 	};
-	window.alive = function(x,y){position(x,y).occupy();};
-	window.parseRLEBody = function(body){
-		position.vacateAll();
-		parseRLEBody(body, function(x,y){position(x,y).occupy();});
-		drawAll();
-	};
-	window.copyFromRLE = function(body){
-		var relativePositions = [];
-		parseRLEBody(body, function(x,y){
-			relativePositions.push({x:x,y:y});
-		});
-		clipboard.copy(relativePositions);
-	};
-	var actions = [
+
+	var shortcuts = [
 		{
-			events:[
-				{
-					name:"keydown",
-					condition:function(e){return e.key == "+" || e.key == "-";},
-					value:function(e){
-						return {
-							factor:e.key == "+" ? 2 : 0.5,
-							centerX:w/2,
-							centerY:h/2
-						};
-					}
-				},
-				{
-					name:"wheel",
-					value:function(e){
-						return {
-							factor:e.deltaY < 0 ? 2 : 0.5,
-							centerX:e.clientX,
-							centerY:e.clientY
-						};
-					}
-				}
-			],
-			action:function(v){
-				clear();
-				zoom(v.factor, v.centerX, v.centerY);
-				drawAll();
-			}
-		},
-		{
-			events:[
-				{
-					name:"keydown",
-					condition:function(e){return !selection.isPresent() && e.key == "ArrowLeft";}
-				}
-			],
+			key:"s",
 			action:function(){
-				xShift += Math.floor(nx/4);
+				doStep();
 				drawAll();
+				setCounter();
 			}
-		},
-		{
-			events:[
-				{
-					name:"keydown",
-					condition:function(e){return selection.isPresent() && e.key == "ArrowLeft";}
-				}
-			],
+		},{
+			key: "r",
 			action:function(){
-				selection.moveLeft();
-				drawAll();
+				snapshots.add(position.getAllAlive());
 			}
-		},
-		{
-			events:[
-				{
-					name:"keydown",
-					condition:function(e){return !selection.isPresent() && e.key == "ArrowRight";}
-				}
-			],
-			action:function(){
-				xShift -= Math.floor(nx/4);
-				drawAll();
-			}
-		},
-		{
-			events:[
-				{
-					name:"keydown",
-					condition:function(e){return selection.isPresent() && e.key == "ArrowRight";}
-				}
-			],
-			action:function(){
-				selection.moveRight();
-				drawAll();
-			}
-		},
-		{
-			events:[
-				{
-					name:"keydown",
-					condition:function(e){return !selection.isPresent() && e.key == "ArrowUp";}
-				}
-			],
-			action:function(){
-				yShift += Math.floor(ny/4);
-				drawAll();
-			}
-		},
-		{
-			events:[
-				{
-					name:"keydown",
-					condition:function(e){return selection.isPresent() && e.key == "ArrowUp";}
-				}
-			],
-			action:function(){
-				selection.moveUp();
-				drawAll();
-			}
-		},
-		{
-			events:[
-				{
-					name:"keydown",
-					condition:function(e){return !selection.isPresent() && e.key == "ArrowDown";}
-				}
-			],
-			action:function(){
-				yShift -= Math.floor(ny/4);
-				drawAll();
-			}
-		},
-		{
-			events:[
-				{
-					name:"keydown",
-					condition:function(e){return selection.isPresent() && e.key == "ArrowDown";}
-				}
-			],
-			action:function(){
-				selection.moveDown();
-				drawAll();
-			}
-		},
-		{
-			events:[
-				{
-					name:"keydown",
-					condition:function(e){return e.key == " ";}
-				}
-			],
+		},{
+			key:"c",
+			action:reset
+		},{
+			key:" ",
 			action:function(){
 				if(going){
 					stop();
@@ -876,62 +1220,18 @@
 					go();
 				}
 			}
-		},
-		{
-			events:[
-				{
-					name:"keydown",
-					condition:function(e){return e.key == "c";}
-				}
-			],
-			action:function(){
-				position.vacateAll();
-				stepCount = 0;
-				setCounter();
-				drawAll();
-			}
-		},
-		{
-			events:[
-				{
-					name:"keydown",
-					condition:function(e){return e.key == "s";}
-				}
-			],
-			action:function(){
-				doStep();
-				drawAll();
-				setCounter();
-			}
-		},
-		{
-			events:[
-				{
-					name:"keydown",
-					condition:function(e){return e.key == "r";}
-				}
-			],
-			action:function(){
-				snapshots.add(position.getAllAlive());
-			}
 		}
 	];
-	var doAction = function(eventName, e){
-		for(var i=0;i<actions.length;i++){
-			var event = actions[i].events.find(function(ev){return ev.name == eventName;});
-			if(event && (!event.condition || event.condition(e))){
-				actions[i].action(event.value && event.value(e));
-				break;
+	window.addEventListener('keydown',function(e){
+		shortcuts.map(function(s){
+			if(e.key == s.key){
+				s.action();
 			}
-		}
-	};
-	window.addEventListener("keydown",function(e){
-		if(input.isOpen()){return true;}
-		doAction("keydown",e);
+		});
 	});
-	window.addEventListener("wheel", function(e){
-		if(input.isOpen()){return true;}
-		doAction("wheel", e);
+	window.addEventListener('wheel',function(e){
+		zoom(Math.pow(2, -e.deltaY / 200), e.clientX, e.clientY);
+		drawAll();
 	});
 })();
 </script>
