@@ -1,0 +1,3 @@
+window.TreeNodeBase = function(){
+	
+};
