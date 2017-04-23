@@ -890,6 +890,7 @@
 				layover.appendChild(option);
 			};
 			var add = function(positions){
+				positions = positions.map(function(p){return {x:p.x,y:p.y};});
 				var s = document.createElement('div');
 				s.setAttribute('class','snapshot');
 				var s1 = document.createElement('div');
