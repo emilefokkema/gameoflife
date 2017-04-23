@@ -394,6 +394,38 @@
 						maxX = Math.max(minX, pos.x);
 					}
 				));
+				result.push(makeDraggerMaker(
+					minLoc.x,
+					minLoc.y,
+					function(pos){
+						minX = Math.min(maxX, pos.x);
+						minY = Math.min(maxY, pos.y);
+					}
+				));
+				result.push(makeDraggerMaker(
+					minLoc.x,
+					maxLoc.y,
+					function(pos){
+						minX = Math.min(maxX, pos.x);
+						maxY = Math.max(minY, pos.y);
+					}
+				));
+				result.push(makeDraggerMaker(
+					maxLoc.x,
+					minLoc.y,
+					function(pos){
+						maxX = Math.max(minX, pos.x);
+						minY = Math.min(maxY, pos.y);
+					}
+				));
+				result.push(makeDraggerMaker(
+					maxLoc.x,
+					maxLoc.y,
+					function(pos){
+						maxX = Math.max(minX, pos.x);
+						maxY = Math.max(minY, pos.y);
+					}
+				));
 				return result;
 			};
 			var makeMover = function(mouseX, mouseY){
@@ -587,7 +619,10 @@
 			};
 			var addSelectingOption = function(){
 				removeSelectOption = menu.addOption('select', function(x,y,remove){
+					var width = Math.floor(w / (5 * size));
+					var height = Math.floor(h / (5 * size));
 					select(x,y);
+					select(x + width, y + height);
 					drawAll();
 					remove();
 				});
