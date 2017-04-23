@@ -280,6 +280,10 @@
 				dragger = null;
 			});
 			canvas.addEventListener('contextmenu',function(e){
+				if(dragger){
+					dragger.end();
+					dragger = null;
+				}
 				e.preventDefault();
 				menu.show(e.clientX, e.clientY);
 				return false;
@@ -583,6 +587,7 @@
 			};
 			var clear = function(){
 				present = false;
+				dragger = null;
 				removeMenuOption && removeMenuOption();
 				removeMenuOption = null;
 				addSelectingOption();
