@@ -10,6 +10,13 @@
 </head>
 <body style="padding:0px;margin:0px"></body>
 <script src="quadtree.js"></script>
+<script src="tree/hashmap.js"></script>
+<script src="tree/hashmapprovider.js"></script>
+<script src="tree/treenodebase.js"></script>
+<script src="tree/treenode.js"></script>
+<script src="tree/canonicaltreenode.js"></script>
+<script src="tree/memoizedtreenode.js"></script>
+<script src="tree/hashlifemaker.js"></script>
 <script>
 (function(){
 	var interpolation = function(y0, x1, c){
@@ -784,7 +791,7 @@
 				y:(p.y + yShift) * size
 			};
 		},
-		position = quadTreePositionFactory(),
+		position = hashLifeMaker(),
 		snapshots = (function(){
 			var showing = false, count = 0;
 			var snapshotWidth = 120, snapshotHeight = 120;

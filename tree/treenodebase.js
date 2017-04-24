@@ -82,6 +82,25 @@
 				this.create(border, this.sw,border,border),
 				this.create(this.se,border,border,border)
 				);
+		},
+		draw:function(x, y, xyDrawer){
+			if(this.population == 0){return;}
+			if(this.level == 0 && this.alive){
+				xyDrawer(x,y);
+				return;
+			}
+			if(this.level == 1){
+				this.nw.draw(x - 1, y - 1, xyDrawer);
+				this.ne.draw(x, y-1, xyDrawer);
+				this.sw.draw(x - 1, y, xyDrawer);
+				this.se.draw(x, y, xyDrawer);
+				return;
+			}
+			var offset = 1 << (this.level - 2);
+			this.nw.draw(x - offset, y - offset, xyDrawer);
+			this.sw.draw(x - offset, y + offset, xyDrawer);
+			this.ne.draw(x + offset, y - offset, xyDrawer);
+			this.se.draw(x + offset, y + offset, xyDrawer);
 		}
 	};
 	TreeNodeBase.create = function(){
