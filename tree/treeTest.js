@@ -2,6 +2,7 @@
 	var reportSuccess = function(t){console.info(t);};
 	var reportFailure = function(t){console.error(t);};
 	var test = function(name, t){
+		hashMapProvider.set(getHashMap());
 		var fail = function(e){
 			reportFailure(name+" failed");
 			console.error(e);
