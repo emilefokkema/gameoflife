@@ -96,4 +96,19 @@
 		this.assert(next.getBit(1,0) == 1);
 		this.assert(next.getBit(-1,0) == 1);
 	});
+
+	test("canonicalTreeNodeCreateTest",function(){
+		var created = CanonicalTreeNode.create();
+		this.assert(created.nw == created.ne);
+		var createdAgain = CanonicalTreeNode.create();
+		this.assert(created == createdAgain);
+		this.assert(created.nw == createdAgain.nw);
+	});
+
+	test("canonicalTreeNodeTest",function(){
+		var one = CanonicalTreeNode.create().setBit(0,0).setBit(0,1);
+		var two = CanonicalTreeNode.create().setBit(0,0).setBit(0,1);
+		this.assert(one == two);
+		this.assert(one.nw == two.nw);
+	});
 })();

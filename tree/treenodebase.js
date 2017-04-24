@@ -25,7 +25,7 @@
 	TreeNodeBase.prototype = {
 		setBit: function(x,y){
 			if(this.level == 0){
-				return new TreeNode(true);
+				return this.create(true);
 			}
 			var offset = 1 << (this.level - 2);
 			if(x < 0){
