@@ -111,4 +111,12 @@
 		this.assert(one == two);
 		this.assert(one.nw == two.nw);
 	});
+
+	test("memoizedTreeNodeTest",function(){
+		var node = MemoizedTreeNode.create();
+		this.assert(node instanceof MemoizedTreeNode, "expected an instance of MemoizedTreeNode");
+		node = node.setBit(0,0).setBit(0,1).setBit(0,-1);
+		var nextNode = node.nextGeneration();
+		this.assert(node.nextGeneration() == nextNode);
+	});
 })();
