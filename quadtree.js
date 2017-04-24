@@ -262,6 +262,17 @@
 				}
 				return subTree.add(xx,yy);
 			};
+			var find = function(xx,yy){
+				var dir = getDirection(xx - x, yy - y);
+
+				var subTree = subTrees[dir];
+				if(subTree){
+					if(size == 1){
+						return subTree;
+					}
+					return subTree.find(xx,yy);
+				}
+			};
 			var getIfExistsOnXY = function(xx,yy){
 				if(!contains(xx,yy)){
 					return null;
@@ -316,6 +327,7 @@
 				size:size,
 				subTrees:subTrees,
 				contains:contains,
+				find:find,
 				getAllOccupiedPositions:getAllOccupiedPositions,
 				checkContent:checkContent,
 				countAll:countAll,
@@ -367,18 +379,36 @@
 			}
 			return currentTree.add(x,y);
 		};
-		add.countAll = function(){return currentTree ? currentTree.countAll() : 0;};
-		add.getAllAlive = function(){return currentTree ? currentTree.getAllOccupiedPositions() : [];};
-		add.countAlive = function(){return currentTree ? currentTree.getAllOccupiedPositions().length : 0;};
-		add.getIfExistsOnXY = function(x,y){return currentTree ? currentTree.getIfExistsOnXY(x,y) : null;};
-		add.getAllInBox = function(box){return currentTree ? currentTree.getAllInBox(box) : [];};
-		add.draw = function(draw){
+		var obj = {};
+		obj.add = function(x,y){
+			var newOne = add(x,y);
+			newOne.occupy();
+		};
+		obj.contains = function(x,y){
+			var found = currentTree ? currentTree.find(x,y) : null;
+			if(found && found.isOccupied()){
+				return true;
+			}
+			return false;
+		};
+		obj.remove = function(x,y){
+			var found = currentTree ? currentTree.find(x,y) : null;
+			if(found && found.isOccupied()){
+				found.vacate();
+			}
+		};
+		obj.countAll = function(){return currentTree ? currentTree.countAll() : 0;};
+		obj.getAllAlive = function(){return currentTree ? currentTree.getAllOccupiedPositions() : [];};
+		obj.countAlive = function(){return currentTree ? currentTree.getAllOccupiedPositions().length : 0;};
+		obj.getIfExistsOnXY = function(x,y){return currentTree ? currentTree.getIfExistsOnXY(x,y) : null;};
+		obj.getAllInBox = function(box){return currentTree ? currentTree.getAllInBox(box) : [];};
+		obj.draw = function(draw){
 			currentTree && currentTree.draw(draw);
 		};
-		add.vacateAll = function(){
+		obj.vacateAll = function(){
 			currentTree && currentTree.getAllOccupiedPositions().map(function(p){p.vacate();});
 		};
-		add.getDiagnosis = function(){
+		var getDiagnosis = function(){
 			var positionsToVacate = [];
 			var positionsToOccupy = [];
 			if(currentTree){
@@ -390,85 +420,31 @@
 				positionsToOccupy:positionsToOccupy
 			};
 		};
-		add.getCurrentTreeSize = function(){
+		obj.doStep = function(stop, done){
+			try{
+				var diagnosis = getDiagnosis();
+				var positionsToVacate = diagnosis.positionsToVacate;
+				var positionsToOccupy = diagnosis.positionsToOccupy;
+				if(positionsToVacate.length == 0 && positionsToOccupy.length == 0){
+					stop && stop();
+				}
+				for(var i=0;i<positionsToVacate.length;i++){
+					positionsToVacate[i].vacate();
+				}
+				positionsToOccupy.map(function(p){add(p.x,p.y).occupy();});
+				done && done();
+			}catch(e){
+				stop && stop();
+				throw e;
+			}
+		};
+		obj.getCurrentTreeSize = function(){
 			return currentTree ? currentTree.size : 0;
 		};
-		return add;
+		return obj;
 	};
 	window.quadTreePositionFactory = positionFactory;
-	var test = function(name, t){
-		var fail = function(msg, e){
-			console.error(name+" failed: "+msg);
-			if(e){console.trace(e);}
-		}
-		try{
-			t.apply({
-				assert:function(b, msg){
-					if(!b){fail(msg);}
-				}
-			},[]);
-		}catch(e){
-			fail(e.message, e);
-		}
-	};
-	test('test1',function(){
-		var position = positionFactory();
-		var oneOne = position(1,1);
-		this.assert(position(1, 1) === oneOne);
-	});
-	test('test2',function(){
-		var position = positionFactory();
-		var oneOne = position(1,1);
-		var twoTwo = position(2,2);
-		this.assert(oneOne.neighbors.indexOf(twoTwo) > -1);
-	});
-	test('test3',function(){
-		var position = positionFactory();
-		var one = position(1,0);
-		var two = position(2,1);
-		var three = position(1,-1);
-		this.assert(one.neighbors.indexOf(two) > -1);
-		this.assert(two.neighbors.indexOf(one) > -1);
-
-		this.assert(one.neighbors.indexOf(three) > -1);
-		this.assert(three.neighbors.indexOf(one) > -1);
-
-		this.assert(two.neighbors.indexOf(three) == -1);
-		this.assert(three.neighbors.indexOf(two) == -1);
-	});
-	test('testForget',function(){
-		var position = positionFactory();
-		var p = position(5,5);
-		this.assert(position.countAll() == 1);
-		p.forget();
-		this.assert(position.countAll() == 0);
-	});
-	test('testNeighbors',function(){
-		var position = positionFactory();
-		var p1 = position(5,5);
-		var p2 = position(4,4);
-		this.assert(p1.neighbors.length == 1);
-	});
-	test('testOccupyVacate',function(){
-		var position = positionFactory();
-		var p = position(5,5);
-		this.assert(position.countAll() == 1);
-		var q = position(6,6);
-		this.assert(p.neighbors.indexOf(q) > -1);
-		p.occupy();
-		this.assert(position.countAll() == 9);
-		q.occupy();
-		this.assert(position.countAll() == 14);
-		q.vacate();
-		this.assert(position.countAll() == 9);
-		p.vacate();
-		this.assert(position.countAll() == 0);
-	});
-	test('testGetIfExists', function(){
-		var position = positionFactory();
-		var p = position(3,3);
-		this.assert(position.getIfExistsOnXY(3,3) == p);
-		this.assert(position.getIfExistsOnXY(3,4) == null);
-	});
+	
+	
 })();
 

@@ -232,12 +232,12 @@
 				if(selection.isPresent()){
 					selection.clear();
 				}else{
-					var p = mousePositionToPosition(e.clientX, e.clientY);
+					var p = mousePositionToPositionLocation(e.clientX, e.clientY);
 					
-					if(p.isOccupied()){
-						p.vacate();
+					if(position.contains(p.x,p.y)){
+						position.remove(p.x,p.y);
 					}else{
-						p.occupy();
+						position.add(p.x,p.y);
 					}
 				}
 				drawAll();
@@ -252,6 +252,7 @@
 				});
 			});
 			canvas.addEventListener('touchend',function(e){
+				if(!dragger){return;}
 				mapTouchList(e.changedTouches, function(touch){
 					dragger.end(touch.identifier);
 				});
@@ -280,6 +281,10 @@
 				dragger = null;
 			});
 			canvas.addEventListener('contextmenu',function(e){
+				if(dragger){
+					dragger.end();
+					dragger = null;
+				}
 				e.preventDefault();
 				menu.show(e.clientX, e.clientY);
 				return false;
@@ -296,7 +301,13 @@
 			div.setAttribute("class","menu");
 			document.body.appendChild(div);
 			var addOption = function(text, f){
-				var remove = function(){div.removeChild(option);};
+				var removed = false;
+				var remove = function(){
+					if(!removed){
+						div.removeChild(option);
+						removed = true;
+					}
+				};
 				var option = document.createElement('div');
 				option.setAttribute("class","option");
 				option.appendChild(document.createTextNode(text));
@@ -458,7 +469,7 @@
 				};
 				var end = function(){
 					positions.map(function(p){p.vacate();});
-					getNewPositions().map(function(p){position(p.x,p.y).occupy();});
+					getNewPositions().map(function(p){position.add(p.x,p.y);});
 					drawAll();
 				};
 				return {
@@ -515,7 +526,7 @@
 				remove.push(menu.addOption('alive', function(){
 					for(var x=minX;x<=maxX;x++){
 						for(var y=minY;y<=maxY;y++){
-							position(x,y).occupy();
+							position.add(x,y);
 						}
 					}
 					clear();
@@ -530,7 +541,7 @@
 					for(var x=minX;x<=maxX;x++){
 						for(var y=minY;y<=maxY;y++){
 							if(Math.random()<0.5){
-								position(x,y).occupy();
+								position.add(x,y);
 							}
 						}
 					}
@@ -577,46 +588,12 @@
 			};
 			var clear = function(){
 				present = false;
+				dragger = null;
 				removeMenuOption && removeMenuOption();
 				removeMenuOption = null;
 				addSelectingOption();
 			};
-			var moveInDirection = function(dir){
-				if(!present){
-					return;
-				}
-				var selectedPositions = getPositions();
-				selectedPositions.map(function(p){
-					p.vacate();
-				});
-				selectedPositions.map(function(p){
-					if(dir == direction.UP){
-						position(p.x,p.y-1).occupy();
-					}else if(dir == direction.DOWN){
-						position(p.x,p.y+1).occupy();
-					}else if(dir == direction.LEFT){
-						position(p.x-1,p.y).occupy();
-					}else if(dir == direction.RIGHT){
-						position(p.x+1,p.y).occupy();
-					}
-				});
-				if(dir == direction.UP){
-					minY -= 1;
-					maxY -=1;
-				}
-				if(dir == direction.DOWN){
-					minY += 1;
-					maxY +=1;
-				}
-				if(dir == direction.LEFT){
-					minX -= 1;
-					maxX -=1;
-				}
-				if(dir == direction.RIGHT){
-					minX += 1;
-					maxX +=1;
-				}
-			};
+			
 			var addSelectingOption = function(){
 				removeSelectOption = menu.addOption('select', function(x,y,remove){
 					var width = Math.floor(w / (5 * size));
@@ -713,7 +690,7 @@
 			var relativePositions, removeMenuOption;
 			var paste = function(x, y){
 				relativePositions.map(function(p){
-					position(x + p.x,y + p.y).occupy();
+					position.add(x + p.x,y + p.y);
 				});
 				drawAll();
 			};
@@ -801,10 +778,6 @@
 				y:Math.floor(mY / size - yShift)
 			};
 		},
-		mousePositionToPosition = function(mX, mY){
-			var positionLocation = mousePositionToPositionLocation(mX,mY);
-			return position(positionLocation.x,positionLocation.y);
-		},
 		positionToMousePosition = function(p){
 			return {
 				x:(p.x + xShift) * size,
@@ -856,7 +829,7 @@
 					stepCount = 0;
 					setCounter();
 					positions.map(function(p){
-						position(origMinX + p.x,origMinY + p.y).occupy();
+						position.add(origMinX + p.x,origMinY + p.y);
 					});
 					drawAll();
 				};
@@ -890,6 +863,7 @@
 				layover.appendChild(option);
 			};
 			var add = function(positions){
+				positions = positions.map(function(p){return {x:p.x,y:p.y};});
 				var s = document.createElement('div');
 				s.setAttribute('class','snapshot');
 				var s1 = document.createElement('div');
@@ -968,24 +942,10 @@
 		stepCount = 0,
 		timeCount = 0,
 		doStep = function(stop, done){
-			try{
-				var diagnosis = position.getDiagnosis();
-				var positionsToVacate = diagnosis.positionsToVacate;
-				var positionsToOccupy = diagnosis.positionsToOccupy;
-				if(positionsToVacate.length == 0 && positionsToOccupy.length == 0){
-					stop && stop();
-				}
-				for(var i=0;i<positionsToVacate.length;i++){
-					positionsToVacate[i].vacate();
-				}
-				positionsToOccupy.map(function(p){position(p.x,p.y).occupy();});
+			position.doStep(stop, function(){
 				stepCount++;
 				done && done();
-			}catch(e){
-				stop && stop();
-				throw e;
-
-			}
+			});
 		},
 		going = false,
 		setCounterInterval,
@@ -1120,7 +1080,7 @@
 				return;
 			}
 			parseRLEBody(hash.substr(1), function(x,y){
-				position(x,y).occupy()
+				position.add(x,y);
 			});
 		},
 		drawAll = function(){
@@ -1173,7 +1133,7 @@
 		input(function(v){
 			if(!v){return;}
 			position.vacateAll();
-			parseRLEBody(v, function(xx,yy){position(xx+x,yy+y).occupy();});
+			parseRLEBody(v, function(xx,yy){position.add(xx+x,yy+y);});
 			drawAll();
 		});
 	});
