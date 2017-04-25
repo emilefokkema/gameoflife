@@ -49,6 +49,12 @@
 		this.assert(node.getBit(0,0) == 1, "bit at 0,0 should be 1");
 		this.assert(node.getBit(1,0) == 1, "bit at 1,0 should be 1")
 	});
+
+	test("containTest",function(){
+		var node = TreeNodeBase.create();
+		this.assert(node.canContain(1,1));
+		this.assert(!node.canContain(35,35));
+	});
 	
 	test("expandUniverseTest",function(){
 		var node = TreeNodeBase.create();

@@ -61,6 +61,11 @@
 				}
 			}
 		},
+		canContain:function(x,y){
+			var maxCoordinate = 1 << (this.level - 1);
+			return -maxCoordinate <= x && x <= maxCoordinate-1 &&
+             -maxCoordinate <= y && y <= maxCoordinate-1;
+		},
 		emptyTree: function(lev){
 			if(lev <= 0){
 				return this.create(false);
