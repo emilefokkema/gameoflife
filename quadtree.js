@@ -273,20 +273,6 @@
 					return subTree.find(xx,yy);
 				}
 			};
-			var getIfExistsOnXY = function(xx,yy){
-				if(!contains(xx,yy)){
-					return null;
-				}
-				var dir = getDirection(xx - x, yy - y);
-				var subTree = subTrees[dir];
-				if(!subTree){
-					return null;
-				}
-				if(size == 1){
-					return subTree;
-				}
-				return subTree.getIfExistsOnXY(xx,yy);
-			};
 			var getAllInBox = function(box){
 				var all = [];
 				if(isOutsideBox(box)){
@@ -296,7 +282,7 @@
 					if(t != null){
 						if(size == 1){
 							if(t.isOccupied() && t.x >= box.minX && t.x <= box.maxX && t.y >= box.minY && t.y <= box.maxY){
-								all.push(t);
+								all.push({x:t.x,y:t.y});
 							}
 						}else{
 							t.getAllInBox(box).map(function(p){
@@ -331,7 +317,6 @@
 				getAllOccupiedPositions:getAllOccupiedPositions,
 				checkContent:checkContent,
 				countAll:countAll,
-				getIfExistsOnXY:getIfExistsOnXY,
 				isOutsideBox:isOutsideBox,
 				setEnvironmentUnchanged:setEnvironmentUnchanged,
 				notifyEnvironmentChanged:notifyEnvironmentChanged,
@@ -400,8 +385,9 @@
 		obj.countAll = function(){return currentTree ? currentTree.countAll() : 0;};
 		obj.getAllAlive = function(){return currentTree ? currentTree.getAllOccupiedPositions() : [];};
 		obj.countAlive = function(){return currentTree ? currentTree.getAllOccupiedPositions().length : 0;};
-		obj.getIfExistsOnXY = function(x,y){return currentTree ? currentTree.getIfExistsOnXY(x,y) : null;};
-		obj.getAllInBox = function(box){return currentTree ? currentTree.getAllInBox(box) : [];};
+		obj.getAllInBox = function(box){
+			return currentTree ? currentTree.getAllInBox(box) : [];
+		};
 		obj.draw = function(draw){
 			currentTree && currentTree.draw(draw);
 		};

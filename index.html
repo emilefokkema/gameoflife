@@ -468,7 +468,7 @@
 					});
 				};
 				var end = function(){
-					positions.map(function(p){p.vacate();});
+					positions.map(function(p){position.remove(p.x, p.y);});
 					getNewPositions().map(function(p){position.add(p.x,p.y);});
 					drawAll();
 				};
@@ -519,7 +519,7 @@
 				remove.push(menu.addOption('cut',function(){
 					var positions = getPositions();
 					copyPositions(positions);
-					positions.map(function(p){p.vacate();});
+					positions.map(function(p){position.remove(p.x, p.y);});
 					clear();
 					drawAll();
 				}));
@@ -533,7 +533,7 @@
 					drawAll();
 				}));
 				remove.push(menu.addOption('dead', function(){
-					getPositions().map(function(p){p.vacate();});
+					getPositions().map(function(p){position.remove(p.x, p.y);});
 					clear();
 					drawAll();
 				}));
