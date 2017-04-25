@@ -42,6 +42,25 @@
 				}
 			}
 		},
+		removeBit: function(x,y){
+			if(this.level == 0){
+				return this.create(false);
+			}
+			var offset = 1 << (this.level - 2);
+			if(x < 0){
+				if(y < 0){
+					return this.create(this.nw.removeBit(x+offset,y+offset), this.ne, this.sw, this.se);
+				}else{
+					return this.create(this.nw, this.ne, this.sw.removeBit(x+offset,y-offset), this.se);
+				}
+			}else{
+				if(y < 0){
+					return this.create(this.nw, this.ne.removeBit(x-offset,y+offset), this.sw, this.se);
+				}else{
+					return this.create(this.nw, this.ne, this.sw, this.se.removeBit(x-offset,y-offset));
+				}
+			}
+		},
 		getBit:function(x,y){
 			if(this.level == 0){
 				return this.alive ? 1 : 0;
