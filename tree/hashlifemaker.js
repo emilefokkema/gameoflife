@@ -35,12 +35,17 @@
 			done && done();
 		};
 
+		var vacateAll = function(){
+			currentTree = MemoizedTreeNode.create();
+		};
+
 		return {
 			draw:draw,
 			contains:contains,
 			add:add,
 			remove:remove,
-			doStep:doStep
+			doStep:doStep,
+			vacateAll:vacateAll
 		};
 	};
 })();

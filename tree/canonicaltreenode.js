@@ -2,13 +2,15 @@
 
 	var CanonicalTreeNode = function(){
 		TreeNode.apply(this, arguments);
+		this.hashCache = null;
 	};
 
 	CanonicalTreeNode.prototype = Object.create(TreeNode.prototype, {
 		hashCode:{
 			value:function(){
-				if(this.level == 0){return 1 + this.population;}
-				return this.nw.hashCode() + 11 * this.ne.hashCode() + 101 * this.sw.hashCode() + 1007 * this.se.hashCode();
+				if(this.hashCache != null){return this.hashCache;}
+				if(this.level == 0){return this.hashCache = 1 + this.population;}
+				return this.hashCache = this.nw.hashCode() + 11 * this.ne.hashCode() + 101 * this.sw.hashCode() + 1007 * this.se.hashCode();
 			}
 		},
 		equals:{
