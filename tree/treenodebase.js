@@ -107,24 +107,24 @@
 				this.create(this.se,border,border,border)
 				);
 		},
-		draw:function(x, y, xyDrawer){
+		getCoordinates:function(x, y, returnXY){
 			if(this.population == 0){return;}
 			if(this.level == 0 && this.alive){
-				xyDrawer(x,y);
+				returnXY(x,y);
 				return;
 			}
 			if(this.level == 1){
-				this.nw.draw(x - 1, y - 1, xyDrawer);
-				this.ne.draw(x, y-1, xyDrawer);
-				this.sw.draw(x - 1, y, xyDrawer);
-				this.se.draw(x, y, xyDrawer);
+				this.nw.getCoordinates(x - 1, y - 1, returnXY);
+				this.ne.getCoordinates(x, y-1, returnXY);
+				this.sw.getCoordinates(x - 1, y, returnXY);
+				this.se.getCoordinates(x, y, returnXY);
 				return;
 			}
 			var offset = 1 << (this.level - 2);
-			this.nw.draw(x - offset, y - offset, xyDrawer);
-			this.sw.draw(x - offset, y + offset, xyDrawer);
-			this.ne.draw(x + offset, y - offset, xyDrawer);
-			this.se.draw(x + offset, y + offset, xyDrawer);
+			this.nw.getCoordinates(x - offset, y - offset, returnXY);
+			this.sw.getCoordinates(x - offset, y + offset, returnXY);
+			this.ne.getCoordinates(x + offset, y - offset, returnXY);
+			this.se.getCoordinates(x + offset, y + offset, returnXY);
 		}
 	};
 	TreeNodeBase.create = function(){

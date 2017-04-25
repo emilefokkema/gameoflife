@@ -3,7 +3,7 @@
 		var currentTree = MemoizedTreeNode.create();
 
 		var draw = function(xyDrawer){
-			currentTree.draw(0, 0, function(x,y){xyDrawer({x:x,y:y});});
+			currentTree.getCoordinates(0, 0, function(x,y){xyDrawer({x:x,y:y});});
 		};
 
 		var contains = function(x,y){
@@ -39,13 +39,33 @@
 			currentTree = MemoizedTreeNode.create();
 		};
 
+		var getAllInBox = function(box){
+			var result =[];
+			currentTree.getCoordinates(0, 0, function(x,y){
+				if(x >= box.minX && x <= box.maxX && y >= box.minY && y <= box.maxY){
+					result.push({x:x,y:y});
+				}
+			});
+			return result;
+		};
+
+		var getAllAlive = function(){
+			var result = [];
+			currentTree.getCoordinates(0, 0, function(x,y){
+				result.push({x:x,y:y});
+			});
+			return result;
+		};
+
 		return {
 			draw:draw,
 			contains:contains,
 			add:add,
 			remove:remove,
 			doStep:doStep,
-			vacateAll:vacateAll
+			vacateAll:vacateAll,
+			getAllInBox:getAllInBox,
+			getAllAlive:getAllAlive
 		};
 	};
 })();
