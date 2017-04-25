@@ -749,7 +749,6 @@
 			document.body.appendChild(range);
 			range.addEventListener('input',function(){
 				var newLength = getLength(range.value);
-				console.log(newLength);
 				intervalLength = Math.max(1, newLength); 
 			});
 		})(),
