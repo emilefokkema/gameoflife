@@ -23,11 +23,24 @@
 			currentTree = currentTree.removeBit(x,y);
 		};
 
+		var doStep = function(stop, done){
+			while(currentTree.level < 3 ||
+				currentTree.nw.population != currentTree.nw.se.se.population ||
+				currentTree.ne.population != currentTree.ne.sw.sw.population ||
+				currentTree.sw.population != currentTree.sw.ne.ne.population ||
+				currentTree.se.population != currentTree.se.nw.nw.population){
+				currentTree = currentTree.expandUniverse();
+			}
+			currentTree = currentTree.nextGeneration();
+			done && done();
+		};
+
 		return {
 			draw:draw,
 			contains:contains,
 			add:add,
-			remove:remove
+			remove:remove,
+			doStep:doStep
 		};
 	};
 })();
