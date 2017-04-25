@@ -22,9 +22,21 @@
 				entry.push(o);
 			}
 		};
+		var memoizedRatio = function(){
+			var n = 0;
+			var r = 0;
+			for(p in all){
+				if(all.hasOwnProperty(p)){
+					n += all[p].length;
+					r += all[p].filter(function(n){return n.result != null;}).length;
+				}
+			}
+			return r/n;
+		};
 		return {
 			get:get,
-			put:put
+			put:put,
+			memoizedRatio:memoizedRatio
 		};
 	};
 })();
