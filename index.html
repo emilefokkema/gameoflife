@@ -737,7 +737,7 @@
 				drawAll();
 				setCounter();
 			});
-			addButton("fa-save",function(){
+			addButton("fa-clipboard",function(){
 				snapshots.add(position.getAllAlive());
 			});
 		})(),
@@ -913,7 +913,7 @@
 				count++;
 			};
 			var button = document.createElement('div');
-			button.setAttribute('class','button snapshot-button fa fa-inbox');
+			button.setAttribute('class','button snapshot-button fa fa-clipboard');
 			document.body.appendChild(button);
 			button.addEventListener('click',function(){
 				if(showing){
