@@ -406,22 +406,19 @@
 				positionsToOccupy:positionsToOccupy
 			};
 		};
-		obj.doStep = function(stop, done){
-			try{
-				var diagnosis = getDiagnosis();
-				var positionsToVacate = diagnosis.positionsToVacate;
-				var positionsToOccupy = diagnosis.positionsToOccupy;
-				if(positionsToVacate.length == 0 && positionsToOccupy.length == 0){
-					stop && stop();
-				}
-				for(var i=0;i<positionsToVacate.length;i++){
-					positionsToVacate[i].vacate();
-				}
-				positionsToOccupy.map(function(p){add(p.x,p.y).occupy();});
-				done && done();
-			}catch(e){
-				stop && stop();
-				throw e;
+		var doStep = function(){
+			var diagnosis = getDiagnosis();
+			var positionsToVacate = diagnosis.positionsToVacate;
+			var positionsToOccupy = diagnosis.positionsToOccupy;
+			
+			for(var i=0;i<positionsToVacate.length;i++){
+				positionsToVacate[i].vacate();
+			}
+			positionsToOccupy.map(function(p){add(p.x,p.y).occupy();});
+		};
+		obj.doStep = function(stepSize){
+			for(var i=0;i<stepSize;i++){
+				doStep();
 			}
 		};
 		obj.getCurrentTreeSize = function(){

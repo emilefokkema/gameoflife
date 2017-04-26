@@ -23,7 +23,7 @@
 			currentTree = currentTree.removeBit(x,y);
 		};
 
-		var doStep = function(stop, done){
+		var doStep = function(){
 			while(currentTree.level < 3 ||
 				currentTree.nw.population != currentTree.nw.se.se.population ||
 				currentTree.ne.population != currentTree.ne.sw.sw.population ||
@@ -32,7 +32,6 @@
 				currentTree = currentTree.expandUniverse();
 			}
 			currentTree = currentTree.nextGeneration();
-			done && done();
 		};
 
 		var vacateAll = function(){
@@ -62,7 +61,11 @@
 			contains:contains,
 			add:add,
 			remove:remove,
-			doStep:doStep,
+			doStep:function(stepSize){
+				for(var i=0;i<stepSize;i++){
+					doStep();
+				}
+			},
 			vacateAll:vacateAll,
 			getAllInBox:getAllInBox,
 			getAllAlive:getAllAlive

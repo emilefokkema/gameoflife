@@ -732,7 +732,7 @@
 					stop();
 					setNewClassName("fa-play");
 				}else{
-					go(function(){setNewClassName("fa-play");});
+					go();
 					setNewClassName("fa-pause");
 				}
 			});
@@ -740,7 +740,7 @@
 				reset();
 			});
 			addButton("fa-step-forward",function(){
-				doStep();
+				doStep(1);
 				drawAll();
 				setCounter();
 			});
@@ -755,6 +755,13 @@
 			range.setAttribute('class','speed-range');
 			document.body.appendChild(range);
 			range.addEventListener('input',function(){
+				if(range.value > 80 && stepSize != 2){
+					console.log("setting stepSize to 2");
+					stepSize = 2;
+				}else if(range.value <= 80 && stepSize != 1){
+					console.log("setting stepSize to 1");
+					stepSize = 1;
+				}
 				var newLength = getLength(range.value);
 				intervalLength = Math.max(1, newLength); 
 			});
@@ -947,15 +954,14 @@
 		},
 		stepCount = 0,
 		timeCount = 0,
-		doStep = function(stop, done){
-			position.doStep(stop, function(){
-				stepCount++;
-				done && done();
-			});
+		stepSize = 1,
+		doStep = function(_stepSize, done){
+			position.doStep(_stepSize);
+			stepCount += _stepSize;
+			done && done();
 		},
 		going = false,
 		setCounterInterval,
-		
 		stop = function(){
 			going = false;
 			var timeDiff = +new Date() - timeCount;
@@ -964,20 +970,16 @@
 			setCounter();
 		},
 		intervalLength = 75,
-		go = function(onStop){
-			var sstop = function(){
-				stop();
-				onStop && onStop();
-			};
+		go = function(){
 			going = true;
 			timeCount = +new Date();
 			var afterStep = function(){
 				drawAll();
-				if(going){
-					window.setTimeout(function(){
-						doStep(sstop, afterStep);
-					},intervalLength);
-				}
+				window.setTimeout(function(){
+					if(going){
+						doStep(stepSize, afterStep);
+					}
+				},intervalLength);
 			};
 			afterStep();
 			setCounterInterval = window.setInterval(setCounter, 250);
@@ -1165,7 +1167,7 @@
 		{
 			key:"s",
 			action:function(){
-				doStep();
+				doStep(1);
 				drawAll();
 				setCounter();
 			}
