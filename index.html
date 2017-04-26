@@ -217,6 +217,22 @@
 					mapper(touchList.item(i));
 				}
 			};
+			var save = function(){
+				var url = canvas.toDataURL("image/png");
+				var a = document.createElement('a');
+				var event = new MouseEvent('click',{});
+				a.setAttribute('href',url);
+				a.setAttribute('download','gameoflife.png');
+				document.body.appendChild(a);
+				a.dispatchEvent(event);
+				document.body.removeChild(a);
+			};
+			var whiteBackground = function(){
+				context.save();
+				context.fillStyle = '#fff';
+				context.fillRect(0,0,w,h);
+				context.restore();
+			};
 			canvas.addEventListener('click',function(e){
 				if(dragHappened){
 					dragHappened = false;
@@ -298,8 +314,13 @@
 			});
 			return {
 				context:context,
-				clear:function(){canvas.width = w;initializeContext();},
-				addEventListener:function(name, handler){canvas.addEventListener(name, handler);}
+				clear:function(){
+					canvas.width = w;
+					initializeContext();
+					whiteBackground();
+				},
+				addEventListener:function(name, handler){canvas.addEventListener(name, handler);},
+				save:save
 			};
 		})(),
 		menu = (function(){
@@ -744,7 +765,7 @@
 				drawAll();
 				setCounter();
 			});
-			addButton("fa-save",function(){
+			addButton("fa-clipboard",function(){
 				snapshots.add(position.getAllAlive());
 			});
 		})(),
@@ -927,7 +948,7 @@
 				count++;
 			};
 			var button = document.createElement('div');
-			button.setAttribute('class','button snapshot-button fa fa-inbox');
+			button.setAttribute('class','button snapshot-button fa fa-clipboard');
 			document.body.appendChild(button);
 			button.addEventListener('click',function(){
 				if(showing){
@@ -1145,7 +1166,9 @@
 			drawAll();
 		});
 	});
-	
+	menu.addOption('save image',function(){
+		c.save();
+	});
 	input(function(){},"Click on a cell to bring it to life. Hit the space bar to get things moving, or to pause them if they already are. Adjust the slider to make them move faster or slower. Shift-click on a cell to make a selection, and then right-click on the selection to find some options.");
 	setSize(15);
 	readHash();
