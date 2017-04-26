@@ -210,6 +210,15 @@
 					mapper(touchList.item(i));
 				}
 			};
+			var save = function(){
+				window.open(canvas.toDataURL("image/png"));
+			};
+			var whiteBackground = function(){
+				context.save();
+				context.fillStyle = '#fff';
+				context.fillRect(0,0,w,h);
+				context.restore();
+			};
 			canvas.addEventListener('click',function(e){
 				if(dragHappened){
 					dragHappened = false;
@@ -291,8 +300,13 @@
 			});
 			return {
 				context:context,
-				clear:function(){canvas.width = w;initializeContext();},
-				addEventListener:function(name, handler){canvas.addEventListener(name, handler);}
+				clear:function(){
+					canvas.width = w;
+					initializeContext();
+					whiteBackground();
+				},
+				addEventListener:function(name, handler){canvas.addEventListener(name, handler);},
+				save:save
 			};
 		})(),
 		menu = (function(){
@@ -1136,7 +1150,9 @@
 			drawAll();
 		});
 	});
-	
+	menu.addOption('save image',function(){
+		c.save();
+	});
 	input(function(){},"Click on a cell to bring it to life. Hit the space bar to get things moving, or to pause them if they already are. Adjust the slider to make them move faster or slower. Shift-click on a cell to make a selection, and then right-click on the selection to find some options.");
 	setSize(15);
 	readHash();
