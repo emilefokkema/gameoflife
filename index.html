@@ -283,6 +283,7 @@
 				dragHappened = true;
 			});
 			canvas.addEventListener('mousedown',function(e){
+				e.preventDefault();
 				dragger = draggerFactory.make(e.clientX, e.clientY);
 			});
 			canvas.addEventListener('mousemove',function(e){
@@ -293,8 +294,10 @@
 				return true;
 			});
 			canvas.addEventListener('mouseup',function(){
-				dragger.end();
-				dragger = null;
+				if(dragger){
+					dragger.end();
+					dragger = null;
+				}
 			});
 			canvas.addEventListener('contextmenu',function(e){
 				if(dragger){
