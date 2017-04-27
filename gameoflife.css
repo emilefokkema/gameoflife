@@ -102,6 +102,12 @@ body.has-snapshots.show-snapshots .snapshot-button{
 	color:#000;
 	font-family: monospace;
 	font-size: 20px;
+	-webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 .speed-range {
 	position: absolute;
