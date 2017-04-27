@@ -841,6 +841,12 @@
 					});
 					setPositions();
 				};
+				var turnClockwise = function(){
+					positions = positions.map(function(p){
+						return {x:-p.y,y:p.x};
+					});
+					setPositions();
+				};
 				var flipVertical = function(){
 					positions = positions.map(function(p){
 						return {x:p.x,y:-p.y};
@@ -862,6 +868,7 @@
 				return {
 					draw:draw,
 					restore:restore,
+					turnClockwise:turnClockwise,
 					forget:forget,
 					flipHorizontal:flipHorizontal,
 					flipVertical:flipVertical,
@@ -930,6 +937,11 @@
 				});
 				addSnapshotOption(s2, 'fa-arrows-v',function(){
 					newSnapshot.flipVertical();
+					canvas.width = snapshotWidth;
+					newSnapshot.draw(canvas);
+				});
+				addSnapshotOption(s2, 'fa-refresh',function(){
+					newSnapshot.turnClockwise();
 					canvas.width = snapshotWidth;
 					newSnapshot.draw(canvas);
 				});
