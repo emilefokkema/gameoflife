@@ -88,7 +88,7 @@
 		}
 	});
 	nextGeneration = TreeNode.prototype.nextGeneration;
-	nextGeneration.timePerStepLog = 2;
+	
 	window.TreeNode = TreeNode;
 })();
 

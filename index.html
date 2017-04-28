@@ -985,7 +985,7 @@
 		timeCount = 0,
 		doStep = function(done){
 			position.doStep();
-			stepCount += 1;
+			stepCount += 1 << TreeNode.prototype.nextGeneration.timePerStepLog;
 			done && done();
 		},
 		going = false,
