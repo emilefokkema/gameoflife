@@ -1,5 +1,5 @@
 (function(){
-	var timePerStep = 1;
+	var timePerStepLog = 1;
 
 	var TreeNode = function(){
 		TreeNodeBase.apply(this,arguments);
@@ -81,7 +81,7 @@
 				if(this.population == 0){
 					return this.nw;
 				}
-				if(1 << (this.level - 2) <= timePerStep){
+				if(this.level - 2 <= timePerStepLog){
 					return this.recursiveNextGeneration();
 				}
 				var n00 = this.nw.centeredSubnode(false),
