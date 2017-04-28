@@ -1,4 +1,5 @@
 (function(){
+
 	var MemoizedTreeNode = function(){
 		CanonicalTreeNode.apply(this,arguments);
 		this.result = null;

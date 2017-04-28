@@ -1,9 +1,10 @@
 (function(){
-	var timePerStepLog = 1;
-
 	var TreeNode = function(){
 		TreeNodeBase.apply(this,arguments);
 	};
+
+	var nextGeneration;
+
 
 	TreeNode.prototype = Object.create(TreeNodeBase.prototype, {
 		oneGen: {
@@ -38,31 +39,8 @@
 				              this.oneGen(allBits>>1), this.oneGen(allBits)) ;
 			}
 		},
-		recursiveNextGeneration:{
-			value:function(){
-				if(this.level == 2){
-					return this.slowSimulation();
-				}
-				var n00 = this.nw.centeredSubnode(true),
-					n01 = this.centeredHorizontal(this.nw, this.ne).centeredSubnode(true),
-					n02 = this.ne.centeredSubnode(true),
-					n10 = this.centeredVertical(this.nw, this.sw).centeredSubnode(true),
-					n11 = this.centeredSubnode(false).centeredSubnode(true),
-					n12 = this.centeredVertical(this.ne, this.se).centeredSubnode(true),
-					n20 = this.sw.centeredSubnode(true),
-					n21 = this.centeredHorizontal(this.sw, this.se).centeredSubnode(true),
-					n22 = this.se.centeredSubnode(true);
-				return this.create(this.create(n00, n01, n10, n11).centeredSubnode(true),
-				              this.create(n01, n02, n11, n12).centeredSubnode(true),
-				              this.create(n10, n11, n20, n21).centeredSubnode(true),
-				              this.create(n11, n12, n21, n22).centeredSubnode(true)) ;
-			}
-		},
 		centeredSubnode:{
-			value:function(advancedInTime){
-				if(advancedInTime){
-					return this.nextGeneration();
-				}
+			value:function(){
 				return this.create(this.nw.se, this.ne.sw, this.sw.ne, this.se.nw) ;
 			}
 		},
@@ -76,31 +54,41 @@
 				return this.create(n.sw, n.se, s.nw, s.ne) ;
 			}
 		},
+		getCenter:{
+			value:function(){
+				if(this.level - 1 <= nextGeneration.timePerStepLog){
+					return this.nextGeneration();
+				}
+				return this.centeredSubnode();
+			}
+		},
 		nextGeneration:{
 			value:function(){
 				if(this.population == 0){
 					return this.nw;
 				}
-				if(this.level - 2 <= timePerStepLog){
-					return this.recursiveNextGeneration();
+				if(this.level == 2){
+					return this.slowSimulation();
 				}
-				var n00 = this.nw.centeredSubnode(false),
-					n01 = this.centeredHorizontal(this.nw, this.ne).centeredSubnode(false),
-					n02 = this.ne.centeredSubnode(false),
-					n10 = this.centeredVertical(this.nw, this.sw).centeredSubnode(false),
-					n11 = this.centeredSubnode(false).centeredSubnode(false),
-					n12 = this.centeredVertical(this.ne, this.se).centeredSubnode(false),
-					n20 = this.sw.centeredSubnode(false),
-					n21 = this.centeredHorizontal(this.sw, this.se).centeredSubnode(false),
-					n22 = this.se.centeredSubnode(false);
-				return this.create(this.create(n00, n01, n10, n11).centeredSubnode(true),
-				              this.create(n01, n02, n11, n12).centeredSubnode(true),
-				              this.create(n10, n11, n20, n21).centeredSubnode(true),
-				              this.create(n11, n12, n21, n22).centeredSubnode(true)) ;
+				var n00 = this.nw.getCenter(),
+					n01 = this.centeredHorizontal(this.nw, this.ne).getCenter(),
+					n02 = this.ne.getCenter(),
+					n10 = this.centeredVertical(this.nw, this.sw).getCenter(),
+					n11 = this.centeredSubnode().getCenter(),
+					n12 = this.centeredVertical(this.ne, this.se).getCenter(),
+					n20 = this.sw.getCenter(),
+					n21 = this.centeredHorizontal(this.sw, this.se).getCenter(),
+					n22 = this.se.getCenter();
+
+				return this.create(this.create(n00, n01, n10, n11).nextGeneration(),
+				              this.create(n01, n02, n11, n12).nextGeneration(),
+				              this.create(n10, n11, n20, n21).nextGeneration(),
+				              this.create(n11, n12, n21, n22).nextGeneration()) ;
 			}
 		}
 	});
-
+	nextGeneration = TreeNode.prototype.nextGeneration;
+	nextGeneration.timePerStepLog = 2;
 	window.TreeNode = TreeNode;
 })();
 
