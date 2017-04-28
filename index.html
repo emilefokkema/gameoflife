@@ -764,7 +764,7 @@
 				reset();
 			});
 			addButton("fa-step-forward",function(){
-				doStep(1);
+				doStep();
 				drawAll();
 				setCounter();
 			});
@@ -779,13 +779,6 @@
 			range.setAttribute('class','speed-range');
 			document.body.appendChild(range);
 			range.addEventListener('input',function(){
-				if(range.value > 80 && stepSize != 2){
-					console.log("setting stepSize to 2");
-					stepSize = 2;
-				}else if(range.value <= 80 && stepSize != 1){
-					console.log("setting stepSize to 1");
-					stepSize = 1;
-				}
 				var newLength = getLength(range.value);
 				intervalLength = Math.max(1, newLength); 
 			});
@@ -990,10 +983,9 @@
 		},
 		stepCount = 0,
 		timeCount = 0,
-		stepSize = 1,
-		doStep = function(_stepSize, done){
-			position.doStep(_stepSize);
-			stepCount += _stepSize;
+		doStep = function(done){
+			position.doStep();
+			stepCount += 1;
 			done && done();
 		},
 		going = false,
@@ -1013,7 +1005,7 @@
 				drawAll();
 				window.setTimeout(function(){
 					if(going){
-						doStep(stepSize, afterStep);
+						doStep(afterStep);
 					}
 				},intervalLength);
 			};
@@ -1208,7 +1200,7 @@
 		{
 			key:"s",
 			action:function(){
-				doStep(1);
+				doStep();
 				drawAll();
 				setCounter();
 			}

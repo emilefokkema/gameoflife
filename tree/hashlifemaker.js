@@ -61,11 +61,7 @@
 			contains:contains,
 			add:add,
 			remove:remove,
-			doStep:function(stepSize){
-				for(var i=0;i<stepSize;i++){
-					doStep();
-				}
-			},
+			doStep:doStep,
 			vacateAll:vacateAll,
 			getAllInBox:getAllInBox,
 			getAllAlive:getAllAlive
