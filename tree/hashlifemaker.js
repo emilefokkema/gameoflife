@@ -56,9 +56,22 @@
 			return result;
 		};
 
+		var timePerStepLog = 0;
+
+		var setTimePerStepLog = function(l){
+			if(l != timePerStepLog){
+				MemoizedTreeNode.setTimePerStepLog(l);
+				timePerStepLog = l;
+			}
+		};
+
+		var getTimePerStepLog = function(){return timePerStepLog;};
+
 		return {
 			draw:draw,
 			contains:contains,
+			setTimePerStepLog:setTimePerStepLog,
+			getTimePerStepLog:getTimePerStepLog,
 			add:add,
 			remove:remove,
 			doStep:doStep,

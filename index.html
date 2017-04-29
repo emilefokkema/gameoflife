@@ -37,6 +37,20 @@
 		oldClassNames = oldClassNames || [];
 		el.setAttribute('class', oldClassNames.filter(function(n){return n != className;}).join(" "));
 	};
+	var topRightButtons = (function(){
+		var all = [];
+		var add = function(b){all.push(b);};
+		var attach = function(){
+			var div = document.createElement('div');
+			div.setAttribute('class','topright-buttons');
+			document.body.appendChild(div);
+			all.map(function(el){div.appendChild(el);});
+		};
+		return {
+			add:add,
+			attach:attach
+		};
+	})();
 	var w = document.body.offsetWidth,
 		h = document.body.offsetHeight,
 		size, nx, ny,
@@ -815,6 +829,46 @@
 			};
 		},
 		position = hashLifeMaker(),
+		settings = (function(){
+			var open = false;
+			var div = document.createElement('div');
+			div.setAttribute("class","input settings");
+			div.appendChild(document.createTextNode("time per step: 2 ^ "));
+			var number = document.createElement('input');
+			number.setAttribute('type','number');
+			number.setAttribute('min',0);
+			number.setAttribute('step',1);
+			number.value = 0;
+			number.addEventListener('blur',function(){
+				number.value = Math.floor(number.value);
+				number.value = Math.max(0,number.value);
+			});
+			div.appendChild(number);
+			var closeButton = document.createElement('input');
+			closeButton.setAttribute('type','button');
+			closeButton.setAttribute('value','Save');
+			closeButton.addEventListener('click',function(){
+				position.setTimePerStepLog(number.value);
+				hide();
+			});
+			div.appendChild(closeButton);
+			var show = function(initialText){
+				open = true;
+				addClass(document.body,'settings-open');
+			};
+			var hide = function(){
+				open = false;
+				removeClass(document.body, 'settings-open');
+			};
+			document.body.appendChild(div);
+			hide();
+			var button = document.createElement('div');
+			button.addEventListener('click',function(){
+				show();
+			});
+			button.setAttribute('class','button settings-button fa fa-gear');
+			topRightButtons.add(button);
+		})(),
 		snapshots = (function(){
 			var showing = false, count = 0;
 			var snapshotWidth = 120, snapshotHeight = 120;
@@ -892,7 +946,9 @@
 			};
 			var container = document.createElement('div');
 			container.setAttribute('class','snapshots');
-			document.body.appendChild(container);
+			var attach = function(){
+				document.body.appendChild(container);
+			};
 			var addSnapshotOption = function(layover, name, toDo){
 				var option = document.createElement('div');
 				option.setAttribute('class','button snapshot-option fa '+name);
@@ -957,7 +1013,7 @@
 			};
 			var button = document.createElement('div');
 			button.setAttribute('class','button snapshot-button fa fa-clipboard');
-			document.body.appendChild(button);
+			topRightButtons.add(button);
 			button.addEventListener('click',function(){
 				if(showing){
 					hide();
@@ -972,7 +1028,8 @@
 			return {
 				add:add,
 				isShowing:function(){return showing;},
-				hide:hide
+				hide:hide,
+				attach:attach
 			};
 		})(),
 		drawHorizontalLine = function(y){
@@ -985,13 +1042,14 @@
 		timeCount = 0,
 		doStep = function(done){
 			position.doStep();
-			stepCount += 1 << TreeNode.prototype.nextGeneration.timePerStepLog;
+			stepCount += 1 << position.getTimePerStepLog();
 			done && done();
 		},
 		going = false,
 		setCounterInterval,
 		stop = function(){
 			going = false;
+			removeClass(document.body,'going');
 			var timeDiff = +new Date() - timeCount;
 			console.log("time diff:", timeDiff);
 			window.clearInterval(setCounterInterval);
@@ -1000,6 +1058,7 @@
 		intervalLength = 75,
 		go = function(){
 			going = true;
+			addClass(document.body,'going');
 			timeCount = +new Date();
 			var afterStep = function(){
 				drawAll();
@@ -1176,6 +1235,8 @@
 	menu.addOption('save image',function(){
 		c.save();
 	});
+	topRightButtons.attach();
+	snapshots.attach();
 	input(function(){},"Click on a cell to bring it to life. Hit the space bar to get things moving, or to pause them if they already are. Adjust the slider to make them move faster or slower. Shift-click on a cell to make a selection, and then right-click on the selection to find some options.");
 	setSize(15);
 	readHash();
