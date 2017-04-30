@@ -1,18 +1,20 @@
 (function(){
-	window.hashMapProvider = (function(){
-		var map = null;
+	var provider = function(maker){
+		var thing = null;
 		var get = function(){
-			if(!map){
-				map = getHashMap();
+			if(!thing){
+				thing = maker();
 			}
-			return map;
+			return thing;
 		};
-		var set = function(m){
-			map = m;
+		var set = function(t){
+			thing = t;
 		};
 		return {
 			get:get,
 			set:set
 		};
-	})();
+	};
+
+	window.hashMapProvider = provider(getHashMap);
 })();

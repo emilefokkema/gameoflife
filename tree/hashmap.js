@@ -12,6 +12,13 @@
 				}
 			}
 		};
+		var doForAll = function(f){
+			for(p in all){
+				if(all.hasOwnProperty(p)){
+					all[p].map(f);
+				}
+			}
+		};
 		var put = function(o){
 			var hashCode = o.hashCode();
 			var entry = all[hashCode];
@@ -36,6 +43,7 @@
 		return {
 			get:get,
 			put:put,
+			all:doForAll,
 			memoizedRatio:memoizedRatio
 		};
 	};

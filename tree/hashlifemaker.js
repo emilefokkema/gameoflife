@@ -56,16 +56,25 @@
 			return result;
 		};
 
+		var timePerStepLog = 0;
+
+		var setTimePerStepLog = function(l){
+			if(l != timePerStepLog){
+				MemoizedTreeNode.setTimePerStepLog(l);
+				timePerStepLog = l;
+			}
+		};
+
+		var getTimePerStepLog = function(){return timePerStepLog;};
+
 		return {
 			draw:draw,
 			contains:contains,
+			setTimePerStepLog:setTimePerStepLog,
+			getTimePerStepLog:getTimePerStepLog,
 			add:add,
 			remove:remove,
-			doStep:function(stepSize){
-				for(var i=0;i<stepSize;i++){
-					doStep();
-				}
-			},
+			doStep:doStep,
 			vacateAll:vacateAll,
 			getAllInBox:getAllInBox,
 			getAllAlive:getAllAlive

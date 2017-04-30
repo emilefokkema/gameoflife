@@ -3,6 +3,9 @@
 		TreeNodeBase.apply(this,arguments);
 	};
 
+	var nextGeneration;
+
+
 	TreeNode.prototype = Object.create(TreeNodeBase.prototype, {
 		oneGen: {
 			value:function(bitMask){
@@ -43,17 +46,20 @@
 		},
 		centeredHorizontal:{
 			value:function(w, e){
-				return this.create(w.ne.se, e.nw.sw, w.se.ne, e.sw.nw) ;
+				return this.create(w.ne, e.nw, w.se, e.sw) ;
 			}
 		},
 		centeredVertical:{
 			value:function(n, s){
-				return this.create(n.sw.se, n.se.sw, s.nw.ne, s.ne.nw) ;
+				return this.create(n.sw, n.se, s.nw, s.ne) ;
 			}
 		},
-		centeredSubSubnode:{
+		getCenter:{
 			value:function(){
-				return this.create(this.nw.se.se, this.ne.sw.sw, this.sw.ne.ne, this.se.nw.nw) ;
+				if(this.level - 1 <= nextGeneration.timePerStepLog){
+					return this.nextGeneration();
+				}
+				return this.centeredSubnode();
 			}
 		},
 		nextGeneration:{
@@ -64,15 +70,16 @@
 				if(this.level == 2){
 					return this.slowSimulation();
 				}
-				var n00 = this.nw.centeredSubnode(),
-					n01 = this.centeredHorizontal(this.nw, this.ne),
-					n02 = this.ne.centeredSubnode(),
-					n10 = this.centeredVertical(this.nw, this.sw),
-					n11 = this.centeredSubSubnode(),
-					n12 = this.centeredVertical(this.ne, this.se),
-					n20 = this.sw.centeredSubnode(),
-					n21 = this.centeredHorizontal(this.sw, this.se),
-					n22 = this.se.centeredSubnode();
+				var n00 = this.nw.getCenter(),
+					n01 = this.centeredHorizontal(this.nw, this.ne).getCenter(),
+					n02 = this.ne.getCenter(),
+					n10 = this.centeredVertical(this.nw, this.sw).getCenter(),
+					n11 = this.centeredSubnode().getCenter(),
+					n12 = this.centeredVertical(this.ne, this.se).getCenter(),
+					n20 = this.sw.getCenter(),
+					n21 = this.centeredHorizontal(this.sw, this.se).getCenter(),
+					n22 = this.se.getCenter();
+
 				return this.create(this.create(n00, n01, n10, n11).nextGeneration(),
 				              this.create(n01, n02, n11, n12).nextGeneration(),
 				              this.create(n10, n11, n20, n21).nextGeneration(),
@@ -80,7 +87,8 @@
 			}
 		}
 	});
-
+	nextGeneration = TreeNode.prototype.nextGeneration;
+	
 	window.TreeNode = TreeNode;
 })();
 

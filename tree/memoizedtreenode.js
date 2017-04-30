@@ -1,8 +1,21 @@
 (function(){
+
 	var MemoizedTreeNode = function(){
 		CanonicalTreeNode.apply(this,arguments);
 		this.result = null;
 	};
+
+	var timePerStepLog;
+
+	var setTimePerStepLog = function(l){
+		if(l != timePerStepLog){
+			TreeNode.prototype.nextGeneration.timePerStepLog = l;
+			hashMapProvider.get().all(function(n){n.result = null});
+			timePerStepLog = l;
+		}
+	};
+
+	setTimePerStepLog(0);
 
 	MemoizedTreeNode.prototype = Object.create(CanonicalTreeNode.prototype, {
 		create:{
@@ -26,6 +39,8 @@
 	MemoizedTreeNode.create = function(){
 		return new MemoizedTreeNode(false).emptyTree(3) ;
 	};
+
+	MemoizedTreeNode.setTimePerStepLog = setTimePerStepLog;
 
 	window.MemoizedTreeNode = MemoizedTreeNode;
 })();
