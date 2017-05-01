@@ -1077,6 +1077,16 @@
 			setCounter();
 			drawAll();
 		},
+		parsePlaintext = function(text, occupy){
+			var lines = text.match(/[\.O]+/g);
+			for(var y = 0;y<lines.length;y++){
+				for(var x=0;x<lines[y].length;x++){
+					if(lines[y][x] == "O"){
+						occupy(x,y);
+					}
+				}
+			}
+		},
 		parseRLEBody = function(body, occupy){
 			var parts = body.replace(/\s*/g,"").match(/\d*[bo\$]/g);
 			var x = 0, y = 0;
@@ -1232,6 +1242,14 @@
 			drawAll();
 		});
 	});
+	menu.addOption('parse plaintext',function(x,y){
+		input(function(v){
+			if(!v){return;}
+			position.vacateAll();
+			parsePlaintext(v, function(xx,yy){position.add(xx+x,yy+y);});
+			drawAll();
+		});
+	});
 	menu.addOption('save image',function(){
 		c.save();
 	});
@@ -1292,6 +1310,9 @@
 		});
 	});
 	window.addEventListener('wheel',function(e){
+		if(snapshots.isShowing()){
+			return;
+		}
 		zoom(Math.pow(2, -e.deltaY / 200), e.clientX, e.clientY);
 		drawAll();
 	});
