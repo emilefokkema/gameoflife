@@ -9,7 +9,7 @@
 
 	var setTimePerStepLog = function(l){
 		if(l != timePerStepLog){
-			TreeNode.prototype.nextGeneration.timePerStepLog = l;
+			CanonicalTreeNode.prototype.nextGeneration.timePerStepLog = l;
 			hashMapProvider.get().all(function(n){n.result = null});
 			timePerStepLog = l;
 		}

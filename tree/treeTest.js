@@ -3,7 +3,7 @@
 	var reportFailure = function(t){console.error(t);};
 	var test = function(name, t){
 		hashMapProvider.set(getHashMap());
-		TreeNode.prototype.nextGeneration.timePerStepLog = 0;
+		CanonicalTreeNode.prototype.nextGeneration.timePerStepLog = 0;
 		var fail = function(e){
 			reportFailure(name+" failed");
 			console.error(e);
