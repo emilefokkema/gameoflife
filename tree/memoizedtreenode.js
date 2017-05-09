@@ -1,4 +1,37 @@
 (function(){
+	var create = function(){
+		if(arguments.length == 4){
+			return new MemoizedTreeNode(arguments[0], arguments[1], arguments[2], arguments[3]).intern();
+		}
+		return new MemoizedTreeNode(arguments[0]).intern();
+	};
+
+	var emptyTree = function(lev){
+		if(lev <= 0){
+			return create(false);
+		}
+		var n = emptyTree(lev - 1);
+		return create(n, n, n, n);
+	};
+
+	var oneGen = function(bitMask){
+		if(bitMask == 0){
+			return create(false);
+		}
+		var self = (bitMask >> 5) & 1 ;
+		bitMask &= 0x757 ;
+		var neighborCount = 0;
+		while (bitMask != 0) {
+		   neighborCount++ ;
+		   bitMask &= bitMask - 1 ;
+		}
+		if (neighborCount == 3 || (neighborCount == 2 && self != 0)){
+		   return create(true) ;
+		}
+		else{
+		   return create(false) ;
+		}
+	};
 
 	var MemoizedTreeNode = function(){
 		this.nw = null;
@@ -39,39 +72,39 @@
 	MemoizedTreeNode.prototype = {
 		setBit: function(x,y){
 			if(this.level == 0){
-				return this.create(true);
+				return create(true);
 			}
 			var offset = 1 << (this.level - 2);
 			if(x < 0){
 				if(y < 0){
-					return this.create(this.nw.setBit(x+offset,y+offset), this.ne, this.sw, this.se);
+					return create(this.nw.setBit(x+offset,y+offset), this.ne, this.sw, this.se);
 				}else{
-					return this.create(this.nw, this.ne, this.sw.setBit(x+offset,y-offset), this.se);
+					return create(this.nw, this.ne, this.sw.setBit(x+offset,y-offset), this.se);
 				}
 			}else{
 				if(y < 0){
-					return this.create(this.nw, this.ne.setBit(x-offset,y+offset), this.sw, this.se);
+					return create(this.nw, this.ne.setBit(x-offset,y+offset), this.sw, this.se);
 				}else{
-					return this.create(this.nw, this.ne, this.sw, this.se.setBit(x-offset,y-offset));
+					return create(this.nw, this.ne, this.sw, this.se.setBit(x-offset,y-offset));
 				}
 			}
 		},
 		removeBit: function(x,y){
 			if(this.level == 0){
-				return this.create(false);
+				return create(false);
 			}
 			var offset = 1 << (this.level - 2);
 			if(x < 0){
 				if(y < 0){
-					return this.create(this.nw.removeBit(x+offset,y+offset), this.ne, this.sw, this.se);
+					return create(this.nw.removeBit(x+offset,y+offset), this.ne, this.sw, this.se);
 				}else{
-					return this.create(this.nw, this.ne, this.sw.removeBit(x+offset,y-offset), this.se);
+					return create(this.nw, this.ne, this.sw.removeBit(x+offset,y-offset), this.se);
 				}
 			}else{
 				if(y < 0){
-					return this.create(this.nw, this.ne.removeBit(x-offset,y+offset), this.sw, this.se);
+					return create(this.nw, this.ne.removeBit(x-offset,y+offset), this.sw, this.se);
 				}else{
-					return this.create(this.nw, this.ne, this.sw, this.se.removeBit(x-offset,y-offset));
+					return create(this.nw, this.ne, this.sw, this.se.removeBit(x-offset,y-offset));
 				}
 			}
 		},
@@ -99,26 +132,13 @@
 			return -maxCoordinate <= x && x <= maxCoordinate-1 &&
              -maxCoordinate <= y && y <= maxCoordinate-1;
 		},
-		emptyTree: function(lev){
-			if(lev <= 0){
-				return this.create(false);
-			}
-			var n = this.emptyTree(lev - 1);
-			return this.create(n, n, n, n);
-		},
-		create: function(){
-			if(arguments.length == 4){
-				return new MemoizedTreeNode(arguments[0], arguments[1], arguments[2], arguments[3]).intern();
-			}
-			return new MemoizedTreeNode(arguments[0]).intern();
-		},
 		expandUniverse:function(){
-			var border = this.emptyTree(this.level - 1);
-			return this.create(
-				this.create(border,border,border,this.nw),
-				this.create(border,border,this.ne,border),
-				this.create(border, this.sw,border,border),
-				this.create(this.se,border,border,border)
+			var border = emptyTree(this.level - 1);
+			return create(
+				create(border,border,border,this.nw),
+				create(border,border,this.ne,border),
+				create(border, this.sw,border,border),
+				create(this.se,border,border,border)
 				);
 		},
 		getCoordinates:function(x, y, returnXY){
@@ -140,24 +160,6 @@
 			this.ne.getCoordinates(x + offset, y - offset, returnXY);
 			this.se.getCoordinates(x + offset, y + offset, returnXY);
 		},
-		oneGen:function(bitMask){
-			if(bitMask == 0){
-				return this.create(false);
-			}
-			var self = (bitMask >> 5) & 1 ;
-			bitMask &= 0x757 ;
-			var neighborCount = 0;
-			while (bitMask != 0) {
-			   neighborCount++ ;
-			   bitMask &= bitMask - 1 ;
-			}
-			if (neighborCount == 3 || (neighborCount == 2 && self != 0)){
-			   return this.create(true) ;
-			}
-			else{
-			   return this.create(false) ;
-			}
-		},
 		slowSimulation:function(){
 			var allBits = 0;
 			for(var y=-2;y<2;y++){
@@ -165,17 +167,17 @@
 					allBits = (allBits << 1) + this.getBit(x, y) ;
 				}
 			}
-			return this.create(this.oneGen(allBits>>5), this.oneGen(allBits>>4),
-			              this.oneGen(allBits>>1), this.oneGen(allBits)) ;
+			return create(oneGen(allBits>>5), oneGen(allBits>>4),
+			              oneGen(allBits>>1), oneGen(allBits)) ;
 		},
 		centeredSubnode:function(){
-			return this.create(this.nw.se, this.ne.sw, this.sw.ne, this.se.nw) ;
+			return create(this.nw.se, this.ne.sw, this.sw.ne, this.se.nw) ;
 		},
 		centeredHorizontal:function(w, e){
-			return this.create(w.ne, e.nw, w.se, e.sw) ;
+			return create(w.ne, e.nw, w.se, e.sw) ;
 		},
 		centeredVertical:function(n, s){
-			return this.create(n.sw, n.se, s.nw, s.ne) ;
+			return create(n.sw, n.se, s.nw, s.ne) ;
 		},
 		getCenter:function(){
 			if(this.level - 1 <= timePerStepLog){
@@ -200,10 +202,10 @@
 				n21 = this.centeredHorizontal(this.sw, this.se).getCenter(),
 				n22 = this.se.getCenter();
 
-			return this.create(this.create(n00, n01, n10, n11).nextGeneration(),
-			              this.create(n01, n02, n11, n12).nextGeneration(),
-			              this.create(n10, n11, n20, n21).nextGeneration(),
-			              this.create(n11, n12, n21, n22).nextGeneration()) ;
+			return create(create(n00, n01, n10, n11).nextGeneration(),
+			              create(n01, n02, n11, n12).nextGeneration(),
+			              create(n10, n11, n20, n21).nextGeneration(),
+			              create(n11, n12, n21, n22).nextGeneration()) ;
 		},
 		hashCode:function(){
 			if(this.hashCache != null){return this.hashCache;}
@@ -239,7 +241,7 @@
 	
 
 	MemoizedTreeNode.create = function(){
-		return new MemoizedTreeNode(false).emptyTree(3) ;
+		return emptyTree(3) ;
 	};
 
 	MemoizedTreeNode.setTimePerStepLog = setTimePerStepLog;
