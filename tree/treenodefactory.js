@@ -1,9 +1,9 @@
 (function(){
 	var create = function(){
 		if(arguments.length == 4){
-			return new MemoizedTreeNode(arguments[0], arguments[1], arguments[2], arguments[3]).intern();
+			return new TreeNode(arguments[0], arguments[1], arguments[2], arguments[3]).intern();
 		}
-		return new MemoizedTreeNode(arguments[0]).intern();
+		return new TreeNode(arguments[0]).intern();
 	};
 
 	var emptyTree = function(lev){
@@ -14,26 +14,13 @@
 		return create(n, n, n, n);
 	};
 
-	var oneGen = function(bitMask){
-		if(bitMask == 0){
-			return create(false);
-		}
-		var self = (bitMask >> 5) & 1 ;
-		bitMask &= 0x757 ;
-		var neighborCount = 0;
-		while (bitMask != 0) {
-		   neighborCount++ ;
-		   bitMask &= bitMask - 1 ;
-		}
-		if (neighborCount == 3 || (neighborCount == 2 && self != 0)){
-		   return create(true) ;
-		}
-		else{
-		   return create(false) ;
-		}
-	};
+	var oneGen = (function(old){
+		return function(bitMask){
+			return old(bitMask, create);
+		};
+	})(window.oneGen)
 
-	var MemoizedTreeNode = function(){
+	var TreeNode = function(){
 		this.nw = null;
 		this.ne = null;
 		this.sw = null;
@@ -69,7 +56,7 @@
 
 	setTimePerStepLog(0);
 
-	MemoizedTreeNode.prototype = {
+	TreeNode.prototype = {
 		setBit: function(x,y){
 			if(this.level == 0){
 				return create(true);
@@ -238,13 +225,11 @@
 		}
 	};
 
-	
-
-	MemoizedTreeNode.create = function(){
-		return emptyTree(3) ;
+	window.TreeNodeFactory = {
+		setTimePerStepLog:setTimePerStepLog,
+		create:create,
+		emptyTree:function(){
+			return emptyTree(3) ;
+		}
 	};
-
-	MemoizedTreeNode.setTimePerStepLog = setTimePerStepLog;
-
-	window.MemoizedTreeNode = MemoizedTreeNode;
 })();

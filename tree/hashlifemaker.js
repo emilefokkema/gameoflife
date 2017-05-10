@@ -1,6 +1,6 @@
 (function(){
 	window.hashLifeMaker = function(){
-		var currentTree = MemoizedTreeNode.create();
+		var currentTree = TreeNodeFactory.emptyTree();
 
 		var draw = function(xyDrawer){
 			currentTree.getCoordinates(0, 0, function(x,y){xyDrawer({x:x,y:y});});
@@ -35,7 +35,7 @@
 		};
 
 		var vacateAll = function(){
-			currentTree = MemoizedTreeNode.create();
+			currentTree = TreeNodeFactory.emptyTree();
 		};
 
 		var getAllInBox = function(box){
@@ -60,7 +60,7 @@
 
 		var setTimePerStepLog = function(l){
 			if(l != timePerStepLog){
-				MemoizedTreeNode.setTimePerStepLog(l);
+				TreeNodeFactory.setTimePerStepLog(l);
 				timePerStepLog = l;
 			}
 		};
