@@ -26,25 +26,35 @@
 				entry = [o];
 				all[hashCode] = entry;
 			}else{
+				for(var i=0;i<entry.length;i++){
+					if(entry[i].equals(o)){return;}
+				}
 				entry.push(o);
 			}
 		};
-		var memoizedRatio = function(){
-			var n = 0;
-			var r = 0;
+
+		var health = function(){
+			var totalEntries = 0;
+			var hashes = 0;
+			var entriesWithResult = 0;
 			for(p in all){
 				if(all.hasOwnProperty(p)){
-					n += all[p].length;
-					r += all[p].filter(function(n){return n.result != null;}).length;
+					hashes++;
+					totalEntries += all[p].length;
+					entriesWithResult += all[p].filter(function(n){return n.result != null;}).length;
 				}
 			}
-			return r/n;
+			return {
+				totalEntries:totalEntries,
+				hashesRatio: Math.floor(100 * hashes / totalEntries) + "%",
+				resultRatio: Math.floor(100 * entriesWithResult / totalEntries) + "%"
+			};
 		};
 		return {
 			get:get,
 			put:put,
 			all:doForAll,
-			memoizedRatio:memoizedRatio
+			health:health
 		};
 	};
 })();
