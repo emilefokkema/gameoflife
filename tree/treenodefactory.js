@@ -14,11 +14,24 @@
 		return create(n, n, n, n);
 	};
 
-	var oneGen = (function(old){
-		return function(bitMask){
-			return old(bitMask, create);
-		};
-	})(window.oneGen)
+	var oneGen = function(bitMask){
+		if(bitMask == 0){
+			return create(false);
+		}
+		var self = (bitMask >> 5) & 1 ;
+		bitMask &= 0x757 ;
+		var neighborCount = 0;
+		while (bitMask != 0) {
+		   neighborCount++ ;
+		   bitMask &= bitMask - 1 ;
+		}
+		if (neighborCount == 3 || (neighborCount == 2 && self != 0)){
+		   return create(true) ;
+		}
+		else{
+		   return create(false) ;
+		}
+	};
 
 	var TreeNode = function(){
 		this.nw = null;

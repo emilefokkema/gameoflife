@@ -62,24 +62,7 @@
 		node = node.expandUniverse();
 		this.assert(node.level == 4, "level should be 4");
 	});
-
-	test("oneGenTest",function(){
-
-		var aliveInNext = oneGen(0b100111, TreeNodeFactory.create).alive; //three south neighbors are alive
-		this.assert(aliveInNext);
-
-
-		aliveInNext = oneGen(0b100111, TreeNodeFactory.create).alive; //three south neighbors are alive
-		this.assert(aliveInNext);
-
-
-		aliveInNext = oneGen(0b11, TreeNodeFactory.create).alive; //two south neighbors are alive
-		this.assert(!aliveInNext);
-
-		aliveInNext = oneGen(0b100001, TreeNodeFactory.create).alive; //one south neighbor is alive
-		this.assert(!aliveInNext);
-	});
-
+	
 	test("slowSimulationTest",function(){
 		var node = TreeNodeFactory.emptyTree().nw;
 		node = node.setBit(-2,-2).setBit(-1,-2).setBit(0,-2).setBit(1,-2); //a 4x4 with the top four alive

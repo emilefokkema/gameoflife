@@ -43,10 +43,19 @@
 				resultRatio: Math.floor(100 * entriesWithResult / totalEntries) + "%"
 			};
 		};
+
+		var all = function(f){
+			for(var p in all){
+				if(all.hasOwnProperty(p)){
+					all[p].map(function(x){f(x);});
+				}
+			}
+		};
 		return {
 			get:get,
 			put:put,
-			health:health
+			health:health,
+			all:all
 		};
 	};
 })();
