@@ -15,6 +15,25 @@
 <script src="tree/treenodefactory.js"></script>
 <script src="tree/hashlifemaker.js"></script>
 <script src="require-element.min.js"></script>
+<script type="text/template" id="settings">
+	<div id="1" class="input settings">
+		time per step: 2 ^
+		<input id="2" type="number" min="0" step="1"/>
+		<input id="3" type="button" value="Save"/>
+	</div>
+</script>
+<script type="text/template" id="input">
+	<div id="1" class="input">
+		<textarea id="2"></textarea>
+		<input id="3" type="button" value="OK"/>
+	</div>
+</script>
+<script type="text/template" id="snapshot">
+	<div id="1" class="snapshot">
+		<div id="2" class="snapshot-part"></div>
+		<div class="snapshot-part">$(options)</div>
+	</div>
+</script>
 <script>
 (function(){
 	var interpolation = function(y0, x1, c){
@@ -680,7 +699,7 @@
 				}
 			};
 		})(),
-		input = requireElement("<div id=\"1\" class=\"input\"><textarea id=\"2\"></textarea><input id=\"3\" type=\"button\" value=\"OK\"/></div>", function(div, text, button){
+		input = requireElement(document.getElementById("input").innerHTML, function(div, text, button){
 			var open = false;
 
 			var show = function(initialText){
@@ -808,7 +827,7 @@
 			};
 		},
 		position = hashLifeMaker(),
-		settings = requireElement("<div id=\"1\" class=\"input settings\">time per step: 2 ^ <input id=\"2\" type=\"number\" min=\"0\" step=\"1\"/><input id=\"3\" type=\"button\" value=\"Save\"/></div>", function(div, number, closeButton){
+		settings = requireElement(document.getElementById("settings").innerHTML, function(div, number, closeButton){
 			var open = false;
 
 			number.value = 0;
@@ -954,7 +973,7 @@
 										newSnapshot.draw(canvas);
 									})
 				];
-				container.appendChild(requireElement("<div id=\"1\" class=\"snapshot\"><div id=\"2\" class=\"snapshot-part\"></div><div class=\"snapshot-part\">$(options)</div></div>",function(s, s1){
+				container.appendChild(requireElement(document.getElementById("snapshot").innerHTML,function(s, s1){
 						canvas = document.createElement('canvas');
 						canvas.setAttribute('width',snapshotWidth);
 						canvas.setAttribute('height',snapshotHeight);
