@@ -34,6 +34,11 @@
 		<div class="snapshot-part">$(options)</div>
 	</div>
 </script>
+<script type="text/template" id="snapshots">
+	<div id="1" class="snapshots">
+		<div id="2" class="button snapshot-close-button fa fa-close"></div>
+	</div>
+</script>
 <script>
 (function(){
 	var interpolation = function(y0, x1, c){
@@ -858,7 +863,7 @@
 					});
 			}));
 		}),
-		snapshots = requireElement("<div id=\"1\" class=\"snapshots\"></div>", function(container){
+		snapshots = requireElement(document.getElementById("snapshots").innerHTML, function(container, closeButton){
 			var showing = false, count = 0;
 			var snapshotWidth = 120, snapshotHeight = 120;
 			var makeSnapshot = function(positions, forget){
@@ -933,6 +938,7 @@
 				removeClass(document.body,'show-snapshots');
 				showing = false;
 			};
+			closeButton.addEventListener('click',hide);
 			var attach = function(){
 				document.body.appendChild(container);
 			};
@@ -1004,10 +1010,6 @@
 					});
 			}));
 			
-			container.appendChild(requireElement("<div id=\"1\" class=\"button snapshot-close-button fa fa-close\"></div>",function(closeButton){
-					closeButton.addEventListener('click',hide);
-			}));
-
 			return {
 				add:add,
 				isShowing:function(){return showing;},
