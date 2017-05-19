@@ -14,6 +14,46 @@
 <script src="tree/hashmapprovider.js"></script>
 <script src="tree/treenodefactory.js"></script>
 <script src="tree/hashlifemaker.js"></script>
+<script src="require-element.min.js"></script>
+<script type="text/template" id="settings">
+	<div id="1" class="input settings">
+		time per step: 2 ^
+		<input id="2" type="number" min="0" step="1"/>
+		<input id="3" type="button" value="Save"/>
+	</div>
+</script>
+<script type="text/template" id="input">
+	<div id="1" class="input">
+		<textarea id="2"></textarea>
+		<input id="3" type="button" value="OK"/>
+	</div>
+</script>
+<script type="text/template" id="snapshots">
+	<div id="1" class="snapshots">
+		<div id="2" class="button snapshot-close-button fa fa-close"></div>
+		<div template-id="3" id="1" class="snapshot">
+			<div id="2" class="snapshot-part"></div>
+			<div class="snapshot-part">
+				<div id="1" template-id="3" class="button snapshot-option fa $(name)"></div>
+			</div>
+		</div>
+	</div>
+</script>
+<script type="text/template" id="menu">
+	<div id="1" class="menu">
+		<div id="1" template-id="2" class="option">$(text)</div>
+	</div>
+</script>
+<script type="text/template" id="controls">
+	<div id="1" class="controls">
+		<div id="1" template-id="2" class="button fa $(className)"></div>
+	</div>
+</script>
+<script type="text/template" id="topRightButtons">
+	<div id="1" class="topright-buttons">
+		<div id="1" template-id="2" class="button $(className)"></div>
+	</div>
+</script>
 <script>
 (function(){
 	var interpolation = function(y0, x1, c){
@@ -34,20 +74,19 @@
 		oldClassNames = oldClassNames || [];
 		el.setAttribute('class', oldClassNames.filter(function(n){return n != className;}).join(" "));
 	};
-	var topRightButtons = (function(){
+	var topRightButtons = requireElement(document.getElementById("topRightButtons").innerHTML, function(container, buttonDiv){
 		var all = [];
-		var add = function(b){all.push(b);};
+		var add = function(className, f){
+			buttonDiv(f, {className:className});
+		};
 		var attach = function(){
-			var div = document.createElement('div');
-			div.setAttribute('class','topright-buttons');
-			document.body.appendChild(div);
-			all.map(function(el){div.appendChild(el);});
+			document.body.appendChild(container);
 		};
 		return {
 			add:add,
 			attach:attach
 		};
-	})();
+	});
 	var w = document.body.offsetWidth,
 		h = document.body.offsetHeight,
 		size, nx, ny,
@@ -337,28 +376,24 @@
 				save:save
 			};
 		})(),
-		menu = (function(){
+		menu = requireElement(document.getElementById("menu").innerHTML, function(div, optionDiv){
 			var currentX, currentY,open = false;
-			var div = document.createElement("div");
-			div.setAttribute("class","menu");
 			document.body.appendChild(div);
 			var addOption = function(text, f){
-				var removed = false;
-				var remove = function(){
-					if(!removed){
-						div.removeChild(option);
-						removed = true;
-					}
-				};
-				var option = document.createElement('div');
-				option.setAttribute("class","option");
-				option.appendChild(document.createTextNode(text));
-				option.addEventListener('click', function(){
-					hide();
-					f(currentX, currentY, remove);
-				});
-				div.appendChild(option);
-				return remove;
+				return optionDiv(function(option){
+					var removed = false;
+					var remove = function(){
+						if(!removed){
+							div.removeChild(option);
+							removed = true;
+						}
+					};
+					option.addEventListener('click', function(){
+						hide();
+						f(currentX, currentY, remove);
+					});
+					return remove;
+				},{text:text});
 			};
 			var show = function(x,y){
 				var loc = mousePositionToPositionLocation(x,y);
@@ -379,7 +414,7 @@
 				hide:hide,
 				isOpen:function(){return open;}
 			}
-		})(),
+		}),
 		selection = (function(){
 			var present = false, removeMenuOption = null, removeSelectOption = null, minX, minY, maxX, maxY, dragger;
 			var getMinLoc = function(){
@@ -684,16 +719,9 @@
 				}
 			};
 		})(),
-		input = (function(){
+		input = requireElement(document.getElementById("input").innerHTML, function(div, text, button){
 			var open = false;
-			var div = document.createElement('div');
-			div.setAttribute("class","input");
-			var text = document.createElement('textarea');
-			var button = document.createElement('input');
-			button.setAttribute('type','button');
-			button.setAttribute('value','OK');
-			div.appendChild(text);
-			div.appendChild(button);
+
 			var show = function(initialText){
 				open = true;
 				div.style.display = 'initial';
@@ -721,7 +749,7 @@
 			};
 			f.isOpen = function(){return open;};
 			return f;
-		})(),
+		}),
 		alert = function(text){
 			input(function(){
 				clear();
@@ -746,21 +774,18 @@
 			
 			return {copy:copy};
 		})(),
-		controls = (function(){
-			var container = document.createElement('div');
-			container.setAttribute('class','controls');
+		controls = requireElement(document.getElementById("controls").innerHTML, function(container, buttonDiv){
 			document.body.appendChild(container);
 			var addButton = function(className, action){
-				var div = document.createElement('div');
-				div.setAttribute('class','button fa '+className);
-				div.addEventListener('click',function(){
-					action(function(newClassName){
-						if(newClassName){
-							div.setAttribute('class','button fa '+newClassName);
-						}
+				buttonDiv(function(div){
+					div.addEventListener('click',function(){
+						action(function(newClassName){
+							if(newClassName){
+								div.setAttribute('class','button fa '+newClassName);
+							}
+						});
 					});
-				});
-				container.appendChild(div);
+				},{className:className});
 			};
 			addButton("fa-play",function(setNewClassName){
 				if(going){
@@ -782,26 +807,21 @@
 			addButton("fa-clipboard",function(){
 				snapshots.add(position.getAllAlive());
 			});
-		})(),
-		speedRange = (function(){
+		}),
+		speedRange = requireElement("<input id=\"1\" type=\"range\" class=\"speed-range\"/>", function(range){
 			var getLength = interpolation(1000,100,0.05);
-			var range = document.createElement('input');
-			range.setAttribute('type','range');
-			range.setAttribute('class','speed-range');
 			document.body.appendChild(range);
 			range.addEventListener('input',function(){
 				var newLength = getLength(range.value);
 				intervalLength = Math.max(1, newLength); 
 			});
-		})(),
-		setCounter = (function(){
-		    var a = document.createElement('a');
-		    a.setAttribute('class','step-count');
+		}),
+		setCounter = requireElement("<a id=\"1\" class=\"step-count\"></a>", function(a){
 		    document.body.appendChild(a);
 		    return function(){
 		            a.innerHTML = stepCount;
 		    };
-		})(),
+		}),
 		context = c.context,
 		clear = c.clear,
 		fillRect = function(screenX, screenY){
@@ -826,29 +846,21 @@
 			};
 		},
 		position = hashLifeMaker(),
-		settings = (function(){
+		settings = requireElement(document.getElementById("settings").innerHTML, function(div, number, closeButton){
 			var open = false;
-			var div = document.createElement('div');
-			div.setAttribute("class","input settings");
-			div.appendChild(document.createTextNode("time per step: 2 ^ "));
-			var number = document.createElement('input');
-			number.setAttribute('type','number');
-			number.setAttribute('min',0);
-			number.setAttribute('step',1);
+
 			number.value = 0;
 			number.addEventListener('blur',function(){
 				number.value = Math.floor(number.value);
 				number.value = Math.max(0,number.value);
 			});
-			div.appendChild(number);
-			var closeButton = document.createElement('input');
-			closeButton.setAttribute('type','button');
-			closeButton.setAttribute('value','Save');
+			
+			
 			closeButton.addEventListener('click',function(){
 				position.setTimePerStepLog(number.value);
 				hide();
 			});
-			div.appendChild(closeButton);
+			
 			var show = function(initialText){
 				open = true;
 				addClass(document.body,'settings-open');
@@ -859,14 +871,13 @@
 			};
 			document.body.appendChild(div);
 			hide();
-			var button = document.createElement('div');
-			button.addEventListener('click',function(){
-				show();
+			topRightButtons.add("settings-button fa fa-gear",function(button){
+					button.addEventListener('click',function(){
+						show();
+					});
 			});
-			button.setAttribute('class','button settings-button fa fa-gear');
-			topRightButtons.add(button);
-		})(),
-		snapshots = (function(){
+		}),
+		snapshots = requireElement(document.getElementById("snapshots").innerHTML, function(container, closeButton, snapshotElement){
 			var showing = false, count = 0;
 			var snapshotWidth = 120, snapshotHeight = 120;
 			var makeSnapshot = function(positions, forget){
@@ -941,94 +952,81 @@
 				removeClass(document.body,'show-snapshots');
 				showing = false;
 			};
-			var container = document.createElement('div');
-			container.setAttribute('class','snapshots');
+			closeButton.addEventListener('click',hide);
 			var attach = function(){
 				document.body.appendChild(container);
 			};
-			var addSnapshotOption = function(layover, name, toDo){
-				var option = document.createElement('div');
-				option.setAttribute('class','button snapshot-option fa '+name);
-				option.addEventListener('click',toDo);
-				layover.appendChild(option);
-			};
+			
 			var add = function(positions){
 				positions = positions.map(function(p){return {x:p.x,y:p.y};});
-				var s = document.createElement('div');
-				s.setAttribute('class','snapshot');
-				var s1 = document.createElement('div');
-				s1.setAttribute('class','snapshot-part');
-				s.appendChild(s1);
-				var s2 = document.createElement('div');
-				s2.setAttribute('class','snapshot-part');
-				s.appendChild(s2);
-				container.appendChild(s);
-				var canvas = document.createElement('canvas');
-				canvas.setAttribute('width',snapshotWidth);
-				canvas.setAttribute('height',snapshotHeight);
-				s1.appendChild(canvas);
-				var newSnapshot = makeSnapshot(positions, function(){
-					container.removeChild(s);
-					count--;
-					if(count == 0){
-						removeClass(document.body,'show-snapshots');
-						removeClass(document.body,'has-snapshots');
-					}
+				snapshotElement(function(s, s1, optionElement){
+						var getSnapshotOption = function(name, toDo){
+							optionElement(function(option){
+									option.addEventListener('click',toDo);
+							},{name:name});
+						};
+						var canvas = document.createElement('canvas');
+						canvas.setAttribute('width',snapshotWidth);
+						canvas.setAttribute('height',snapshotHeight);
+						s1.appendChild(canvas);
+						var newSnapshot = makeSnapshot(positions, function(){
+							container.removeChild(s);
+							count--;
+							if(count == 0){
+								removeClass(document.body,'show-snapshots');
+								removeClass(document.body,'has-snapshots');
+							}
+						});
+						newSnapshot.draw(canvas);
+						getSnapshotOption('fa-folder-open',function(){
+											newSnapshot.restore();
+										});
+						getSnapshotOption('fa-copy',function(){
+											newSnapshot.copyToClipboard();
+										});
+						getSnapshotOption('fa-trash',function(){
+											newSnapshot.forget();
+										});
+						getSnapshotOption('fa-file-code-o',function(){
+											alert(makeRLE(positions));
+										});
+						getSnapshotOption('fa-arrows-h',function(){
+											newSnapshot.flipHorizontal();
+											canvas.width = snapshotWidth;
+											newSnapshot.draw(canvas);
+										});
+						getSnapshotOption('fa-arrows-v',function(){
+											newSnapshot.flipVertical();
+											canvas.width = snapshotWidth;
+											newSnapshot.draw(canvas);
+										});
+						getSnapshotOption('fa-refresh',function(){
+											newSnapshot.turnClockwise();
+											canvas.width = snapshotWidth;
+											newSnapshot.draw(canvas);
+										});
 				});
-				
-				newSnapshot.draw(canvas);
-				
-				addSnapshotOption(s2, 'fa-folder-open',function(){
-					newSnapshot.restore();
-				});
-				addSnapshotOption(s2, 'fa-copy',function(){
-					newSnapshot.copyToClipboard();
-				});
-				addSnapshotOption(s2, 'fa-trash',function(){
-					newSnapshot.forget();
-				});
-				addSnapshotOption(s2, 'fa-file-code-o',function(){
-					alert(makeRLE(positions));
-				});
-				addSnapshotOption(s2, 'fa-arrows-h',function(){
-					newSnapshot.flipHorizontal();
-					canvas.width = snapshotWidth;
-					newSnapshot.draw(canvas);
-				});
-				addSnapshotOption(s2, 'fa-arrows-v',function(){
-					newSnapshot.flipVertical();
-					canvas.width = snapshotWidth;
-					newSnapshot.draw(canvas);
-				});
-				addSnapshotOption(s2, 'fa-refresh',function(){
-					newSnapshot.turnClockwise();
-					canvas.width = snapshotWidth;
-					newSnapshot.draw(canvas);
-				});
+
 				addClass(document.body, 'has-snapshots');
 				count++;
 			};
-			var button = document.createElement('div');
-			button.setAttribute('class','button snapshot-button fa fa-clipboard');
-			topRightButtons.add(button);
-			button.addEventListener('click',function(){
-				if(showing){
-					hide();
-				}else{
-					show();
-				}
+			topRightButtons.add("snapshot-button fa fa-clipboard",function(button){
+					button.addEventListener('click',function(){
+						if(showing){
+							hide();
+						}else{
+							show();
+						}
+					});
 			});
-			var closeButton = document.createElement('div');
-			closeButton.setAttribute('class','button snapshot-close-button fa fa-close');
-			container.appendChild(closeButton);
-			closeButton.addEventListener('click',hide);
+			
 			return {
 				add:add,
 				isShowing:function(){return showing;},
 				hide:hide,
 				attach:attach
 			};
-		})(),
+		}),
 		drawHorizontalLine = function(y){
 			context.beginPath();
 			context.moveTo(0,y);
