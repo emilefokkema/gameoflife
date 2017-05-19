@@ -28,15 +28,25 @@
 		<input id="3" type="button" value="OK"/>
 	</div>
 </script>
-<script type="text/template" id="snapshot">
-	<div id="1" class="snapshot">
-		<div id="2" class="snapshot-part"></div>
-		<div class="snapshot-part">$(options)</div>
-	</div>
-</script>
 <script type="text/template" id="snapshots">
 	<div id="1" class="snapshots">
 		<div id="2" class="button snapshot-close-button fa fa-close"></div>
+		<div template-id="3" id="1" class="snapshot">
+			<div id="2" class="snapshot-part"></div>
+			<div class="snapshot-part">
+				<div id="1" template-id="3" class="button snapshot-option fa $(name)"></div>
+			</div>
+		</div>
+	</div>
+</script>
+<script type="text/template" id="menu">
+	<div id="1" class="menu">
+		<div id="1" template-id="2" class="option">$(text)</div>
+	</div>
+</script>
+<script type="text/template" id="controls">
+	<div id="1" class="controls">
+		<div id="1" template-id="2" class="button fa $(className)"></div>
 	</div>
 </script>
 <script>
@@ -360,11 +370,11 @@
 				save:save
 			};
 		})(),
-		menu = requireElement("<div id=\"1\" class=\"menu\"></div>", function(div){
+		menu = requireElement(document.getElementById("menu").innerHTML, function(div, optionDiv){
 			var currentX, currentY,open = false;
 			document.body.appendChild(div);
 			var addOption = function(text, f){
-				return requireElement("<div id=\"1\" class=\"option\">$(text)</div>",function(option){
+				return optionDiv(function(option){
 					var removed = false;
 					var remove = function(){
 						if(!removed){
@@ -376,7 +386,6 @@
 						hide();
 						f(currentX, currentY, remove);
 					});
-					div.appendChild(option);
 					return remove;
 				},{text:text});
 			};
@@ -759,10 +768,10 @@
 			
 			return {copy:copy};
 		})(),
-		controls = requireElement("<div id=\"1\" class=\"controls\"></div>", function(container){
+		controls = requireElement(document.getElementById("controls").innerHTML, function(container, buttonDiv){
 			document.body.appendChild(container);
 			var addButton = function(className, action){
-				requireElement("<div id=\"1\" class=\"button fa "+className+"\"></div>",function(div){
+				buttonDiv(function(div){
 					div.addEventListener('click',function(){
 						action(function(newClassName){
 							if(newClassName){
@@ -770,8 +779,7 @@
 							}
 						});
 					});
-					container.appendChild(div);
-				});
+				},{className:className});
 			};
 			addButton("fa-play",function(setNewClassName){
 				if(going){
@@ -863,7 +871,7 @@
 					});
 			}));
 		}),
-		snapshots = requireElement(document.getElementById("snapshots").innerHTML, function(container, closeButton){
+		snapshots = requireElement(document.getElementById("snapshots").innerHTML, function(container, closeButton, snapshotElement){
 			var showing = false, count = 0;
 			var snapshotWidth = 120, snapshotHeight = 120;
 			var makeSnapshot = function(positions, forget){
@@ -942,49 +950,20 @@
 			var attach = function(){
 				document.body.appendChild(container);
 			};
-			var getSnapshotOption = function(name, toDo){
-				return requireElement("<div id=\"1\" class=\"button snapshot-option fa "+name+"\"></div>",function(option){
-						option.addEventListener('click',toDo);
-				});
-			};
+			
 			var add = function(positions){
 				positions = positions.map(function(p){return {x:p.x,y:p.y};});
-				var newSnapshot, canvas;
-				var options = [
-					getSnapshotOption('fa-folder-open',function(){
-										newSnapshot.restore();
-									}),
-					getSnapshotOption('fa-copy',function(){
-										newSnapshot.copyToClipboard();
-									}),
-					getSnapshotOption('fa-trash',function(){
-										newSnapshot.forget();
-									}),
-					getSnapshotOption('fa-file-code-o',function(){
-										alert(makeRLE(positions));
-									}),
-					getSnapshotOption('fa-arrows-h',function(){
-										newSnapshot.flipHorizontal();
-										canvas.width = snapshotWidth;
-										newSnapshot.draw(canvas);
-									}),
-					getSnapshotOption('fa-arrows-v',function(){
-										newSnapshot.flipVertical();
-										canvas.width = snapshotWidth;
-										newSnapshot.draw(canvas);
-									}),
-					getSnapshotOption('fa-refresh',function(){
-										newSnapshot.turnClockwise();
-										canvas.width = snapshotWidth;
-										newSnapshot.draw(canvas);
-									})
-				];
-				container.appendChild(requireElement(document.getElementById("snapshot").innerHTML,function(s, s1){
-						canvas = document.createElement('canvas');
+				snapshotElement(function(s, s1, optionElement){
+						var getSnapshotOption = function(name, toDo){
+							optionElement(function(option){
+									option.addEventListener('click',toDo);
+							},{name:name});
+						};
+						var canvas = document.createElement('canvas');
 						canvas.setAttribute('width',snapshotWidth);
 						canvas.setAttribute('height',snapshotHeight);
 						s1.appendChild(canvas);
-						newSnapshot = makeSnapshot(positions, function(){
+						var newSnapshot = makeSnapshot(positions, function(){
 							container.removeChild(s);
 							count--;
 							if(count == 0){
@@ -992,10 +971,35 @@
 								removeClass(document.body,'has-snapshots');
 							}
 						});
-						
 						newSnapshot.draw(canvas);
-
-				}, {options:options}));
+						getSnapshotOption('fa-folder-open',function(){
+											newSnapshot.restore();
+										});
+						getSnapshotOption('fa-copy',function(){
+											newSnapshot.copyToClipboard();
+										});
+						getSnapshotOption('fa-trash',function(){
+											newSnapshot.forget();
+										});
+						getSnapshotOption('fa-file-code-o',function(){
+											alert(makeRLE(positions));
+										});
+						getSnapshotOption('fa-arrows-h',function(){
+											newSnapshot.flipHorizontal();
+											canvas.width = snapshotWidth;
+											newSnapshot.draw(canvas);
+										});
+						getSnapshotOption('fa-arrows-v',function(){
+											newSnapshot.flipVertical();
+											canvas.width = snapshotWidth;
+											newSnapshot.draw(canvas);
+										});
+						getSnapshotOption('fa-refresh',function(){
+											newSnapshot.turnClockwise();
+											canvas.width = snapshotWidth;
+											newSnapshot.draw(canvas);
+										});
+				});
 
 				addClass(document.body, 'has-snapshots');
 				count++;
