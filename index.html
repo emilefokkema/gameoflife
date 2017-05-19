@@ -49,6 +49,11 @@
 		<div id="1" template-id="2" class="button fa $(className)"></div>
 	</div>
 </script>
+<script type="text/template" id="topRightButtons">
+	<div id="1" class="topright-buttons">
+		<div id="1" template-id="2" class="button $(className)"></div>
+	</div>
+</script>
 <script>
 (function(){
 	var interpolation = function(y0, x1, c){
@@ -69,18 +74,19 @@
 		oldClassNames = oldClassNames || [];
 		el.setAttribute('class', oldClassNames.filter(function(n){return n != className;}).join(" "));
 	};
-	var topRightButtons = (function(){
+	var topRightButtons = requireElement(document.getElementById("topRightButtons").innerHTML, function(container, buttonDiv){
 		var all = [];
-		var add = function(b){all.push(b);};
+		var add = function(className, f){
+			buttonDiv(f, {className:className});
+		};
 		var attach = function(){
-			document.body.appendChild(requireElement("<div id=\"1\" class=\"topright-buttons\">$(all)</div>",function(div){
-			},{all:all}));
+			document.body.appendChild(container);
 		};
 		return {
 			add:add,
 			attach:attach
 		};
-	})();
+	});
 	var w = document.body.offsetWidth,
 		h = document.body.offsetHeight,
 		size, nx, ny,
@@ -865,11 +871,11 @@
 			};
 			document.body.appendChild(div);
 			hide();
-			topRightButtons.add(requireElement("<div id=\"1\" class=\"button settings-button fa fa-gear\"></div>",function(button){
+			topRightButtons.add("settings-button fa fa-gear",function(button){
 					button.addEventListener('click',function(){
 						show();
 					});
-			}));
+			});
 		}),
 		snapshots = requireElement(document.getElementById("snapshots").innerHTML, function(container, closeButton, snapshotElement){
 			var showing = false, count = 0;
@@ -1004,7 +1010,7 @@
 				addClass(document.body, 'has-snapshots');
 				count++;
 			};
-			topRightButtons.add(requireElement("<div id=\"1\" class=\"button snapshot-button fa fa-clipboard\"></div>",function(button){
+			topRightButtons.add("snapshot-button fa fa-clipboard",function(button){
 					button.addEventListener('click',function(){
 						if(showing){
 							hide();
@@ -1012,7 +1018,7 @@
 							show();
 						}
 					});
-			}));
+			});
 			
 			return {
 				add:add,
