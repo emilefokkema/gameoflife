@@ -1,5 +1,7 @@
-define([],function(){
+define(["sender"],function(sender){
 	var dragger = null;
+	var onDraw = sender();
+	var onClick = function(){};
 	var zoomer = null;
 	var dragHappened = false;
 	var w = document.body.offsetWidth,
@@ -110,37 +112,29 @@ define([],function(){
 		context.fillRect(0,0,w,h);
 		context.restore();
 	};
+	var clear = function(){
+		canvas.width = w;
+		initializeContext();
+		whiteBackground();
+	};
+	var drawAll = function(){
+		clear();
+		onDraw(context);
+		// coordinates.drawLines(context);
+		// selection.draw(context);
+		// position.draw(function(p){
+		// 	coordinates.fillRect(p, context);
+		// });
+	};
 	canvas.addEventListener('click',function(e){
 		if(dragHappened){
 			dragHappened = false;
-			return true;
-		}
-		if(e.shiftKey){
-			var loc = mousePositionToPositionLocation(e.clientX, e.clientY);
-			selection.select(loc.x, loc.y);
-			drawAll();
-			return;
-		}
-		if(menu.isOpen()){
-			menu.hide();
-			return;
-		}
-		if(snapshots.isShowing()){
-			snapshots.hide();
-			return;
-		}
-		if(selection.isPresent()){
-			selection.clear();
+			e.stopPropagation();
+			return false;
 		}else{
-			var p = mousePositionToPositionLocation(e.clientX, e.clientY);
-			
-			if(position.contains(p.x,p.y)){
-				position.remove(p.x,p.y);
-			}else{
-				position.add(p.x,p.y);
-			}
+			onClick(e);
 		}
-		drawAll();
+		
 	});
 	canvas.addEventListener('touchstart',function(e){
 		mapTouchList(e.changedTouches, function(touch){
@@ -189,19 +183,23 @@ define([],function(){
 			dragger = null;
 		}
 		e.preventDefault();
-		menu.show(e.clientX, e.clientY);
-		return false;
 	});
 	return {
 		w:w,
 		h:h,
 		context:context,
-		clear:function(){
-			canvas.width = w;
-			initializeContext();
-			whiteBackground();
+		clear:clear,
+		onDraw:function(f){
+			onDraw.add(f);
 		},
-		addEventListener:function(name, handler){canvas.addEventListener(name, handler);},
+		drawAll:drawAll,
+		addEventListener:function(name, handler){
+			if(name == 'click'){
+				onClick = handler;
+			}else{
+				canvas.addEventListener(name, handler);
+			}
+		},
 		save:save
 	};
 });

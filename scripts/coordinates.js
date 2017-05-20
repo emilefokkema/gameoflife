@@ -8,7 +8,6 @@ define(["c"],function(c){
 			ny = Math.ceil(h / size);
 		},
 		zoom = function(factor, centerX, centerY){
-			c.clear();
 			var pCenter = mousePositionToPositionLocation(centerX, centerY);
 			var newSize = size * factor;
 			if(newSize != size){
@@ -110,12 +109,16 @@ define(["c"],function(c){
 			context.stroke();
 		},
 		drawLines = function(context){
+			context.save();
+			context.strokeStyle = '#ddd';
+			context.strokeWidth = 0.2;
 			for(var i = 0;i<nx;i++){
 				drawVerticalLine(context, i * size + xShiftOffset * size);
 			}
 			for(var i = 0;i<ny;i++){
 				drawHorizontalLine(context, i * size + yShiftOffset * size);
 			}
+			context.restore();
 		},
 		beginDrag = function(x,y){
 			currentDrag = makeDrag(x, y);
@@ -142,7 +145,12 @@ define(["c"],function(c){
 			if(currentDrag){
 				currentDrag.endZoom();
 			}
+		},
+		fillRect = function(p, context){
+			var mousePosition = positionToMousePosition(p);
+			context.fillRect(mousePosition.x, mousePosition.y, size, size);
 		};
+	c.onDraw(drawLines);
 	setSize(15);
 
 	return {
@@ -153,6 +161,7 @@ define(["c"],function(c){
 		startZoom:startZoom,
 		changeZoom:changeZoom,
 		endZoom:endZoom,
+		fillRect:fillRect,
 		endDrag:endDrag,
 		moveDrag:moveDrag,
 		drawLines:drawLines,

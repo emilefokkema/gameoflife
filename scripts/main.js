@@ -1,4 +1,4 @@
-requirejs(["topRightButtons","menu","coordinates","c"], function(topRightButtons, menu, coordinates, c){
+requirejs(["topRightButtons","menu","coordinates","c","selection","position"], function(topRightButtons, menu, coordinates, c, selection, position){
 	var interpolation = function(y0, x1, c){
 		var a = y0 / (1 - Math.exp(-c*x1)), b = y0 - a;
 		return function(x){
@@ -18,311 +18,7 @@ requirejs(["topRightButtons","menu","coordinates","c"], function(topRightButtons
 		el.setAttribute('class', oldClassNames.filter(function(n){return n != className;}).join(" "));
 	};
 	
-	var selection = (function(){
-			var present = false, removeMenuOption = null, removeSelectOption = null, minX, minY, maxX, maxY, dragger;
-			var getMinLoc = function(){
-				return positionToMousePosition({x:minX,y:minY});
-			};
-			var getMaxLoc = function(){
-				return positionToMousePosition({x:maxX + 1,y:maxY + 1});
-			};
-			var makeDraggerMaker = function(mX, mY, howToDrag){
-				var isClose = function(x,y){
-					var d = Math.sqrt(Math.pow(mX - x, 2) + Math.pow(mY - y, 2));
-					return d < 10;
-				};
-				var draw = function(){
-					context.save();
-					context.fillStyle = '#00f';
-					context.beginPath();
-					context.arc(mX, mY, 4, 0, 2*Math.PI);
-					context.fill();
-					context.restore();
-				};
-				var make = function(){
-					var drag = function(x,y){
-						var pos = mousePositionToPositionLocation(x,y);
-						howToDrag(pos);
-						drawAll();
-					};
-					return {
-						drag:drag
-					};
-				};
-				return {
-					isClose:isClose,
-					draw:draw,
-					make:make
-				};
-			};
-			var getDraggerMakers = function(minLoc, maxLoc){
-				var result = [];
-				result.push(makeDraggerMaker(
-					(minLoc.x + maxLoc.x)/2,
-					minLoc.y,
-					function(pos){
-						minY = Math.min(maxY, pos.y);
-					}
-				));
-				result.push(makeDraggerMaker(
-					minLoc.x,
-					(minLoc.y + maxLoc.y) / 2,
-					function(pos){
-						minX = Math.min(maxX, pos.x);
-					}
-				));
-				result.push(makeDraggerMaker(
-					(minLoc.x + maxLoc.x)/2,
-					maxLoc.y,
-					function(pos){
-						maxY = Math.max(minY, pos.y);
-					}
-				));
-				result.push(makeDraggerMaker(
-					maxLoc.x,
-					(minLoc.y + maxLoc.y) / 2,
-					function(pos){
-						maxX = Math.max(minX, pos.x);
-					}
-				));
-				result.push(makeDraggerMaker(
-					minLoc.x,
-					minLoc.y,
-					function(pos){
-						minX = Math.min(maxX, pos.x);
-						minY = Math.min(maxY, pos.y);
-					}
-				));
-				result.push(makeDraggerMaker(
-					minLoc.x,
-					maxLoc.y,
-					function(pos){
-						minX = Math.min(maxX, pos.x);
-						maxY = Math.max(minY, pos.y);
-					}
-				));
-				result.push(makeDraggerMaker(
-					maxLoc.x,
-					minLoc.y,
-					function(pos){
-						maxX = Math.max(minX, pos.x);
-						minY = Math.min(maxY, pos.y);
-					}
-				));
-				result.push(makeDraggerMaker(
-					maxLoc.x,
-					maxLoc.y,
-					function(pos){
-						maxX = Math.max(minX, pos.x);
-						maxY = Math.max(minY, pos.y);
-					}
-				));
-				return result;
-			};
-			var makeMover = function(mouseX, mouseY){
-				var positions = getPositions();
-				var relativePositions = positions.map(function(p){return {x:p.x - minX,y:p.y-minY};});
-				var startPos = mousePositionToPositionLocation(mouseX, mouseY);
-				var relativePositionX = startPos.x - minX;
-				var relativePositionY = startPos.y - minY;
-				var width = maxX - minX;
-				var height = maxY - minY;
-				var drag = function(x,y){
-					var toPos = mousePositionToPositionLocation(x, y);
-					minX = toPos.x - relativePositionX;
-					maxX = minX + width;
-					minY = toPos.y - relativePositionY;
-					maxY = minY + height;
-					drawAll();
-					draw();
-				};
-				var getNewPositions = function(){
-					return relativePositions.map(function(p){return {x:minX + p.x,y:minY + p.y};});
-				};
-				var draw = function(){
-					context.save();
-					context.fillStyle = 'rgba(0,0,0,0.5)';
-					getNewPositions().map(function(p){
-						var pos = positionToMousePosition(p);
-						context.fillRect(pos.x, pos.y,size,size);
-					});
-				};
-				var end = function(){
-					positions.map(function(p){position.remove(p.x, p.y);});
-					getNewPositions().map(function(p){position.add(p.x,p.y);});
-					drawAll();
-				};
-				return {
-					drag:drag,
-					end:end
-				};
-			};
-			var makeDragger = function(mouseX, mouseY){
-				var draggerMakers = getDraggerMakers(getMinLoc(), getMaxLoc());
-				for(var i=0;i<draggerMakers.length;i++){
-					var draggerMaker = draggerMakers[i];
-					if(draggerMaker.isClose(mouseX, mouseY)){
-						return draggerMaker.make();
-					}
-				}
-				if(containsMousePosition(mouseX, mouseY)){
-					return makeMover(mouseX, mouseY);
-				}
-			};
-			var direction = {UP:0,DOWN:1,LEFT:2,RIGHT:3};
-			var getPositions = function(){
-				return position.getAllInBox({
-							minX:minX,
-							maxX:maxX,
-							minY:minY,
-							maxY:maxY
-						});
-			};
-			var copyPositions = function(positions){
-				clipboard.copy(positions.map(function(p){return {
-						x: p.x - minX,
-						y: p.y - minY
-					};}), true);
-			};
-			var addMenuOptions = function(){
-				var remove = [];
-				remove.push(menu.addOption('make RLE',
-					function(){
-						alert(makeRLE(getPositions()));
-					}));
-				remove.push(menu.addOption('copy',function(x,y){
-					var positions = getPositions();
-					copyPositions(positions);
-					clear();
-					drawAll();
-				}));
-				remove.push(menu.addOption('cut',function(){
-					var positions = getPositions();
-					copyPositions(positions);
-					positions.map(function(p){position.remove(p.x, p.y);});
-					clear();
-					drawAll();
-				}));
-				remove.push(menu.addOption('alive', function(){
-					for(var x=minX;x<=maxX;x++){
-						for(var y=minY;y<=maxY;y++){
-							position.add(x,y);
-						}
-					}
-					clear();
-					drawAll();
-				}));
-				remove.push(menu.addOption('dead', function(){
-					getPositions().map(function(p){position.remove(p.x, p.y);});
-					clear();
-					drawAll();
-				}));
-				remove.push(menu.addOption('random', function(){
-					for(var x=minX;x<=maxX;x++){
-						for(var y=minY;y<=maxY;y++){
-							if(Math.random()<0.5){
-								position.add(x,y);
-							}
-						}
-					}
-					clear();
-					drawAll();
-				}));
-				return function(){
-					remove.map(function(f){f();});
-					remove = [];
-				};
-			};
-			var select = function(x,y){
-				if(!present){
-					minX = maxX = x;
-					minY = maxY = y;
-					present = true;
-					removeSelectOption && removeSelectOption();
-				}else{
-					if(x > minX){
-						maxX = x;
-					}else{
-						maxX = minX;
-						minX = x;
-					}
-					if(y > minY){
-						maxY = y;
-					}else{
-						maxY = minY;
-						minY = y;
-					}
-				}
-				!removeMenuOption && (removeMenuOption = addMenuOptions());
-			};
-			var draw = function(){
-				if(!present){return;}
-				context.save();
-				context.strokeStyle = '#00f';
-				context.lineWidth = 2;
-				var minLoc = getMinLoc();
-				var maxLoc = getMaxLoc();
-				context.strokeRect(minLoc.x, minLoc.y, maxLoc.x - minLoc.x, maxLoc.y - minLoc.y);
-				getDraggerMakers(minLoc, maxLoc).map(function(d){d.draw();});
-				context.restore();
-			};
-			var clear = function(){
-				present = false;
-				dragger = null;
-				removeMenuOption && removeMenuOption();
-				removeMenuOption = null;
-				addSelectingOption();
-			};
-			
-			var addSelectingOption = function(){
-				removeSelectOption = menu.addOption('select', function(x,y,remove){
-					var width = Math.floor(w / (5 * size));
-					var height = Math.floor(h / (5 * size));
-					select(x,y);
-					select(x + width, y + height);
-					drawAll();
-					remove();
-				});
-			};
-			var containsMousePosition = function(mouseX, mouseY){
-				var pos = mousePositionToPositionLocation(mouseX, mouseY);
-				return pos.x >= minX && pos.x <= maxX && pos.y >= minY && pos.y <= maxY;
-			};
-			addSelectingOption();
-			c.addEventListener('positiondragmove',function(e){
-				if(dragger){
-					dragger.drag(e.detail.toX, e.detail.toY);
-				}
-			});
-			c.addEventListener('positiondragend',function(){
-				dragger && dragger.end && dragger.end();
-				dragger = null;
-			});
-			return {
-				select:select,
-				draw:draw,
-				clear:clear,
-				moveLeft:function(){
-					moveInDirection(direction.LEFT);
-				},
-				moveRight:function(){
-					moveInDirection(direction.RIGHT);
-				},
-				moveUp:function(){
-					moveInDirection(direction.UP);
-				},
-				moveDown:function(){
-					moveInDirection(direction.DOWN);
-				},
-				isPresent:function(){return present;},
-				containsMousePosition:containsMousePosition,
-				handleDragStart:function(mouseX, mouseY){
-					dragger = makeDragger(mouseX, mouseY);
-					return !!dragger;
-				}
-			};
-		})(),
-		input = requireElement(document.getElementById("input").innerHTML, function(div, text, button){
+	var input = requireElement(document.getElementById("input").innerHTML, function(div, text, button){
 			var open = false;
 
 			var show = function(initialText){
@@ -356,7 +52,7 @@ requirejs(["topRightButtons","menu","coordinates","c"], function(topRightButtons
 		alert = function(text){
 			input(function(){
 				clear();
-				drawAll();
+				c.drawAll();
 			},text);
 		},
 		clipboard = (function(){
@@ -365,7 +61,7 @@ requirejs(["topRightButtons","menu","coordinates","c"], function(topRightButtons
 				relativePositions.map(function(p){
 					position.add(x + p.x,y + p.y);
 				});
-				drawAll();
+				c.drawAll();
 			};
 			var copy = function(_relativePositions, makeSnapshot){
 				relativePositions = _relativePositions;
@@ -404,7 +100,7 @@ requirejs(["topRightButtons","menu","coordinates","c"], function(topRightButtons
 			});
 			addButton("fa-step-forward",function(){
 				doStep();
-				drawAll();
+				c.drawAll();
 				setCounter();
 			});
 			addButton("fa-clipboard",function(){
@@ -430,8 +126,6 @@ requirejs(["topRightButtons","menu","coordinates","c"], function(topRightButtons
 		fillRect = function(screenX, screenY){
 			context.fillRect(screenX, screenY, size, size);
 		},
-		
-		position = hashLifeMaker(),
 		settings = requireElement(document.getElementById("settings").innerHTML, function(div, number, closeButton){
 			var open = false;
 
@@ -515,7 +209,7 @@ requirejs(["topRightButtons","menu","coordinates","c"], function(topRightButtons
 					positions.map(function(p){
 						position.add(origMinX + p.x,origMinY + p.y);
 					});
-					drawAll();
+					c.drawAll();
 				};
 				var copyToClipboard = function(){
 					clipboard.copy(positions);
@@ -637,7 +331,7 @@ requirejs(["topRightButtons","menu","coordinates","c"], function(topRightButtons
 			addClass(document.body,'going');
 			timeCount = +new Date();
 			var afterStep = function(){
-				drawAll();
+				c.drawAll();
 				window.setTimeout(function(){
 					if(going){
 						doStep(afterStep);
@@ -651,7 +345,7 @@ requirejs(["topRightButtons","menu","coordinates","c"], function(topRightButtons
 			position.vacateAll();
 			stepCount = 0;
 			setCounter();
-			drawAll();
+			c.drawAll();
 		},
 		parsePlaintext = function(text, occupy){
 			var lines = text.match(/[\.O]+/g);
@@ -763,20 +457,7 @@ requirejs(["topRightButtons","menu","coordinates","c"], function(topRightButtons
 			parseRLEBody(hash.substr(1), function(x,y){
 				position.add(x,y);
 			});
-		},
-		drawAll = function(){
-			clear();
-			context.save();
-			context.strokeStyle = '#ddd';
-			context.strokeWidth = 0.2;
-			coordinates.drawLines(context);
-			context.restore();
-			selection.draw();
-			position.draw(function(p){
-				var mousePosition = positionToMousePosition(p);
-				fillRect(mousePosition.x,mousePosition.y);
-			});
-		};
+		}
 	c.addEventListener('positiondragstart',function(e){
 		if(!selection.isPresent() || !selection.handleDragStart(e.detail.x, e.detail.y)){
 			coordinates.beginDrag(e.detail.x, e.detail.y);
@@ -784,26 +465,60 @@ requirejs(["topRightButtons","menu","coordinates","c"], function(topRightButtons
 	});
 	c.addEventListener('positiondragmove',function(e){
 		coordinates.moveDrag(e.detail.toX, e.detail.toY);
-		drawAll();
+		c.drawAll();
 	});
 	c.addEventListener('positiondragend',function(){
 		coordinates.endDrag();
+		c.drawAll();
 	});
 	c.addEventListener('startzoom',function(e){
 		coordinates.startZoom(e.detail.r);
 	});
 	c.addEventListener('changezoom',function(e){
 		coordinates.changeZoom(e.detail.r);
+		c.drawAll();
 	});
 	c.addEventListener('endzoom',function(e){
 		coordinates.endZoom();
+	});
+	c.addEventListener('click',function(e){
+		if(e.shiftKey){
+			var loc = coordinates.mousePositionToPositionLocation(e.clientX, e.clientY);
+			selection.select(loc.x, loc.y);
+			c.drawAll();
+			return;
+		}
+		if(menu.isOpen()){
+			menu.hide();
+			return;
+		}
+		if(snapshots.isShowing()){
+			snapshots.hide();
+			return;
+		}
+		if(selection.isPresent()){
+			selection.clear();
+		}else{
+			var p = coordinates.mousePositionToPositionLocation(e.clientX, e.clientY);
+			
+			if(position.contains(p.x,p.y)){
+				position.remove(p.x,p.y);
+			}else{
+				position.add(p.x,p.y);
+			}
+		}
+		c.drawAll();
+	});
+	c.addEventListener('contextmenu',function(e){
+		menu.show(e.clientX, e.clientY);
+		return false;
 	});
 	menu.addOption('parse RLE',function(x,y){
 		input(function(v){
 			if(!v){return;}
 			position.vacateAll();
 			parseRLEBody(v, function(xx,yy){position.add(xx+x,yy+y);});
-			drawAll();
+			c.drawAll();
 		});
 	});
 	menu.addOption('parse plaintext',function(x,y){
@@ -811,7 +526,7 @@ requirejs(["topRightButtons","menu","coordinates","c"], function(topRightButtons
 			if(!v){return;}
 			position.vacateAll();
 			parsePlaintext(v, function(xx,yy){position.add(xx+x,yy+y);});
-			drawAll();
+			c.drawAll();
 		});
 	});
 	menu.addOption('save image',function(){
@@ -821,7 +536,7 @@ requirejs(["topRightButtons","menu","coordinates","c"], function(topRightButtons
 	snapshots.attach();
 	input(function(){},"Click on a cell to bring it to life. Hit the space bar to get things moving, or to pause them if they already are. Adjust the slider to make them move faster or slower. Shift-click on a cell to make a selection, and then right-click on the selection to find some options.");
 	readHash();
-	drawAll();
+	c.drawAll();
 	setCounter();
 	window.health = function(){
 		var all = position.countAll();
@@ -843,7 +558,7 @@ requirejs(["topRightButtons","menu","coordinates","c"], function(topRightButtons
 			key:"s",
 			action:function(){
 				doStep();
-				drawAll();
+				c.drawAll();
 				setCounter();
 			}
 		},{
@@ -877,6 +592,6 @@ requirejs(["topRightButtons","menu","coordinates","c"], function(topRightButtons
 			return;
 		}
 		coordinates.zoom(Math.pow(2, -e.deltaY / 200), e.clientX, e.clientY);
-		drawAll();
+		c.drawAll();
 	});
 });

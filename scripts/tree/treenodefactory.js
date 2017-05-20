@@ -1,4 +1,4 @@
-(function(){
+define(["tree/hashMapProvider"],function(hashMapProvider){
 	var create = function(){
 		if(arguments.length == 4){
 			return new TreeNode(arguments[0], arguments[1], arguments[2], arguments[3]).intern();
@@ -238,11 +238,11 @@
 		}
 	};
 
-	window.TreeNodeFactory = {
+	return {
 		setTimePerStepLog:setTimePerStepLog,
 		create:create,
 		emptyTree:function(){
 			return emptyTree(3) ;
 		}
 	};
-})();
+});

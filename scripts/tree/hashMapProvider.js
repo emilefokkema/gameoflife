@@ -1,4 +1,4 @@
-(function(){
+define(["tree/getHashMap"], function(getHashMap){
 	var provider = function(maker){
 		var thing = null;
 		var get = function(){
@@ -16,5 +16,5 @@
 		};
 	};
 
-	window.hashMapProvider = provider(getHashMap);
-})();
+	return provider(getHashMap);
+});

@@ -1,5 +1,5 @@
-(function(){
-	window.getHashMap = function(){
+define([], function(){
+	return function(){
 		var all = {};
 
 		var get = function(o){
@@ -58,4 +58,4 @@
 			all:all
 		};
 	};
-})();
+});
