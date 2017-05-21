@@ -1,4 +1,4 @@
-define(["menu","coordinates","c","position"],function(menu,coordinates,c,position){
+define(["menu","coordinates","c","position","snapshots"],function(menu,coordinates,c,position,snapshots){
 	var present = false, removeMenuOption = null, removeSelectOption = null, minX, minY, maxX, maxY, dragger;
 	var getMinLoc = function(){
 		return coordinates.positionToMousePosition({x:minX,y:minY});
@@ -158,7 +158,7 @@ define(["menu","coordinates","c","position"],function(menu,coordinates,c,positio
 				});
 	};
 	var copyPositions = function(positions){
-		clipboard.copy(positions.map(function(p){return {
+		snapshots.copy(positions.map(function(p){return {
 				x: p.x - minX,
 				y: p.y - minY
 			};}), true);

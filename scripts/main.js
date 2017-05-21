@@ -1,22 +1,11 @@
-requirejs(["topRightButtons","menu","coordinates","c","selection","position"], function(topRightButtons, menu, coordinates, c, selection, position){
+requirejs(["topRightButtons","menu","coordinates","c","selection","position","snapshots","body"], function(topRightButtons, menu, coordinates, c, selection, position, snapshots, body){
 	var interpolation = function(y0, x1, c){
 		var a = y0 / (1 - Math.exp(-c*x1)), b = y0 - a;
 		return function(x){
 			return a * Math.exp(-c*x) + b;
 		};
 	};
-	var addClass = function(el, className){
-		var oldName = el.getAttribute('class') || "";
-		var oldClassNames = oldName.match(/[^\s]+/g);
-		oldClassNames = oldClassNames || [];
-		el.setAttribute('class', oldClassNames.concat([className]).join(" "));
-	};
-	var removeClass = function(el, className){
-		var oldName = el.getAttribute('class') || "";
-		var oldClassNames = oldName.match(/[^\s]+/g);
-		oldClassNames = oldClassNames || [];
-		el.setAttribute('class', oldClassNames.filter(function(n){return n != className;}).join(" "));
-	};
+	
 	
 	var input = requireElement(document.getElementById("input").innerHTML, function(div, text, button){
 			var open = false;
@@ -55,24 +44,6 @@ requirejs(["topRightButtons","menu","coordinates","c","selection","position"], f
 				c.drawAll();
 			},text);
 		},
-		clipboard = (function(){
-			var relativePositions, removeMenuOption;
-			var paste = function(x, y){
-				relativePositions.map(function(p){
-					position.add(x + p.x,y + p.y);
-				});
-				c.drawAll();
-			};
-			var copy = function(_relativePositions, makeSnapshot){
-				relativePositions = _relativePositions;
-				!removeMenuOption && (removeMenuOption = menu.addOption('paste', paste));
-				if(makeSnapshot){
-					snapshots.add(_relativePositions);
-				}
-			};
-			
-			return {copy:copy};
-		})(),
 		controls = requireElement(document.getElementById("controls").innerHTML, function(container, buttonDiv){
 			document.body.appendChild(container);
 			var addButton = function(className, action){
@@ -123,9 +94,6 @@ requirejs(["topRightButtons","menu","coordinates","c","selection","position"], f
 		}),
 		context = c.context,
 		clear = c.clear,
-		fillRect = function(screenX, screenY){
-			context.fillRect(screenX, screenY, size, size);
-		},
 		settings = requireElement(document.getElementById("settings").innerHTML, function(div, number, closeButton){
 			var open = false;
 
@@ -143,11 +111,11 @@ requirejs(["topRightButtons","menu","coordinates","c","selection","position"], f
 			
 			var show = function(initialText){
 				open = true;
-				addClass(document.body,'settings-open');
+				body.addClass('settings-open');
 			};
 			var hide = function(){
 				open = false;
-				removeClass(document.body, 'settings-open');
+				body.removeClass('settings-open');
 			};
 			document.body.appendChild(div);
 			hide();
@@ -157,157 +125,6 @@ requirejs(["topRightButtons","menu","coordinates","c","selection","position"], f
 					});
 			});
 		}),
-		snapshots = requireElement(document.getElementById("snapshots").innerHTML, function(container, closeButton, snapshotElement){
-			var showing = false, count = 0;
-			var snapshotWidth = 120, snapshotHeight = 120;
-			var makeSnapshot = function(positions, forget){
-				var setPositions = function(){
-					minX = Math.min.apply(null, positions.map(function(p){return p.x;}));
-					maxX = Math.max.apply(null, positions.map(function(p){return p.x;}));
-					minY = Math.min.apply(null, positions.map(function(p){return p.y;}));
-					maxY = Math.max.apply(null, positions.map(function(p){return p.y;}));
-					positions = positions.map(function(p){
-						return {x:p.x-minX,y:p.y-minY};
-					});
-				};
-				var minX, maxX, minY, maxY, origMinX, origMinY;
-				setPositions();
-				origMinX = minX;
-				origMinY = minY;
-				var draw = function(canvas){
-					var ctx = canvas.getContext("2d");
-					ctx.fillStyle = '#fff';
-					ctx.fillRect(0,0,snapshotWidth,snapshotHeight);
-					ctx.fillStyle = '#000';
-					var cellSize = Math.min(snapshotWidth / (maxX - minX + 1), snapshotHeight / (maxY - minY + 1));
-					positions.map(function(p){
-						ctx.fillRect(p.x * cellSize, p.y * cellSize, cellSize, cellSize);
-					});
-				};
-				var flipHorizontal = function(){
-					positions = positions.map(function(p){
-						return {x:-p.x,y:p.y};
-					});
-					setPositions();
-				};
-				var turnClockwise = function(){
-					positions = positions.map(function(p){
-						return {x:-p.y,y:p.x};
-					});
-					setPositions();
-				};
-				var flipVertical = function(){
-					positions = positions.map(function(p){
-						return {x:p.x,y:-p.y};
-					});
-					setPositions();
-				};
-				var restore = function(){
-					position.vacateAll();
-					stepCount = 0;
-					setCounter();
-					positions.map(function(p){
-						position.add(origMinX + p.x,origMinY + p.y);
-					});
-					c.drawAll();
-				};
-				var copyToClipboard = function(){
-					clipboard.copy(positions);
-				};
-				return {
-					draw:draw,
-					restore:restore,
-					turnClockwise:turnClockwise,
-					forget:forget,
-					flipHorizontal:flipHorizontal,
-					flipVertical:flipVertical,
-					copyToClipboard:copyToClipboard
-				};
-			};
-			var show = function(){
-				addClass(document.body,'show-snapshots');
-				showing = true;
-			};
-			var hide = function(){
-				removeClass(document.body,'show-snapshots');
-				showing = false;
-			};
-			closeButton.addEventListener('click',hide);
-			var attach = function(){
-				document.body.appendChild(container);
-			};
-			
-			var add = function(positions){
-				positions = positions.map(function(p){return {x:p.x,y:p.y};});
-				snapshotElement(function(s, s1, optionElement){
-						var getSnapshotOption = function(name, toDo){
-							optionElement(function(option){
-									option.addEventListener('click',toDo);
-							},{name:name});
-						};
-						var canvas = document.createElement('canvas');
-						canvas.setAttribute('width',snapshotWidth);
-						canvas.setAttribute('height',snapshotHeight);
-						s1.appendChild(canvas);
-						var newSnapshot = makeSnapshot(positions, function(){
-							container.removeChild(s);
-							count--;
-							if(count == 0){
-								removeClass(document.body,'show-snapshots');
-								removeClass(document.body,'has-snapshots');
-							}
-						});
-						newSnapshot.draw(canvas);
-						getSnapshotOption('fa-folder-open',function(){
-											newSnapshot.restore();
-										});
-						getSnapshotOption('fa-copy',function(){
-											newSnapshot.copyToClipboard();
-										});
-						getSnapshotOption('fa-trash',function(){
-											newSnapshot.forget();
-										});
-						getSnapshotOption('fa-file-code-o',function(){
-											alert(makeRLE(positions));
-										});
-						getSnapshotOption('fa-arrows-h',function(){
-											newSnapshot.flipHorizontal();
-											canvas.width = snapshotWidth;
-											newSnapshot.draw(canvas);
-										});
-						getSnapshotOption('fa-arrows-v',function(){
-											newSnapshot.flipVertical();
-											canvas.width = snapshotWidth;
-											newSnapshot.draw(canvas);
-										});
-						getSnapshotOption('fa-refresh',function(){
-											newSnapshot.turnClockwise();
-											canvas.width = snapshotWidth;
-											newSnapshot.draw(canvas);
-										});
-				});
-
-				addClass(document.body, 'has-snapshots');
-				count++;
-			};
-			topRightButtons.add("snapshot-button fa fa-clipboard",function(button){
-					button.addEventListener('click',function(){
-						if(showing){
-							hide();
-						}else{
-							show();
-						}
-					});
-			});
-			
-			return {
-				add:add,
-				isShowing:function(){return showing;},
-				hide:hide,
-				attach:attach
-			};
-		}),
-		
 		stepCount = 0,
 		timeCount = 0,
 		doStep = function(done){
@@ -319,7 +136,7 @@ requirejs(["topRightButtons","menu","coordinates","c","selection","position"], f
 		setCounterInterval,
 		stop = function(){
 			going = false;
-			removeClass(document.body,'going');
+			body.removeClass('going');
 			var timeDiff = +new Date() - timeCount;
 			console.log("time diff:", timeDiff);
 			window.clearInterval(setCounterInterval);
@@ -328,7 +145,7 @@ requirejs(["topRightButtons","menu","coordinates","c","selection","position"], f
 		intervalLength = 75,
 		go = function(){
 			going = true;
-			addClass(document.body,'going');
+			body.addClass('going');
 			timeCount = +new Date();
 			var afterStep = function(){
 				c.drawAll();
