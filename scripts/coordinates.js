@@ -65,7 +65,6 @@ define(["c"],function(c){
 					}else{
 						applyZoomAndDrag();
 					}
-					//drawAll();
 				},
 				startZoom:function(r){
 					origR = r;
@@ -74,7 +73,6 @@ define(["c"],function(c){
 				changeZoom:function(r){
 					currentR = r;
 					applyZoomAndDrag();
-					drawAll();
 				},
 				endZoom:function(){
 					origR = undefined;
@@ -138,7 +136,7 @@ define(["c"],function(c){
 		},
 		changeZoom = function(r){
 			if(currentDrag){
-				currentDrag.changeZoom(e.detail.r);
+				currentDrag.changeZoom(r);
 			}
 		},
 		endZoom = function(){
