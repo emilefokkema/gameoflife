@@ -148,6 +148,24 @@ define(["c"],function(c){
 			var mousePosition = positionToMousePosition(p);
 			context.fillRect(mousePosition.x, mousePosition.y, size, size);
 		};
+	c.addEventListener('positiondragmove',function(e){
+		moveDrag(e.detail.toX, e.detail.toY);
+		c.drawAll();
+	});
+	c.addEventListener('positiondragend',function(){
+		endDrag();
+		c.drawAll();
+	});
+	c.addEventListener('startzoom',function(e){
+		startZoom(e.detail.r);
+	});
+	c.addEventListener('changezoom',function(e){
+		changeZoom(e.detail.r);
+		c.drawAll();
+	});
+	c.addEventListener('endzoom',function(e){
+		endZoom();
+	});
 	c.onDraw(drawLines);
 	setSize(15);
 

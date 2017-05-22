@@ -1,4 +1,4 @@
-requirejs(["topRightButtons","menu","coordinates","c","selection","position","snapshots","body"], function(topRightButtons, menu, coordinates, c, selection, position, snapshots, body){
+requirejs(["topRightButtons","menu","coordinates","c","selection","position","snapshots","body","input","settings"], function(topRightButtons, menu, coordinates, c, selection, position, snapshots, body, input, settings){
 	var interpolation = function(y0, x1, c){
 		var a = y0 / (1 - Math.exp(-c*x1)), b = y0 - a;
 		return function(x){
@@ -7,38 +7,7 @@ requirejs(["topRightButtons","menu","coordinates","c","selection","position","sn
 	};
 	
 	
-	var input = requireElement(document.getElementById("input").innerHTML, function(div, text, button){
-			var open = false;
-
-			var show = function(initialText){
-				open = true;
-				div.style.display = 'initial';
-				if(initialText){
-					text.value = initialText;
-				}
-			};
-			var hide = function(){
-				open = false;
-				div.style.display = 'none';
-			};
-			var handler = function(v){};
-			document.body.appendChild(div);
-			button.addEventListener('click',function(){
-				handler(text.value);
-				text.value = '';
-			});
-			hide();
-			var f = function(resultHandler, initialText){
-				show(initialText);
-				handler = function(v){
-					hide();
-					resultHandler(v);
-				};
-			};
-			f.isOpen = function(){return open;};
-			return f;
-		}),
-		alert = function(text){
+	var alert = function(text){
 			input(function(){
 				clear();
 				c.drawAll();
@@ -94,37 +63,6 @@ requirejs(["topRightButtons","menu","coordinates","c","selection","position","sn
 		}),
 		context = c.context,
 		clear = c.clear,
-		settings = requireElement(document.getElementById("settings").innerHTML, function(div, number, closeButton){
-			var open = false;
-
-			number.value = 0;
-			number.addEventListener('blur',function(){
-				number.value = Math.floor(number.value);
-				number.value = Math.max(0,number.value);
-			});
-			
-			
-			closeButton.addEventListener('click',function(){
-				position.setTimePerStepLog(number.value);
-				hide();
-			});
-			
-			var show = function(initialText){
-				open = true;
-				body.addClass('settings-open');
-			};
-			var hide = function(){
-				open = false;
-				body.removeClass('settings-open');
-			};
-			document.body.appendChild(div);
-			hide();
-			topRightButtons.add("settings-button fa fa-gear",function(button){
-					button.addEventListener('click',function(){
-						show();
-					});
-			});
-		}),
 		stepCount = 0,
 		timeCount = 0,
 		doStep = function(done){
@@ -280,24 +218,7 @@ requirejs(["topRightButtons","menu","coordinates","c","selection","position","sn
 			coordinates.beginDrag(e.detail.x, e.detail.y);
 		}
 	});
-	c.addEventListener('positiondragmove',function(e){
-		coordinates.moveDrag(e.detail.toX, e.detail.toY);
-		c.drawAll();
-	});
-	c.addEventListener('positiondragend',function(){
-		coordinates.endDrag();
-		c.drawAll();
-	});
-	c.addEventListener('startzoom',function(e){
-		coordinates.startZoom(e.detail.r);
-	});
-	c.addEventListener('changezoom',function(e){
-		coordinates.changeZoom(e.detail.r);
-		c.drawAll();
-	});
-	c.addEventListener('endzoom',function(e){
-		coordinates.endZoom();
-	});
+	
 	c.addEventListener('click',function(e){
 		if(e.shiftKey){
 			var loc = coordinates.mousePositionToPositionLocation(e.clientX, e.clientY);
