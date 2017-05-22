@@ -1,4 +1,4 @@
-define(["topRightButtons","body","position","c","menu"],function(topRightButtons, body, position, c, menu){
+define(["topRightButtons","body","position","c","menu","rle"],function(topRightButtons, body, position, c, menu, rle){
 	var clipboard = (function(){
 		var relativePositions, removeMenuOption;
 		var paste = function(x, y){
@@ -129,7 +129,7 @@ define(["topRightButtons","body","position","c","menu"],function(topRightButtons
 											newSnapshot.forget();
 										});
 						getSnapshotOption('fa-file-code-o',function(){
-											alert(makeRLE(positions));
+											alert(rle.make(positions));
 										});
 						getSnapshotOption('fa-arrows-h',function(){
 											newSnapshot.flipHorizontal();
