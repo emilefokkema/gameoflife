@@ -120,11 +120,6 @@ define(["sender"],function(sender){
 	var drawAll = function(){
 		clear();
 		onDraw(context);
-		// coordinates.drawLines(context);
-		// selection.draw(context);
-		// position.draw(function(p){
-		// 	coordinates.fillRect(p, context);
-		// });
 	};
 	canvas.addEventListener('click',function(e){
 		if(dragHappened){
