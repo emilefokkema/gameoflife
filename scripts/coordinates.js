@@ -173,6 +173,8 @@ define(["c"],function(c){
 		w:w,
 		h:h,
 		setSize:setSize,
+		getNx:function(){return nx;},
+		getNy:function(){return ny;},
 		beginDrag:beginDrag,
 		startZoom:startZoom,
 		changeZoom:changeZoom,

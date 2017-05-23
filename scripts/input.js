@@ -28,6 +28,10 @@ define([],function(){
 				};
 			};
 			f.isOpen = function(){return open;};
+			f.alert = function(text){
+				f(function(){
+				},text);
+			};
 			return f;
 		});
 })

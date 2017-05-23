@@ -253,11 +253,11 @@ define(["menu","coordinates","c","position","snapshots"],function(menu,coordinat
 	
 	var addSelectingOption = function(){
 		removeSelectOption = menu.addOption('select', function(x,y,remove){
-			var width = Math.floor(w / (5 * size));
-			var height = Math.floor(h / (5 * size));
+			var width = Math.floor(coordinates.getNx() / 5);
+			var height = Math.floor(coordinates.getNy() / 5);
 			select(x,y);
 			select(x + width, y + height);
-			drawAll();
+			c.drawAll();
 			remove();
 		});
 	};
