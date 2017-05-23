@@ -1,4 +1,4 @@
-define(["topRightButtons","body","position","c","menu","rle","input"],function(topRightButtons, body, position, c, menu, rle, input){
+define(["topRightButtons","body","position","c","menu","rle","input","animation"],function(topRightButtons, body, position, c, menu, rle, input, animation){
 	var clipboard = (function(){
 		var relativePositions, removeMenuOption;
 		var paste = function(x, y){
@@ -64,9 +64,7 @@ define(["topRightButtons","body","position","c","menu","rle","input"],function(t
 					setPositions();
 				};
 				var restore = function(){
-					position.vacateAll();
-					stepCount = 0;
-					setCounter();
+					animation.reset();
 					positions.map(function(p){
 						position.add(origMinX + p.x,origMinY + p.y);
 					});
