@@ -11,16 +11,32 @@
 <body style="padding:0px;margin:0px"></body>
 <script src="require-element.min.js"></script>
 <script type="text/template" id="settings">
-	<div id="1" class="input settings">
-		time per step: 2 ^
-		<input id="2" type="number" min="0" step="1"/>
-		<input id="3" type="button" value="Save"/>
+	<div id="1" class="dialog settings">
+		<div class="content outer">
+			<div class="inner">
+				time per step: 2 ^
+				<input id="2" type="number" min="0" step="1"/>
+			</div>
+		</div>
+		<div class="buttons outer">
+			<div class="inner">
+				<input id="3" type="button" value="Save"/>
+			</div>
+		</div>
 	</div>
 </script>
 <script type="text/template" id="input">
-	<div id="1" class="input">
-		<textarea id="2"></textarea>
-		<input id="3" type="button" value="OK"/>
+	<div id="1" class="dialog input">
+		<div class="content outer">
+			<div class="inner">
+				<textarea id="2"></textarea>
+			</div>
+		</div>
+		<div class="buttons outer">
+			<div class="inner">
+				<input id="3" type="button" value="OK"/>
+			</div>
+		</div>
 	</div>
 </script>
 <script type="text/template" id="snapshots">

@@ -1,17 +1,17 @@
-define([],function(){
+define(["body"],function(body){
 	return requireElement(document.getElementById("input").innerHTML, function(div, text, button){
 			var open = false;
 
 			var show = function(initialText){
 				open = true;
-				div.style.display = 'initial';
+				body.addClass("input-open");
 				if(initialText){
 					text.value = initialText;
 				}
 			};
 			var hide = function(){
 				open = false;
-				div.style.display = 'none';
+				body.removeClass("input-open");
 			};
 			var handler = function(v){};
 			document.body.appendChild(div);

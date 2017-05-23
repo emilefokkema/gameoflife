@@ -1,4 +1,4 @@
-define(["menu","coordinates","c","position","snapshots"],function(menu,coordinates,c,position,snapshots){
+define(["menu","coordinates","c","position","snapshots","rle","input"],function(menu,coordinates,c,position,snapshots,rle,input){
 	var present = false, removeMenuOption = null, removeSelectOption = null, minX, minY, maxX, maxY, dragger;
 	var getMinLoc = function(){
 		return coordinates.positionToMousePosition({x:minX,y:minY});
@@ -167,7 +167,7 @@ define(["menu","coordinates","c","position","snapshots"],function(menu,coordinat
 		var remove = [];
 		remove.push(menu.addOption('make RLE',
 			function(){
-				alert(makeRLE(getPositions()));
+				input.alert(rle.make(getPositions()));
 			}));
 		remove.push(menu.addOption('copy',function(x,y){
 			var positions = getPositions();
