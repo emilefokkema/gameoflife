@@ -107,6 +107,9 @@ define(["c"],function(c){
 			context.stroke();
 		},
 		drawLines = function(context){
+			if(size < 5){
+				return;
+			}
 			context.save();
 			context.strokeStyle = '#ddd';
 			context.strokeWidth = 0.2;
