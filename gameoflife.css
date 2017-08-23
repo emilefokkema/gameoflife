@@ -152,14 +152,12 @@ body.has-snapshots.show-snapshots .snapshot-button{
 	left:50%;
 	top:50%;
 	width:50%;
-	max-width:400px;
-	max-height:300px;
 	height: 50%;
 	background-color: #ddd;
 	transform: translate(-50%,-50%);
 	border:1pt solid #000;
 }
-.input textarea{
+.dialog textarea{
 	height: 100%;
 	width: 100%;
 }
@@ -185,8 +183,16 @@ body.has-snapshots.show-snapshots .snapshot-button{
 }
 .dialog.input {
 	display: none;
+	max-width:400px;
+	max-height:300px;
+}
+.dialog.lifescript{
+	display:none;
 }
 body.input-open .input{
+	display: initial;
+}
+body.lifescript-open .lifescript{
 	display: initial;
 }
 body.settings-open .settings{
@@ -194,4 +200,7 @@ body.settings-open .settings{
 }
 body.settings-open .settings-button{
 	display: none;
+}
+.lifescript .signature span{
+	display:table-cell;
 }

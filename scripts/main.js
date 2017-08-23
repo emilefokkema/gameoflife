@@ -1,4 +1,4 @@
-requirejs(["topRightButtons","menu","coordinates","c","selection","position","snapshots","body","input","settings","rle","counter","speedRange","animation","controls"], function(topRightButtons, menu, coordinates, c, selection, position, snapshots, body, input, settings, rle, counter, speedRange, animation, controls){
+requirejs(["topRightButtons","menu","coordinates","c","selection","position","snapshots","body","input","settings","rle","counter","speedRange","animation","controls","lifescript"], function(topRightButtons, menu, coordinates, c, selection, position, snapshots, body, input, settings, rle, counter, speedRange, animation, controls, lifescript){
 	
 	var parsePlaintext = function(text, occupy){
 			var lines = text.match(/[\.O]+/g);
@@ -75,6 +75,9 @@ requirejs(["topRightButtons","menu","coordinates","c","selection","position","sn
 	});
 	menu.addOption('save image',function(){
 		c.save();
+	});
+	menu.addOption('make sript',function(){
+		lifescript.makeNew();
 	});
 	topRightButtons.attach();
 	snapshots.attach();
