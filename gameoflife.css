@@ -188,6 +188,10 @@ body.has-snapshots.show-snapshots .snapshot-button{
 }
 .dialog.lifescript{
 	display:none;
+	height: auto;
+}
+.dialog.lifescript textarea{
+	height:300px;
 }
 body.input-open .input{
 	display: initial;
@@ -201,6 +205,13 @@ body.settings-open .settings{
 body.settings-open .settings-button{
 	display: none;
 }
-.lifescript .signature span{
-	display:table-cell;
+.lifescript .signature .function-expression{
+	display: table-cell;
+}
+.signature{
+	width:100%;
+}
+.signature .argument-definition{
+	display: inline-table;
+	width:40%;
 }
