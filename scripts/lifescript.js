@@ -2,16 +2,30 @@ define(["body"], function(body){
     return requireElement(document.getElementById("lifescript").innerHTML, function(div, text, button, signatureMount){
         var makeSignature = function(){
             return requireElement(document.getElementById("scriptSignature").innerHTML, function(container, makeArgument, makeArgumentDefinition, addButton){
+                var nameProvider = (function(){
+                    var current = "a".charCodeAt(0);
+                    return {
+                        next:function(){return String.fromCharCode(current++);}
+                    };
+                })();
                 var addArgument = function(name){
-                    makeArgument(function(container){
-                        container.innerHTML = ", " + name;
+                    var ar = makeArgument(function(container){
+                        return {
+                            setName:function(n){
+                                container.innerHTML = ", " + n;
+                            }
+                        };
                     });
+                    ar.setName(name);
                     makeArgumentDefinition(function(inputName, inputValue){
                         inputName.value = name;
+                        inputName.addEventListener('blur',function(){
+                            ar.setName(inputName.value);
+                        });
                     });
                 };
                 addButton.addEventListener('click',function(){
-                    addArgument("a");
+                    addArgument(nameProvider.next());
                 });
                 return {
                     addArgument:addArgument,
