@@ -76,8 +76,10 @@ requirejs(["topRightButtons","menu","coordinates","c","selection","position","sn
 	menu.addOption('save image',function(){
 		c.save();
 	});
-	menu.addOption('make sript',function(){
-		lifescript.makeNew();
+	menu.addMenu('scripts',function(addOption){
+		addOption('new',function(){
+			lifescript.makeNew();
+		});
 	});
 	topRightButtons.attach();
 	snapshots.attach();
