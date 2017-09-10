@@ -7,7 +7,7 @@ define(["coordinates","sender"],function(coordinates, sender){
 	};
 	var menuFactory = function(){
 		return requireElement(document.getElementById("menu").innerHTML, function(div, optionDiv, subMenuDiv){
-			var currentX, currentY,onOpen, onHide = sender(), onChoose = sender(), open = false;
+			var onOpen, onHide = sender(), onChoose = sender(), open = false;
 			document.body.appendChild(div);
 			var addOption = function(text, f){
 				return optionDiv(function(option){

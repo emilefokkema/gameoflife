@@ -1,16 +1,18 @@
 define(["body","menu"], function(body, menu){
 
-    var lifeScript = requireElement(document.getElementById("lifescript").innerHTML, function(div, text, button, signatureMount){
+    var lifeScript = requireElement(document.getElementById("lifescript").innerHTML, function(div, text, saveButton, signatureMount, title, closeButton){
+        var signature;
         var makeSignature = function(){
-            return requireElement(document.getElementById("scriptSignature").innerHTML, function(container, makeArgument, makeArgumentDefinition, addButton){
+            return requireElement(document.getElementById("scriptSignature").innerHTML, function(container, makeArgumentElement, makeArgumentDefinition, addButton){
+                var fArguments = [];
                 var nameProvider = (function(){
                     var current = "a".charCodeAt(0);
                     return {
                         next:function(){return String.fromCharCode(current++);}
                     };
                 })();
-                var addArgument = function(name){
-                    var ar = makeArgument(function(container){
+                var makeArgument = function(name){
+                    var ar = makeArgumentElement(function(container){
                         return {
                             setName:function(n){
                                 container.innerHTML = ", " + n;
@@ -18,19 +20,39 @@ define(["body","menu"], function(body, menu){
                         };
                     });
                     ar.setName(name);
-                    makeArgumentDefinition(function(inputName, inputValue){
+                    var def = makeArgumentDefinition(function(inputName, inputValue){
                         inputName.value = name;
                         inputName.addEventListener('blur',function(){
                             ar.setName(inputName.value);
                         });
+                        return {
+                            serialize:function(){
+                                return {
+                                    name:inputName.value,
+                                    value:inputValue.value
+                                };
+                            }
+                        };
                     });
+                    return {
+                        serialize:function(){
+                            return def.serialize();
+                        }
+                    };
+                };
+                var addArgument = function(name){
+                    fArguments.push(makeArgument(name));
+                };
+                var serialize = function(){
+                    return fArguments.map(function(a){return a.serialize();});
                 };
                 addButton.addEventListener('click',function(){
                     addArgument(nameProvider.next());
                 });
                 return {
                     addArgument:addArgument,
-                    container:container
+                    container:container,
+                    serialize:serialize
                 };
             });
         };
@@ -40,34 +62,53 @@ define(["body","menu"], function(body, menu){
 			body.addClass("lifescript-open");
 	    };
         var onHide = function(){};
+        var onSave = function(){};
         var hide = function(){
 			open = false;
 			body.removeClass("lifescript-open");
-		};
-        document.body.appendChild(div);
-        button.addEventListener('click',function(){
-			hide();
             onHide();
             onHide = function(){};
+		};
+        document.body.appendChild(div);
+        saveButton.addEventListener('click',function(){
+            onSave({
+                title:title.value,
+                signature:signature.serialize(),
+                body: text.value
+            });
+            onSave = function(){};
+            hide();
 		});
+        closeButton.addEventListener('click',function(){
+            hide();
+        });
         hide();
-        var makeNew = function(){
+        var open = function(){
             show();
-            var signature = makeSignature();
+            signature = makeSignature();
             signatureMount.appendChild(signature.container);
-            return function(){
+            onHide = function(){
                 signatureMount.removeChild(signature.container);
+                signature = null;
+                title.value = "";
+                text.value = "";
+            };
+            return {
+                onSave:function(f){
+                    onSave = f;
+                }
             };
         };
         return {
-            makeNew:function(){
-                onHide = makeNew();
-            }
+            open:open
         };
     });
     menu.addMenu('scripts',function(addOption){
         addOption('new',function(){
-            lifeScript.makeNew();
+            var newOne = lifeScript.open();
+            newOne.onSave(function(obj){
+                console.log(obj);
+            });
         });
     });
     return lifeScript;
