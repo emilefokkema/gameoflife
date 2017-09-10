@@ -1,4 +1,4 @@
-define(["coordinates"],function(coordinates){
+define(["coordinates","sender"],function(coordinates, sender){
 	var currentX, currentY;
 	var setCell = function(x, y){
 		var loc = coordinates.mousePositionToPositionLocation(x,y);
@@ -7,7 +7,7 @@ define(["coordinates"],function(coordinates){
 	};
 	var menuFactory = function(){
 		return requireElement(document.getElementById("menu").innerHTML, function(div, optionDiv, subMenuDiv){
-			var currentX, currentY,onOpen, open = false;
+			var currentX, currentY,onOpen, onHide = sender(), onChoose = sender(), open = false;
 			document.body.appendChild(div);
 			var addOption = function(text, f){
 				return optionDiv(function(option){
@@ -19,15 +19,32 @@ define(["coordinates"],function(coordinates){
 						}
 					};
 					option.addEventListener('click', function(){
-						hide();
+						onChoose();
 						f(currentX, currentY, remove);
 					});
 					return remove;
 				},{text:text});
 			};
 			var addMenu = function(title, constr){
-				return subMenuDiv(function(){
-					
+				return subMenuDiv(function(option){
+					var subMenu = menuFactory();
+					option.addEventListener('click',function(){
+						if(!subMenu.isOpen()){
+							var rect = option.getBoundingClientRect();
+							var x = rect.left + rect.width;
+							var y = rect.top;
+							subMenu.show(x, y);
+						}else{
+							subMenu.hide();
+						}
+					});
+					subMenu.onChoose(function(){
+						hide();
+					});
+					onHide.add(function(){
+						subMenu.hide();
+					});
+					constr.apply(null,[subMenu.addOption]);
 				},{text:title});
 			};
 			var show = function(x,y){
@@ -40,6 +57,7 @@ define(["coordinates"],function(coordinates){
 			var hide = function(){
 				div.style.display = "none";
 				open = false;
+				onHide();
 			};
 			return {
 				addOption:addOption,
@@ -48,11 +66,21 @@ define(["coordinates"],function(coordinates){
 				isOpen:function(){return open;},
 				onOpen:function(f){
 					onOpen = f;
-				}
+				},
+				onChoose: function(f){
+					onChoose.add(f);
+				},
+				onHide:function(f){
+					onHide.add(f);
+				},
+				addMenu:addMenu
 			}
 		});
 	};
 	var mainMenu = menuFactory();
 	mainMenu.onOpen(setCell);
+	mainMenu.onChoose(function(){
+		mainMenu.hide();
+	});
 	return mainMenu;
 })

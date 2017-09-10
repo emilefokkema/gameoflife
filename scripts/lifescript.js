@@ -1,5 +1,6 @@
-define(["body"], function(body){
-    return requireElement(document.getElementById("lifescript").innerHTML, function(div, text, button, signatureMount){
+define(["body","menu"], function(body, menu){
+
+    var lifeScript = requireElement(document.getElementById("lifescript").innerHTML, function(div, text, button, signatureMount){
         var makeSignature = function(){
             return requireElement(document.getElementById("scriptSignature").innerHTML, function(container, makeArgument, makeArgumentDefinition, addButton){
                 var nameProvider = (function(){
@@ -64,4 +65,10 @@ define(["body"], function(body){
             }
         };
     });
+    menu.addMenu('scripts',function(addOption){
+        addOption('new',function(){
+            lifeScript.makeNew();
+        });
+    });
+    return lifeScript;
 });
