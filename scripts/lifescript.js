@@ -135,7 +135,8 @@ define(["body","menu"], function(body, menu){
             };
         };
         return {
-            open:open
+            open:open,
+            isOpen:function(){return open;}
         };
     });
     

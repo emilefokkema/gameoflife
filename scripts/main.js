@@ -96,7 +96,9 @@ requirejs(["topRightButtons","menu","coordinates","c","selection","position","sn
 	window.alive = function(x,y){
 		position.add(x,y);
 	};
-
+	var reactToKeys = function(){
+		return !snapshots.isShowing() && !input.isOpen() && !lifescript.isOpen();
+	};
 	var shortcuts = [
 		{
 			key:"s",
@@ -125,6 +127,9 @@ requirejs(["topRightButtons","menu","coordinates","c","selection","position","sn
 		}
 	];
 	window.addEventListener('keydown',function(e){
+		if(!reactToKeys()){
+			return;
+		}
 		shortcuts.map(function(s){
 			if(e.key == s.key){
 				s.action();
@@ -132,7 +137,7 @@ requirejs(["topRightButtons","menu","coordinates","c","selection","position","sn
 		});
 	});
 	window.addEventListener('wheel',function(e){
-		if(snapshots.isShowing()){
+		if(!reactToKeys()){
 			return;
 		}
 		coordinates.zoom(Math.pow(2, -e.deltaY / 200), e.clientX, e.clientY);
