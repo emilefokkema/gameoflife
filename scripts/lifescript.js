@@ -1,5 +1,20 @@
 define(["body","menu"], function(body, menu){
-
+    var validateScript = function(script){
+        if(!script.title){
+            alert("Please provide a title");
+            return false;
+        }
+        for(var i=0;i<script.signature.length;i++){
+            try{
+                var v = new Function("window","'use strict';return eval("+script.signature[i].value+");").apply(null,[]);
+                console.log(v);
+            }catch(e){
+                alert(e.message);
+                return false;
+            }
+        }
+        return true;
+    };
     var lifeScript = requireElement(document.getElementById("lifescript").innerHTML, function(div, text, saveButton, signatureMount, title, closeButton){
         var signature;
         var makeSignature = function(){
@@ -11,7 +26,7 @@ define(["body","menu"], function(body, menu){
                         next:function(){return String.fromCharCode(current++);}
                     };
                 })();
-                var makeArgument = function(name){
+                var makeArgument = function(name, value){
                     var ar = makeArgumentElement(function(container){
                         return {
                             setName:function(n){
@@ -25,6 +40,9 @@ define(["body","menu"], function(body, menu){
                         inputName.addEventListener('blur',function(){
                             ar.setName(inputName.value);
                         });
+                        if(value){
+                            inputValue.value = value;
+                        }
                         return {
                             serialize:function(){
                                 return {
@@ -40,8 +58,8 @@ define(["body","menu"], function(body, menu){
                         }
                     };
                 };
-                var addArgument = function(name){
-                    fArguments.push(makeArgument(name));
+                var addArgument = function(name, value){
+                    fArguments.push(makeArgument(name, value));
                 };
                 var serialize = function(){
                     return fArguments.map(function(a){return a.serialize();});
@@ -49,10 +67,16 @@ define(["body","menu"], function(body, menu){
                 addButton.addEventListener('click',function(){
                     addArgument(nameProvider.next());
                 });
+                var deserialize = function(obj){
+                    obj.map(function(pair){
+                        addArgument(pair.name, pair.value);
+                    });
+                };
                 return {
                     addArgument:addArgument,
                     container:container,
-                    serialize:serialize
+                    serialize:serialize,
+                    deserialize:deserialize
                 };
             });
         };
@@ -71,19 +95,29 @@ define(["body","menu"], function(body, menu){
 		};
         document.body.appendChild(div);
         saveButton.addEventListener('click',function(){
-            onSave({
+            var script = {
                 title:title.value,
                 signature:signature.serialize(),
                 body: text.value
-            });
+            };
+            if(!validateScript(script)){
+                return;
+            }
+            onSave(script);
             onSave = function(){};
             hide();
 		});
+
         closeButton.addEventListener('click',function(){
             hide();
         });
         hide();
-        var open = function(){
+        var displayScript = function(s){
+            title.value = s.title;
+            signature.deserialize(s.signature);
+            text.value = s.body;
+        };
+        var open = function(s){
             show();
             signature = makeSignature();
             signatureMount.appendChild(signature.container);
@@ -93,6 +127,7 @@ define(["body","menu"], function(body, menu){
                 title.value = "";
                 text.value = "";
             };
+            s && displayScript(s);
             return {
                 onSave:function(f){
                     onSave = f;
@@ -103,11 +138,17 @@ define(["body","menu"], function(body, menu){
             open:open
         };
     });
+    
     menu.addMenu('scripts',function(addOption){
         addOption('new',function(){
             var newOne = lifeScript.open();
             newOne.onSave(function(obj){
-                console.log(obj);
+                addOption(obj.title, function(){
+                    var opened = lifeScript.open(obj);
+                    opened.onSave(function(_obj){
+                        obj = _obj;
+                    });
+                });
             });
         });
     });
