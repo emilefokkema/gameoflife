@@ -1,4 +1,40 @@
-requirejs(["topRightButtons","menu","coordinates","c","selection","position","snapshots","body","input","settings","rle","counter","speedRange","animation","controls","lifescript","script-editor"], function(topRightButtons, menu, coordinates, c, selection, position, snapshots, body, input, settings, rle, counter, speedRange, animation, controls, lifescript, scriptEditor){
+requirejs([
+	"topRightButtons",
+	"menu",
+	"coordinates",
+	"c",
+	"selection",
+	"position",
+	"snapshots",
+	"body",
+	"input",
+	"settings",
+	"rle",
+	"counter",
+	"speedRange",
+	"animation",
+	"controls",
+	"lifescript",
+	"script-editor",
+	"run-script"], function(
+		topRightButtons, 
+		menu, 
+		coordinates, 
+		c, 
+		selection, 
+		position, 
+		snapshots, 
+		body, 
+		input, 
+		settings, 
+		rle, 
+		counter, 
+		speedRange, 
+		animation, 
+		controls, 
+		lifescript, 
+		scriptEditor,
+		runScript){
 	
 	var parsePlaintext = function(text, occupy){
 			var lines = text.match(/[\.O]+/g);
@@ -95,7 +131,7 @@ requirejs(["topRightButtons","menu","coordinates","c","selection","position","sn
 	};
 	
 	var reactToKeys = function(){
-		return !snapshots.isShowing() && !input.isOpen() && !scriptEditor.isOpen();
+		return !snapshots.isShowing() && !input.isOpen() && !scriptEditor.isOpen() && !runScript.isOpen();
 	};
 	var shortcuts = [
 		{

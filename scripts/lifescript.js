@@ -1,4 +1,4 @@
-define(["body","menu","script-editor"], function(body, menu, scriptEditor){
+define(["body","menu","script-editor","run-script"], function(body, menu, scriptEditor, runScript){
 
     menu.addMenu('scripts',function(addOption, addMenu){
         addOption('new',function(){
@@ -11,6 +11,9 @@ define(["body","menu","script-editor"], function(body, menu, scriptEditor){
                             obj = _obj;
                     	});
 					});
+                    _addOption('run',function(){
+                        runScript(obj);
+                    });
 				});
             });
         });

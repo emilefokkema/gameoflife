@@ -190,6 +190,10 @@ body.has-snapshots.show-snapshots .snapshot-button{
 	display:none;
 	height: auto;
 }
+.dialog.run-script{
+	display:none;
+	height: auto;
+}
 .dialog.lifescript textarea{
 	height:300px;
 	width:95%;
@@ -199,6 +203,9 @@ body.input-open .input{
 	display: initial;
 }
 body.lifescript-open .lifescript{
+	display: initial;
+}
+body.run-script-open .run-script{
 	display: initial;
 }
 body.settings-open .settings{
