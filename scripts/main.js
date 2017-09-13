@@ -1,4 +1,4 @@
-requirejs(["topRightButtons","menu","coordinates","c","selection","position","snapshots","body","input","settings","rle","counter","speedRange","animation","controls","lifescript"], function(topRightButtons, menu, coordinates, c, selection, position, snapshots, body, input, settings, rle, counter, speedRange, animation, controls, lifescript){
+requirejs(["topRightButtons","menu","coordinates","c","selection","position","snapshots","body","input","settings","rle","counter","speedRange","animation","controls","lifescript","script-editor"], function(topRightButtons, menu, coordinates, c, selection, position, snapshots, body, input, settings, rle, counter, speedRange, animation, controls, lifescript, scriptEditor){
 	
 	var parsePlaintext = function(text, occupy){
 			var lines = text.match(/[\.O]+/g);
@@ -93,11 +93,9 @@ requirejs(["topRightButtons","menu","coordinates","c","selection","position","sn
 			treeSize: treeSize
 		};
 	};
-	window.alive = function(x,y){
-		position.add(x,y);
-	};
+	
 	var reactToKeys = function(){
-		return !snapshots.isShowing() && !input.isOpen() && !lifescript.isOpen();
+		return !snapshots.isShowing() && !input.isOpen() && !scriptEditor.isOpen();
 	};
 	var shortcuts = [
 		{

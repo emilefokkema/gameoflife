@@ -39,12 +39,31 @@
 		</div>
 	</div>
 </script>
-<script type="text/template" id="lifescript">
+<script type="text/template" id="scriptEditor">
 	<div id="1" class="dialog lifescript">
 		<div class="content outer">
 			<div class="inner">
 				<div>Title:<input type="text" id="5"/></div>
-				<div id="4"></div>
+				<div>
+					<div class="signature" template-id="4">
+						<div>
+							<div>
+								<span class="argument-definition argument-name">alive</span><span class="argument-definition argument-value">(x,y) : void</span>
+							</div>
+							<div template-id="2">
+								<span class="argument-definition argument-name">
+									<input type="text" id="1"/>
+								</span>
+							</div>
+						</div>
+						<input type="button" value="add parameter" id="3"/>
+						<div>
+							<div class="function-expression">function(alive</div>
+							<div class="function-expression wrapper"><div class="function-expression" template-id="1" id="1"></div></div>
+							<div class="function-expression">){</div>
+						</div>
+					</div>
+				</div>
 				<textarea id="2"></textarea>}
 			</div>
 		</div>
@@ -56,7 +75,7 @@
 		</div>
 	</div>
 </script>
-<script type="text/template" id="lifescript">
+<script type="text/template" id="runScript">
 	<div id="1" class="dialog run-script">
 		<div class="content outer">
 			<div class="inner">
@@ -66,26 +85,6 @@
 			<div class="inner">
 				<input id="2" type="button" value="OK"/>
 			</div>
-		</div>
-	</div>
-</script>
-<script type="text/template" id="scriptSignature">
-	<div class="signature" id="1">
-		<div>
-			<div>
-				<span class="argument-definition argument-name">alive</span><span class="argument-definition argument-value">(x,y) : void</span>
-			</div>
-			<div template-id="3">
-				<span class="argument-definition argument-name">
-					<input type="text" id="1"/>
-				</span>
-			</div>
-		</div>
-		<input type="button" value="add parameter" id="4"/>
-		<div>
-			<div class="function-expression">function(alive</div>
-			<div class="function-expression wrapper"><div class="function-expression" template-id="2" id="1"></div></div>
-			<div class="function-expression">){</div>
 		</div>
 	</div>
 </script>
