@@ -26,7 +26,7 @@ define(["body","menu"], function(body, menu){
                         next:function(){return String.fromCharCode(current++);}
                     };
                 })();
-                var makeArgument = function(name, value){
+                var makeArgument = function(name){
                     var ar = makeArgumentElement(function(container){
                         return {
                             setName:function(n){
@@ -35,31 +35,20 @@ define(["body","menu"], function(body, menu){
                         };
                     });
                     ar.setName(name);
-                    var def = makeArgumentDefinition(function(inputName, inputValue){
+                    var def = makeArgumentDefinition(function(inputName){
                         inputName.value = name;
                         inputName.addEventListener('blur',function(){
                             ar.setName(inputName.value);
                         });
-                        if(value){
-                            inputValue.value = value;
-                        }
-                        return {
-                            serialize:function(){
-                                return {
-                                    name:inputName.value,
-                                    value:inputValue.value
-                                };
-                            }
-                        };
                     });
                     return {
                         serialize:function(){
-                            return def.serialize();
+                            return name;
                         }
                     };
                 };
-                var addArgument = function(name, value){
-                    fArguments.push(makeArgument(name, value));
+                var addArgument = function(name){
+                    fArguments.push(makeArgument(name));
                 };
                 var serialize = function(){
                     return fArguments.map(function(a){return a.serialize();});
@@ -68,8 +57,8 @@ define(["body","menu"], function(body, menu){
                     addArgument(nameProvider.next());
                 });
                 var deserialize = function(obj){
-                    obj.map(function(pair){
-                        addArgument(pair.name, pair.value);
+                    obj.map(function(name){
+                        addArgument(name);
                     });
                 };
                 return {
@@ -80,15 +69,15 @@ define(["body","menu"], function(body, menu){
                 };
             });
         };
-        var open = false;
+        var isOpen = false;
         var show = function(){
-			open = true;
+			isOpen = true;
 			body.addClass("lifescript-open");
 	    };
         var onHide = function(){};
         var onSave = function(){};
         var hide = function(){
-			open = false;
+			isOpen = false;
 			body.removeClass("lifescript-open");
             onHide();
             onHide = function(){};
@@ -136,20 +125,22 @@ define(["body","menu"], function(body, menu){
         };
         return {
             open:open,
-            isOpen:function(){return open;}
+            isOpen:function(){return isOpen;}
         };
     });
     
-    menu.addMenu('scripts',function(addOption){
+    menu.addMenu('scripts',function(addOption, addMenu){
         addOption('new',function(){
             var newOne = lifeScript.open();
             newOne.onSave(function(obj){
-                addOption(obj.title, function(){
-                    var opened = lifeScript.open(obj);
-                    opened.onSave(function(_obj){
+								addMenu(obj.title, function(_addOption){
+									_addOption('edit',function(){
+										 	var opened = lifeScript.open(obj);
+                    	opened.onSave(function(_obj){
                         obj = _obj;
-                    });
-                });
+                    	});
+									});
+								});
             });
         });
     });

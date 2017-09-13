@@ -39,12 +39,13 @@ define(["coordinates","sender"],function(coordinates, sender){
 						}
 					});
 					subMenu.onChoose(function(){
-						hide();
+						subMenu.hide();
+						onChoose();
 					});
 					onHide.add(function(){
 						subMenu.hide();
 					});
-					constr.apply(null,[subMenu.addOption]);
+					constr.apply(null,[subMenu.addOption, subMenu.addMenu]);
 				},{text:title});
 			};
 			var show = function(x,y){
