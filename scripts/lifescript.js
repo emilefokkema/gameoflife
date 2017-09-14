@@ -11,8 +11,8 @@ define(["body","menu","script-editor","run-script"], function(body, menu, script
                             obj = _obj;
                     	});
 					});
-                    _addOption('run',function(){
-                        runScript(obj);
+                    _addOption('run',function(x, y){
+                        runScript(x, y, obj);
                     });
 				});
             });
