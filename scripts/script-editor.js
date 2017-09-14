@@ -1,4 +1,4 @@
-define(["body","menu","evaluator"], function(body, menu, evaluator){
+define(["body","menu","evaluator","codemirror/lib/codemirror","codemirror/mode/javascript/javascript"], function(body, menu, evaluator, CodeMirror){
     var validateScript = function(script){
         if(!script.title){
             alert("Please provide a title");
@@ -14,6 +14,10 @@ define(["body","menu","evaluator"], function(body, menu, evaluator){
         return true;
     };
     var scriptEditor = requireElement(document.getElementById("scriptEditor").innerHTML, function(div, text, saveButton, makeSignatureElement, title, closeButton){
+        var editor = CodeMirror.fromTextArea(text, {
+            lineNumbers: true,
+            mode: "javascript"
+        });
         var signature;
         var makeSignature = function(){
             return makeSignatureElement(function(makeArgumentElement, makeArgumentDefinition, addButton){
@@ -73,6 +77,7 @@ define(["body","menu","evaluator"], function(body, menu, evaluator){
         var show = function(){
 			isOpen = true;
 			body.addClass("lifescript-open");
+            editor.doc.cm.refresh();
 	    };
         var onHide = function(){};
         var onSave = function(){};
@@ -87,7 +92,7 @@ define(["body","menu","evaluator"], function(body, menu, evaluator){
             var script = {
                 title:title.value,
                 signature:signature.serialize(),
-                body: text.value
+                body: editor.doc.getValue()
             };
             if(!validateScript(script)){
                 return;
@@ -104,7 +109,7 @@ define(["body","menu","evaluator"], function(body, menu, evaluator){
         var displayScript = function(s){
             title.value = s.title;
             signature.deserialize(s.signature);
-            text.value = s.body;
+            editor.doc.setValue(s.body);
         };
         var open = function(s){
             show();
@@ -113,7 +118,7 @@ define(["body","menu","evaluator"], function(body, menu, evaluator){
                 signature.remove();
                 signature = null;
                 title.value = "";
-                text.value = "";
+                editor.doc.setValue("");
             };
             s && displayScript(s);
             return {

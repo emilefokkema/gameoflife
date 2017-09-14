@@ -196,8 +196,6 @@ body.has-snapshots.show-snapshots .snapshot-button{
 }
 .dialog.lifescript textarea{
 	height:300px;
-	width:95%;
-	margin-left: 5%;
 }
 body.input-open .input{
 	display: initial;
