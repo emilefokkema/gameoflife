@@ -1,5 +1,11 @@
 define(["body","position","evaluator","c"],function(body, position, evaluator, c){
 	var literalPattern = /^(?:|'[^']+(?:\\'[^']+)*'|"[^"]+(?:\\"[^"]+)*"|-?\d+(?:\.\d+)?(?:e[+\-]?\d+)?|0x[0-9a-f]+|0b[01]+|true|false|null|undefined)$/i;
+	var toLiteralString = function(a){
+		if(typeof a === "string"){
+			return "\""+a.replace(/"/g,"\\\"")+"\"";
+		}
+		return a.toString();
+	};
 	var getAlive = function(x,y){
 		var error = false;
 		return function(){
@@ -7,13 +13,11 @@ define(["body","position","evaluator","c"],function(body, position, evaluator, c
 			var xx,yy;
 			if(arguments.length < 2){
 				error = true;
-				alert("alive() requires two numbers");
-				return;
+				throw new Error("alive() requires two numbers");
 			}
 			if(typeof (xx = arguments[0]) !== "number" || typeof (yy = arguments[1]) !== "number"){
 				error = true;
-				alert(xx + " and " + yy + "are not two numbers");
-				return;
+				throw new Error(toLiteralString(xx) + " and " + toLiteralString(yy) + " are not two numbers");
 			}
 			xx = Math.floor(xx);
 			yy = Math.floor(yy);
@@ -84,7 +88,9 @@ define(["body","position","evaluator","c"],function(body, position, evaluator, c
 					serialized[i].value = eval(serialized[i].value);
 				}
 				var alive = getAlive(x,y);
-				evaluator.execute(script.body, serialized, alive);
+				evaluator.execute(script.body, serialized, alive, function(e){
+					alert(e.message + (e.lineNumber ? " (at line "+e.lineNumber+")":""));
+				});
 				c.drawAll();
 			};
 		};
