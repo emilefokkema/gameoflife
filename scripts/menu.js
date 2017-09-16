@@ -27,6 +27,8 @@ define(["coordinates","sender"],function(coordinates, sender){
 			};
 			var addMenu = function(title, constr){
 				return subMenuDiv(function(option){
+					var remove = this.remove;
+					var setTitle = function(t){option.innerHTML = t;};
 					var subMenu = menuFactory();
 					option.addEventListener('click',function(){
 						if(!subMenu.isOpen()){
@@ -46,6 +48,10 @@ define(["coordinates","sender"],function(coordinates, sender){
 						subMenu.hide();
 					});
 					constr.apply(null,[subMenu.addOption, subMenu.addMenu]);
+					return {
+						remove:remove,
+						setTitle:setTitle
+					};
 				},{text:title});
 			};
 			var show = function(x,y){

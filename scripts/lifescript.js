@@ -17,18 +17,27 @@ define(["body","menu","script-editor","run-script"], function(body, menu, script
         saveAll();
         return s;
     };
+    var removeScript = function(s){
+        allScripts.splice(allScripts.indexOf(s),1);
+        saveAll();
+    };
     menu.addMenu('scripts',function(addOption, addMenu){
         createScript = function(obj){
             var script = makeScript(obj);
-            addMenu(obj.title, function(_addOption){
+            var subMenu = addMenu(obj.title, function(_addOption){
                 _addOption('edit',function(){
                     var opened = scriptEditor.open(script.get());
                     opened.onSave(function(_obj){
                         script.replaceWith(_obj);
+                        subMenu.setTitle(_obj.title);
                     });
                 });
                 _addOption('run',function(x, y){
                     runScript(x, y, script.get());
+                });
+                _addOption('remove',function(){
+                    removeScript(script);
+                    subMenu.remove();
                 });
             });
         };
