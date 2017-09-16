@@ -1,4 +1,7 @@
 define([],function(){
+	var onError = function(e){
+		alert(e.message + (e.lineNumber ? " (at line "+e.lineNumber+")":""));
+	};
 	var execute = function(scriptBody, argumentPairs, alive, errorCallback){
 		var cleanedBody = scriptBody;
 		argumentPairs = [{name:"alive",value:alive}]
@@ -17,24 +20,21 @@ define([],function(){
 			if(lineNumberMatch){
 				error.lineNumber = parseInt(lineNumberMatch[1]) - 1
 			}
-			errorCallback(error);
+			onError(error);
+			errorCallback && errorCallback(error);
 		}
 		
 	};
 	var canBeExecuted = function(scriptBody, argumentNames){
-		try{
-			var argumentPairs = argumentNames.map(function(n){
-				return {
-					name:n,
-					value:true
-				};
-			});
-			execute(scriptBody,argumentPairs,function(){});
-		}catch(e){
-			alert(e.message);
-			return false;
-		}
-		return true;
+		var success = true;
+		var argumentPairs = argumentNames.map(function(n){
+			return {
+				name:n,
+				value:true
+			};
+		});
+		execute(scriptBody,argumentPairs,function(){}, function(){success = false;});
+		return success;
 	};
 	return {
 		canBeExecuted:canBeExecuted,

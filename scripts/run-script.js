@@ -88,9 +88,7 @@ define(["body","position","evaluator","c"],function(body, position, evaluator, c
 					serialized[i].value = eval(serialized[i].value);
 				}
 				var alive = getAlive(x,y);
-				evaluator.execute(script.body, serialized, alive, function(e){
-					alert(e.message + (e.lineNumber ? " (at line "+e.lineNumber+")":""));
-				});
+				evaluator.execute(script.body, serialized, alive);
 				c.drawAll();
 			};
 		};
