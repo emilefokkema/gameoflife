@@ -5,39 +5,49 @@ define(["body","menu","script-editor","run-script"], function(body, menu, script
         var all = allScripts.map(function(s){return s.get();});
         localStorage.setItem("lifescripts",JSON.stringify(all));
     };
-    var makeScript = function(obj){
+    var makeScript = function(obj, getSubMenu){
         var s = {
-            replaceWith:function(_obj){
-                obj = _obj;
+            get:function(){return obj;},
+            edit:function(){
+                var opened = scriptEditor.open(obj);
+                opened.onSave(function(_obj){
+                    obj = _obj;
+                    getSubMenu().setTitle(_obj.title);
+                    saveAll();
+                });
+            },
+            remove:function(){
+                allScripts.splice(allScripts.indexOf(s),1);
+                getSubMenu().remove();
                 saveAll();
             },
-            get:function(){return obj;}
+            run:function(x,y){
+                runScript(x, y, obj, function(e){
+                    s.edit();
+                    setTimeout(function(){
+                        alert(e.message + (e.lineNumber ? " (at line "+e.lineNumber+")":""));
+                    },1);
+                });
+            }
         };
         allScripts.push(s);
         saveAll();
         return s;
     };
-    var removeScript = function(s){
-        allScripts.splice(allScripts.indexOf(s),1);
-        saveAll();
-    };
+   
     menu.addMenu('scripts',function(addOption, addMenu){
         createScript = function(obj){
-            var script = makeScript(obj);
-            var subMenu = addMenu(obj.title, function(_addOption){
+            var subMenu;
+            var script = makeScript(obj, function(){return subMenu;});
+            subMenu = addMenu(obj.title, function(_addOption){
                 _addOption('edit',function(){
-                    var opened = scriptEditor.open(script.get());
-                    opened.onSave(function(_obj){
-                        script.replaceWith(_obj);
-                        subMenu.setTitle(_obj.title);
-                    });
+                    script.edit();
                 });
                 _addOption('run',function(x, y){
-                    runScript(x, y, script.get());
+                    script.run(x,y);
                 });
                 _addOption('remove',function(){
-                    removeScript(script);
-                    subMenu.remove();
+                   script.remove();
                 });
             });
         };

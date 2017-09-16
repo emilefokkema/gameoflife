@@ -75,21 +75,28 @@ define(["body","position","evaluator","c"],function(body, position, evaluator, c
 			if(!validate(serialized)){
 				return;
 			}
+			for(var i=0;i<serialized.length;i++){
+				serialized[i].value = eval(serialized[i].value);
+			}
 			onOk(serialized);
 			close();
 			onOk = function(){};
 		});
-		var f = function(x, y, script){
+		var runWithValues = function(x, y, script, namesAndValues, onError){
+			var alive = getAlive(x,y);
+			evaluator.execute(script.body, namesAndValues, alive, onError);
+			c.drawAll();
+		};
+		var f = function(x, y, script, onError){
+			if(script.signature.length == 0){
+				runWithValues(x,y,script,[],onError);
+				return;
+			}
 			show();
 			argumentList = makeArgumentList();
 			argumentList.display(script.signature);
 			onOk = function(serialized){
-				for(var i=0;i<serialized.length;i++){
-					serialized[i].value = eval(serialized[i].value);
-				}
-				var alive = getAlive(x,y);
-				evaluator.execute(script.body, serialized, alive);
-				c.drawAll();
+				runWithValues(x, y, script, serialized, onError);
 			};
 		};
 		f.isOpen = function(){return isOpen;};

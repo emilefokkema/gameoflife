@@ -1,7 +1,5 @@
 define([],function(){
-	var onError = function(e){
-		alert(e.message + (e.lineNumber ? " (at line "+e.lineNumber+")":""));
-	};
+	
 	var execute = function(scriptBody, argumentPairs, alive, errorCallback){
 		var cleanedBody = scriptBody;
 		argumentPairs = [{name:"alive",value:alive}]
@@ -20,7 +18,6 @@ define([],function(){
 			if(lineNumberMatch){
 				error.lineNumber = parseInt(lineNumberMatch[1]) - 1
 			}
-			onError(error);
 			errorCallback && errorCallback(error);
 		}
 		
