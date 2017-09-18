@@ -15,6 +15,7 @@ define(["body","menu","script-editor","run-script"], function(body, menu, script
                     getSubMenu().setTitle(_obj.title);
                     saveAll();
                 });
+                return opened;
             },
             remove:function(){
                 allScripts.splice(allScripts.indexOf(s),1);
@@ -23,10 +24,11 @@ define(["body","menu","script-editor","run-script"], function(body, menu, script
             },
             run:function(x,y){
                 runScript(x, y, obj, function(e){
-                    s.edit();
-                    setTimeout(function(){
-                        alert(e.message + (e.lineNumber ? " (at line "+e.lineNumber+")":""));
-                    },1);
+                    var opened = s.edit();
+                    opened.addError(e);
+                    // setTimeout(function(){
+                    //     alert(e.message + (e.lineNumber ? " (at line "+e.lineNumber+")":""));
+                    // },1);
                 });
             }
         };

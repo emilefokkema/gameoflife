@@ -22,7 +22,7 @@ define([],function(){
 		}
 		
 	};
-	var canBeExecuted = function(scriptBody, argumentNames){
+	var canBeExecuted = function(scriptBody, argumentNames, errorCallback){
 		var success = true;
 		var argumentPairs = argumentNames.map(function(n){
 			return {
@@ -30,7 +30,10 @@ define([],function(){
 				value:true
 			};
 		});
-		execute(scriptBody,argumentPairs,function(){}, function(){success = false;});
+		execute(scriptBody,argumentPairs,function(){}, function(e){
+			success = false;
+			errorCallback && errorCallback(e);
+		});
 		return success;
 	};
 	return {

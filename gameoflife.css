@@ -222,3 +222,6 @@ body.settings-open .settings-button{
 	display: inline-table;
 	width:40%;
 }
+.CodeMirror-code .error span{
+	border-bottom:1pt solid #f00;
+}

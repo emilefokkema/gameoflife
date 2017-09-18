@@ -1,5 +1,5 @@
 define(["body","menu","evaluator","codemirror/lib/codemirror","codemirror/mode/javascript/javascript"], function(body, menu, evaluator, CodeMirror){
-    var validateScript = function(script){
+    var validateScript = function(script, errorCallback){
         if(!script.title){
             alert("Please provide a title");
             return false;
@@ -8,7 +8,7 @@ define(["body","menu","evaluator","codemirror/lib/codemirror","codemirror/mode/j
             alert("please provide a body");
             return false;
         }
-        if(!evaluator.canBeExecuted(script.body, script.signature)){
+        if(!evaluator.canBeExecuted(script.body, script.signature, errorCallback)){
             return false;
         }
         return true;
@@ -94,13 +94,18 @@ define(["body","menu","evaluator","codemirror/lib/codemirror","codemirror/mode/j
                 signature:signature.serialize(),
                 body: editor.doc.getValue()
             };
-            if(!validateScript(script)){
+            if(!validateScript(script, addError)){
                 return;
             }
             onSave(script);
             onSave = function(){};
             hide();
 		});
+        var addError = function(e){
+            if(e.lineNumber){
+                editor.doc.addLineClass(e.lineNumber - 1, "text", "error");
+            }
+        };
 
         closeButton.addEventListener('click',function(){
             hide();
@@ -124,7 +129,8 @@ define(["body","menu","evaluator","codemirror/lib/codemirror","codemirror/mode/j
             return {
                 onSave:function(f){
                     onSave = f;
-                }
+                },
+                addError:addError
             };
         };
         return {
