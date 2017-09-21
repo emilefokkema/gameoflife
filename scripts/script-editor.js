@@ -104,6 +104,7 @@ define(["body","menu","evaluator","codemirror/lib/codemirror","codemirror/mode/j
         var addError = function(e){
             if(e.lineNumber){
                 editor.doc.addLineClass(e.lineNumber - 1, "text", "error");
+                editor.doc.addLineWidget(e.lineNumber - 1, requireElement("<span class='script-error'><span class='message'>$(message)</span></span>",{message:e.message}));
             }
         };
 

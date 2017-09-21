@@ -15,7 +15,9 @@ define(["body","position","evaluator","c"],function(body, position, evaluator, c
 				error = true;
 				throw new Error("alive() requires two numbers");
 			}
-			if(typeof (xx = arguments[0]) !== "number" || typeof (yy = arguments[1]) !== "number"){
+			xx = arguments[0];
+			yy = arguments[1];
+			if(typeof xx !== "number" || typeof yy !== "number"){
 				error = true;
 				throw new Error(toLiteralString(xx) + " and " + toLiteralString(yy) + " are not two numbers");
 			}

@@ -223,5 +223,27 @@ body.settings-open .settings-button{
 	width:40%;
 }
 .CodeMirror-code .error span{
-	border-bottom:1pt solid #f00;
+	background-color: #fcc;
+}
+.script-error{
+	height: 40px;
+}
+.script-error .message{
+	color:#fff;
+	font-size: 12px;
+	background-color: #c00;
+	padding:3px;
+	margin-top:10px;
+	display:inline-block;
+	border-radius: 5px;
+}
+.script-error .message:before{
+	position: absolute;
+	left:30px;
+	top:5px;
+	width:10px;
+	height: 10px;
+	background-color: #c00;
+	content: " ";
+	transform:rotate(45deg);
 }
