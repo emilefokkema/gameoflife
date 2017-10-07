@@ -1,4 +1,4 @@
-define(["body"],function(body){
+define(["body","requireElement"],function(body, requireElement){
 	return requireElement(document.getElementById("input").innerHTML, function(div, text, button){
 			var open = false;
 

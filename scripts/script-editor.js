@@ -1,4 +1,4 @@
-define(["body","menu","evaluator","codemirror/lib/codemirror","codemirror/mode/javascript/javascript"], function(body, menu, evaluator, CodeMirror){
+define(["body","menu","evaluator","requireElement", "codemirror/lib/codemirror","codemirror/mode/javascript/javascript"], function(body, menu, evaluator, requireElement, CodeMirror){
     var validateScript = function(script, errorCallback){
         if(!script.title){
             alert("Please provide a title");

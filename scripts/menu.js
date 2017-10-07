@@ -1,4 +1,4 @@
-define(["coordinates","sender"],function(coordinates, sender){
+define(["coordinates","sender","requireElement"],function(coordinates, sender, requireElement){
 	var currentX, currentY;
 	var setCell = function(x, y){
 		var loc = coordinates.mousePositionToPositionLocation(x,y);

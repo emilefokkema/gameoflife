@@ -1,4 +1,4 @@
-define(["body","position","evaluator","c"],function(body, position, evaluator, c){
+define(["body","position","evaluator","c","requireElement"],function(body, position, evaluator, c, requireElement){
 	var literalPattern = /^(?:|'[^']+(?:\\'[^']+)*'|"[^"]+(?:\\"[^"]+)*"|-?\d+(?:\.\d+)?(?:e[+\-]?\d+)?|0x[0-9a-f]+|0b[01]+|true|false|null|undefined)$/i;
 	var toLiteralString = function(a){
 		if(typeof a === "string"){

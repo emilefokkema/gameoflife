@@ -1,4 +1,4 @@
-define(["animation","position","snapshots"],function(animation,position,snapshots){
+define(["animation","position","snapshots","requireElement"],function(animation,position,snapshots,requireElement){
 	return requireElement(document.getElementById("controls").innerHTML, function(container, buttonDiv){
 			document.body.appendChild(container);
 			var addButton = function(className, action){
