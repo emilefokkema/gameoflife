@@ -5,16 +5,6 @@ define(["c","sender"],function(c, sender){
 		xShift = 0,
 		yShift = 0,
 		onDraw = sender(),
-		onChange = sender(),
-		sendOnChange = function(){
-			onChange({
-				xShift:xShift,
-				yShift:yShift,
-				size:size,
-				nx:nx,
-				ny:ny
-			});
-		},
 		onDragStart = sender(function(a,b){return a && b}, true),
 		setSize = function(s){
 			size = s;
@@ -31,21 +21,11 @@ define(["c","sender"],function(c, sender){
 				setYShift(centerY/size - pCenterY);
 			}
 		},
-		xShiftOffset = 0,
-		yShiftOffset = 0,
-		getOffset = function(v){
-			if(v >= 0){
-				return v  - Math.floor(v);
-			}
-			return 1 - getOffset(-v);
-		},
 		setXShift = function(v){
 			xShift = v;
-			xShiftOffset = getOffset(v);
 		},
 		setYShift = function(v){
 			yShift = v;
-			yShiftOffset = getOffset(v);
 		},
 		makeDrag = function(startMouseX, startMouseY){
 			var origXShift, origYShift, currentMouseX, currentMouseY, origSize;
@@ -95,7 +75,7 @@ define(["c","sender"],function(c, sender){
 			};
 		},
 		currentDrag = null,
-		mousePositionToPositionLocation = function(mX,mY){
+		screenPositionToPoint = function(mX,mY){
 			return {
 				x:mX / size - xShift,
 				y:mY / size - yShift
@@ -106,33 +86,6 @@ define(["c","sender"],function(c, sender){
 				x:(p.x + xShift) * size,
 				y:(p.y + yShift) * size
 			};
-		},
-		drawHorizontalLine = function(context, y){
-			context.beginPath();
-			context.moveTo(0,y);
-			context.lineTo(w,y);
-			context.stroke();
-		},
-		drawVerticalLine = function(context, x){
-			context.beginPath();
-			context.moveTo(x,0);
-			context.lineTo(x,h);
-			context.stroke();
-		},
-		drawLines = function(context){
-			if(size < 5){
-				return;
-			}
-			context.save();
-			context.strokeStyle = '#ddd';
-			context.strokeWidth = 0.2;
-			for(var i = 0;i<nx;i++){
-				drawVerticalLine(context, i * size + xShiftOffset * size);
-			}
-			for(var i = 0;i<ny;i++){
-				drawHorizontalLine(context, i * size + yShiftOffset * size);
-			}
-			context.restore();
 		},
 		beginDrag = function(x,y){
 			currentDrag = makeDrag(x, y);
@@ -159,6 +112,16 @@ define(["c","sender"],function(c, sender){
 			if(currentDrag){
 				currentDrag.endZoom();
 			}
+		},
+		getViewBox = function(){
+			var p1 = screenPositionToPoint(0,0);
+			var p2 = screenPositionToPoint(w,h);
+			return {
+				x:p1.x,
+				y:p1.y,
+				width:p2.x - p1.x,
+				height:p2.y - p1.y
+			};
 		},
 		getScreenRect = function(x,y,width,height){
 			var p = positionToMousePosition({x:x,y:y});
@@ -193,7 +156,6 @@ define(["c","sender"],function(c, sender){
 		endZoom();
 	});
 	c.onDraw(function(context){
-		drawLines(context);
 		onDraw(context);
 	});
 	setSize(15);
@@ -203,13 +165,13 @@ define(["c","sender"],function(c, sender){
 		h:h,
 		getNx:function(){return nx;},
 		getScreenRect:getScreenRect,
+		getViewBox:getViewBox,
 		getNy:function(){return ny;},
-		onChange:function(f){onChange.add(f);},
 		beginDrag:beginDrag,
 		zoom:zoom,
 		onDraw:function(f){onDraw.add(f);},
 		onDragStart:function(f){onDragStart.add(f);},
-		mousePositionToPositionLocation:mousePositionToPositionLocation,
+		screenPositionToPoint:screenPositionToPoint,
 		positionToMousePosition:positionToMousePosition
 	};
 })
