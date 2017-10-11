@@ -1,4 +1,4 @@
-define(["body","position","topRightButtons", "requireElement"],function(body, position, topRightButtons, requireElement){
+define(["body","tree/hashlife","topRightButtons", "requireElement"],function(body, hashLife, topRightButtons, requireElement){
 	return requireElement(document.getElementById("settings").innerHTML, function(div, number, closeButton){
 			var open = false;
 
@@ -10,7 +10,7 @@ define(["body","position","topRightButtons", "requireElement"],function(body, po
 			
 			
 			closeButton.addEventListener('click',function(){
-				position.setTimePerStepLog(number.value);
+				hashLife.setTimePerStepLog(number.value);
 				hide();
 			});
 			

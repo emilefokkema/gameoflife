@@ -1,4 +1,4 @@
-define(["counter","speedRange","position","c","body"], function(counter,speedRange,position, c, body){
+define(["counter","speedRange","tree/hashlife","c","body"], function(counter,speedRange,hashLife, c, body){
 	speedRange.onInput(function(l){
 		intervalLength = l;
 	});
@@ -7,8 +7,8 @@ define(["counter","speedRange","position","c","body"], function(counter,speedRan
 		},
 		stepCount = 0,
 		doStep = function(done){
-			position.doStep();
-			stepCount += 1 << position.getTimePerStepLog();
+			hashLife.doStep();
+			stepCount += 1 << hashLife.getTimePerStepLog();
 			done && done();
 		},
 		going = false,
@@ -35,7 +35,7 @@ define(["counter","speedRange","position","c","body"], function(counter,speedRan
 			setCounterInterval = window.setInterval(setCounter, 250);
 		},
 		reset = function(){
-			position.vacateAll();
+			hashLife.vacateAll();
 			stepCount = 0;
 			setCounter();
 			c.drawAll();

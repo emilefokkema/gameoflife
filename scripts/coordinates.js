@@ -1,23 +1,36 @@
-define(["c"],function(c){
+define(["c","sender"],function(c, sender){
 	var w = c.w,
 		h = c.h,
 		size, nx, ny,
+		xShift = 0,
+		yShift = 0,
+		onDraw = sender(),
+		onChange = sender(),
+		sendOnChange = function(){
+			onChange({
+				xShift:xShift,
+				yShift:yShift,
+				size:size,
+				nx:nx,
+				ny:ny
+			});
+		},
+		onDragStart = sender(function(a,b){return a && b}, true),
 		setSize = function(s){
 			size = s;
-			nx = Math.ceil(w / size);
-			ny = Math.ceil(h / size);
+			nx = w / size;
+			ny = h / size;
 		},
 		zoom = function(factor, centerX, centerY){
-			var pCenter = mousePositionToPositionLocation(centerX, centerY);
+			var pCenterX = centerX / size - xShift;
+			var pCenterY = centerY / size - yShift;
 			var newSize = size * factor;
 			if(newSize != size){
 				setSize(newSize);
-				setXShift(centerX/size - pCenter.x);
-				setYShift(centerY/size - pCenter.y);
+				setXShift(centerX/size - pCenterX);
+				setYShift(centerY/size - pCenterY);
 			}
 		},
-		xShift = 0,
-		yShift = 0,
 		xShiftOffset = 0,
 		yShiftOffset = 0,
 		getOffset = function(v){
@@ -84,8 +97,8 @@ define(["c"],function(c){
 		currentDrag = null,
 		mousePositionToPositionLocation = function(mX,mY){
 			return {
-				x:Math.floor(mX / size - xShift),
-				y:Math.floor(mY / size - yShift)
+				x:mX / size - xShift,
+				y:mY / size - yShift
 			};
 		},
 		positionToMousePosition = function(p){
@@ -147,9 +160,14 @@ define(["c"],function(c){
 				currentDrag.endZoom();
 			}
 		},
-		fillRect = function(p, context){
-			var mousePosition = positionToMousePosition(p);
-			context.fillRect(mousePosition.x, mousePosition.y, size, size);
+		getScreenRect = function(x,y,width,height){
+			var p = positionToMousePosition({x:x,y:y});
+			return {
+				x:p.x,
+				y:p.y,
+				width:width * size,
+				height:height * size
+			};
 		};
 	c.addEventListener('positiondragmove',function(e){
 		moveDrag(e.detail.toX, e.detail.toY);
@@ -158,6 +176,11 @@ define(["c"],function(c){
 	c.addEventListener('positiondragend',function(){
 		endDrag();
 		c.drawAll();
+	});
+	c.addEventListener('positiondragstart',function(e){
+		if(onDragStart(e)){
+			beginDrag(e.detail.x, e.detail.y);
+		}
 	});
 	c.addEventListener('startzoom',function(e){
 		startZoom(e.detail.r);
@@ -169,24 +192,23 @@ define(["c"],function(c){
 	c.addEventListener('endzoom',function(e){
 		endZoom();
 	});
-	c.onDraw(drawLines);
+	c.onDraw(function(context){
+		drawLines(context);
+		onDraw(context);
+	});
 	setSize(15);
 
 	return {
 		w:w,
 		h:h,
-		setSize:setSize,
 		getNx:function(){return nx;},
+		getScreenRect:getScreenRect,
 		getNy:function(){return ny;},
+		onChange:function(f){onChange.add(f);},
 		beginDrag:beginDrag,
-		startZoom:startZoom,
-		changeZoom:changeZoom,
-		endZoom:endZoom,
-		fillRect:fillRect,
-		endDrag:endDrag,
-		moveDrag:moveDrag,
-		drawLines:drawLines,
 		zoom:zoom,
+		onDraw:function(f){onDraw.add(f);},
+		onDragStart:function(f){onDragStart.add(f);},
 		mousePositionToPositionLocation:mousePositionToPositionLocation,
 		positionToMousePosition:positionToMousePosition
 	};

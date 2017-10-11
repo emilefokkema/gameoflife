@@ -1,4 +1,4 @@
-define(["menu","coordinates","c","position","snapshots","rle","input"],function(menu,coordinates,c,position,snapshots,rle,input){
+define(["menu","coordinates","c","position","snapshots","rle","input","tree/hashlife"],function(menu,coordinates,c,position,snapshots,rle,input, hashLife){
 	var present = false, removeMenuOption = null, removeSelectOption = null, minX, minY, maxX, maxY, dragger;
 	var getMinLoc = function(){
 		return coordinates.positionToMousePosition({x:minX,y:minY});
@@ -21,7 +21,7 @@ define(["menu","coordinates","c","position","snapshots","rle","input"],function(
 		};
 		var make = function(){
 			var drag = function(x,y){
-				var pos = coordinates.mousePositionToPositionLocation(x,y);
+				var pos = position.mousePositionToPositionLocation(x,y);
 				howToDrag(pos);
 				c.drawAll();
 			};
@@ -102,13 +102,13 @@ define(["menu","coordinates","c","position","snapshots","rle","input"],function(
 	var makeMover = function(mouseX, mouseY){
 		var positions = getPositions();
 		var relativePositions = positions.map(function(p){return {x:p.x - minX,y:p.y-minY};});
-		var startPos = coordinates.mousePositionToPositionLocation(mouseX, mouseY);
+		var startPos = position.mousePositionToPositionLocation(mouseX, mouseY);
 		var relativePositionX = startPos.x - minX;
 		var relativePositionY = startPos.y - minY;
 		var width = maxX - minX;
 		var height = maxY - minY;
 		var drag = function(x,y){
-			var toPos = coordinates.mousePositionToPositionLocation(x, y);
+			var toPos = position.mousePositionToPositionLocation(x, y);
 			minX = toPos.x - relativePositionX;
 			maxX = minX + width;
 			minY = toPos.y - relativePositionY;
@@ -122,12 +122,12 @@ define(["menu","coordinates","c","position","snapshots","rle","input"],function(
 			context.fillStyle = 'rgba(0,0,0,0.5)';
 			getNewPositions().map(function(p){
 				
-				coordinates.fillRect(p, context);
+				position.fillRect(p, context);
 			});
 		};
 		var end = function(){
-			positions.map(function(p){position.remove(p.x, p.y);});
-			getNewPositions().map(function(p){position.add(p.x,p.y);});
+			positions.map(function(p){hashLife.remove(p.x, p.y);});
+			getNewPositions().map(function(p){hashLife.add(p.x,p.y);});
 			c.drawAll();
 		};
 		return {
@@ -150,7 +150,7 @@ define(["menu","coordinates","c","position","snapshots","rle","input"],function(
 	};
 	var direction = {UP:0,DOWN:1,LEFT:2,RIGHT:3};
 	var getPositions = function(){
-		return position.getAllInBox({
+		return hashLife.getAllInBox({
 					minX:minX,
 					maxX:maxX,
 					minY:minY,
@@ -177,26 +177,26 @@ define(["menu","coordinates","c","position","snapshots","rle","input"],function(
 		remove.push(menu.addOption('cut',function(){
 			var positions = getPositions();
 			copyPositions(positions);
-			positions.map(function(p){position.remove(p.x, p.y);});
+			positions.map(function(p){hashLife.remove(p.x, p.y);});
 			c.drawAll();
 		}));
 		remove.push(menu.addOption('alive', function(){
 			for(var x=minX;x<=maxX;x++){
 				for(var y=minY;y<=maxY;y++){
-					position.add(x,y);
+					hashLife.add(x,y);
 				}
 			}
 			c.drawAll();
 		}));
 		remove.push(menu.addOption('dead', function(){
-			getPositions().map(function(p){position.remove(p.x, p.y);});
+			getPositions().map(function(p){hashLife.remove(p.x, p.y);});
 			c.drawAll();
 		}));
 		remove.push(menu.addOption('random', function(){
 			for(var x=minX;x<=maxX;x++){
 				for(var y=minY;y<=maxY;y++){
 					if(Math.random()<0.5){
-						position.add(x,y);
+						hashLife.add(x,y);
 					}
 				}
 			}
@@ -262,7 +262,7 @@ define(["menu","coordinates","c","position","snapshots","rle","input"],function(
 		});
 	};
 	var containsMousePosition = function(mouseX, mouseY){
-		var pos = coordinates.mousePositionToPositionLocation(mouseX, mouseY);
+		var pos = position.mousePositionToPositionLocation(mouseX, mouseY);
 		return pos.x >= minX && pos.x <= maxX && pos.y >= minY && pos.y <= maxY;
 	};
 	addSelectingOption();

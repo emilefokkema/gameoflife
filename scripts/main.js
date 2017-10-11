@@ -5,6 +5,7 @@ requirejs([
 	"c",
 	"selection",
 	"position",
+	"tree/hashlife",
 	"snapshots",
 	"body",
 	"input",
@@ -22,7 +23,8 @@ requirejs([
 		coordinates, 
 		c, 
 		selection, 
-		position, 
+		position,
+		hashLife, 
 		snapshots, 
 		body, 
 		input, 
@@ -52,18 +54,19 @@ requirejs([
 				return;
 			}
 			rle.parse(hash.substr(1), function(x,y){
-				position.add(x,y);
+				hashLife.add(x,y);
 			});
 		}
-	c.addEventListener('positiondragstart',function(e){
-		if(!selection.isPresent() || !selection.handleDragStart(e.detail.x, e.detail.y)){
-			coordinates.beginDrag(e.detail.x, e.detail.y);
-		}
-	});
 	
+	coordinates.onDragStart(function(e){
+		if(!selection.isPresent() || !selection.handleDragStart(e.detail.x, e.detail.y)){
+			return true;
+		}
+		return false;
+	});
 	c.addEventListener('click',function(e){
 		if(e.shiftKey){
-			var loc = coordinates.mousePositionToPositionLocation(e.clientX, e.clientY);
+			var loc = position.mousePositionToPositionLocation(e.clientX, e.clientY);
 			selection.select(loc.x, loc.y);
 			c.drawAll();
 			return;
@@ -79,12 +82,12 @@ requirejs([
 		if(selection.isPresent()){
 			selection.clear();
 		}else{
-			var p = coordinates.mousePositionToPositionLocation(e.clientX, e.clientY);
+			var p = position.mousePositionToPositionLocation(e.clientX, e.clientY);
 			
-			if(position.contains(p.x,p.y)){
-				position.remove(p.x,p.y);
+			if(hashLife.contains(p.x,p.y)){
+				hashLife.remove(p.x,p.y);
 			}else{
-				position.add(p.x,p.y);
+				hashLife.add(p.x,p.y);
 			}
 		}
 		c.drawAll();
@@ -96,16 +99,16 @@ requirejs([
 	menu.addOption('parse RLE',function(x,y){
 		input(function(v){
 			if(!v){return;}
-			position.vacateAll();
-			rle.parse(v, function(xx,yy){position.add(xx+x,yy+y);});
+			hashLife.vacateAll();
+			rle.parse(v, function(xx,yy){hashLife.add(xx+x,yy+y);});
 			c.drawAll();
 		});
 	});
 	menu.addOption('parse plaintext',function(x,y){
 		input(function(v){
 			if(!v){return;}
-			position.vacateAll();
-			parsePlaintext(v, function(xx,yy){position.add(xx+x,yy+y);});
+			hashLife.vacateAll();
+			parsePlaintext(v, function(xx,yy){hashLife.add(xx+x,yy+y);});
 			c.drawAll();
 		});
 	});
@@ -116,17 +119,7 @@ requirejs([
 	input(function(){},"Click on a cell to bring it to life. Hit the space bar to get things moving, or to pause them if they already are. Adjust the slider to make them move faster or slower. Shift-click on a cell to make a selection, and then right-click on the selection to find some options.");
 	readHash();
 	c.drawAll();
-	window.health = function(){
-		var all = position.countAll();
-		var alive = position.countAlive();
-		var treeSize = position.getCurrentTreeSize();
-		return {
-			all:all,
-			alive:alive,
-			ratio:all/alive,
-			treeSize: treeSize
-		};
-	};
+	
 	
 	var reactToKeys = function(){
 		return !snapshots.isShowing() && !input.isOpen() && !scriptEditor.isOpen() && !runScript.isOpen();
@@ -140,7 +133,7 @@ requirejs([
 		},{
 			key: "r",
 			action:function(){
-				snapshots.add(position.getAllAlive());
+				snapshots.add(hashLife.getAllAlive());
 			}
 		},{
 			key:"c",

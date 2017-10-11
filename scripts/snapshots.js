@@ -1,9 +1,9 @@
-define(["topRightButtons","body","position","c","menu","rle","input","animation","requireElement"],function(topRightButtons, body, position, c, menu, rle, input, animation, requireElement){
+define(["topRightButtons","body","c","menu","rle","input","animation","requireElement","tree/hashlife"],function(topRightButtons, body, c, menu, rle, input, animation, requireElement, hashLife){
 	var clipboard = (function(){
 		var relativePositions, removeMenuOption;
 		var paste = function(x, y){
 			relativePositions.map(function(p){
-				position.add(x + p.x,y + p.y);
+				hashLife.add(x + p.x,y + p.y);
 			});
 			c.drawAll();
 		};
@@ -66,7 +66,7 @@ define(["topRightButtons","body","position","c","menu","rle","input","animation"
 				var restore = function(){
 					animation.reset();
 					positions.map(function(p){
-						position.add(origMinX + p.x,origMinY + p.y);
+						hashLife.add(origMinX + p.x,origMinY + p.y);
 					});
 					c.drawAll();
 				};

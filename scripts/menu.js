@@ -1,7 +1,7 @@
-define(["coordinates","sender","requireElement"],function(coordinates, sender, requireElement){
+define(["sender","requireElement","position"],function(sender, requireElement, position){
 	var currentX, currentY;
 	var setCell = function(x, y){
-		var loc = coordinates.mousePositionToPositionLocation(x,y);
+		var loc = position.mousePositionToPositionLocation(x,y);
 		currentX = loc.x;
 		currentY = loc.y;
 	};
