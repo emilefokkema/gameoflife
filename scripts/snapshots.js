@@ -18,7 +18,7 @@ define(["topRightButtons","body","position","c","menu","rle","input","animation"
 		return {copy:copy};
 	})();
 
-	var snapshots = requireElement(document.getElementById("snapshots").innerHTML, function(container, closeButton, snapshotElement){
+	var snapshots = requireElement(document.getElementById("snapshots"), function(closeButton, snapshotElement){
 			var showing = false, count = 0;
 			var snapshotWidth = 120, snapshotHeight = 120;
 			var makeSnapshot = function(positions, forget){
@@ -92,24 +92,20 @@ define(["topRightButtons","body","position","c","menu","rle","input","animation"
 				showing = false;
 			};
 			closeButton.addEventListener('click',hide);
-			var attach = function(){
-				document.body.appendChild(container);
-			};
 			
 			var add = function(positions){
 				positions = positions.map(function(p){return {x:p.x,y:p.y};});
-				snapshotElement(function(s, s1, optionElement){
+				snapshotElement(function(canvas, optionElement){
+						var remove = this.remove;
 						var getSnapshotOption = function(name, toDo){
 							optionElement(function(option){
 									option.addEventListener('click',toDo);
 							},{name:name});
 						};
-						var canvas = document.createElement('canvas');
 						canvas.setAttribute('width',snapshotWidth);
 						canvas.setAttribute('height',snapshotHeight);
-						s1.appendChild(canvas);
 						var newSnapshot = makeSnapshot(positions, function(){
-							container.removeChild(s);
+							remove();
 							count--;
 							if(count == 0){
 								body.removeClass('show-snapshots');
@@ -163,7 +159,6 @@ define(["topRightButtons","body","position","c","menu","rle","input","animation"
 				add:add,
 				isShowing:function(){return showing;},
 				hide:hide,
-				attach:attach,
 				copy:clipboard.copy
 			};
 		});

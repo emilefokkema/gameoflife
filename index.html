@@ -92,17 +92,6 @@
 		</div>
 	</div>
 </script>
-<script type="text/template" id="snapshots">
-	<div id="1" class="snapshots">
-		<div id="2" class="button snapshot-close-button fa fa-close"></div>
-		<div template-id="3" id="1" class="snapshot">
-			<div id="2" class="snapshot-part"></div>
-			<div class="snapshot-part">
-				<div id="1" template-id="3" class="button snapshot-option fa $(name)"></div>
-			</div>
-		</div>
-	</div>
-</script>
 <script type="text/template" id="menu">
 	<div id="1" class="menu">
 		<div id="1" template-id="2" class="option">$(text)</div>
@@ -115,8 +104,19 @@
 	</div>
 </script>
 <script type="text/template" id="topRightButtons">
-	<div id="1" class="topright-buttons">
-		<div id="1" template-id="2" class="button $(className)"></div>
+	<div class="topright-buttons">
+		<div id="1" template-id="1" class="button $(className)"></div>
+	</div>
+</script>
+<script type="text/template" id="snapshots">
+	<div class="snapshots">
+		<div id="1" class="button snapshot-close-button fa fa-close"></div>
+		<div template-id="2" class="snapshot">
+			<div class="snapshot-part"><canvas id="1"/></div>
+			<div class="snapshot-part">
+				<div id="1" template-id="2" class="button snapshot-option fa $(name)"></div>
+			</div>
+		</div>
 	</div>
 </script>
 <script data-main="scripts/main" src="require.js"></script>

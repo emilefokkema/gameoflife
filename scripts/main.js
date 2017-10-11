@@ -113,8 +113,6 @@ requirejs([
 		c.save();
 	});
 	
-	topRightButtons.attach();
-	snapshots.attach();
 	input(function(){},"Click on a cell to bring it to life. Hit the space bar to get things moving, or to pause them if they already are. Adjust the slider to make them move faster or slower. Shift-click on a cell to make a selection, and then right-click on the selection to find some options.");
 	readHash();
 	c.drawAll();
