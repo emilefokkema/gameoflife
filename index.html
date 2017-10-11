@@ -3,13 +3,12 @@
 	<title>Conway's Game of Life</title>
 	<LINK href="font-awesome.min.css" rel="stylesheet" type="text/css" />
 	<LINK href="gameoflife.css" rel="stylesheet" type="text/css" />
-	
+	<LINK href="codemirror.css" rel="stylesheet" type="text/css" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 </head>
 <body style="padding:0px;margin:0px"></body>
-<script src="require-element.min.js"></script>
 <script type="text/template" id="settings">
 	<div id="1" class="dialog settings">
 		<div class="content outer">
@@ -39,6 +38,60 @@
 		</div>
 	</div>
 </script>
+<script type="text/template" id="scriptEditor">
+	<div id="1" class="dialog lifescript">
+		<div class="content outer">
+			<div class="inner">
+				<div>Title:<input type="text" id="5"/></div>
+				<div>
+					<div class="signature" template-id="4">
+						<div>
+							<div>
+								<span class="argument-definition argument-name">alive</span><span class="argument-definition argument-value">(x,y) : void</span>
+							</div>
+							<div template-id="2">
+								<span class="argument-definition argument-name">
+									<input type="text" id="1"/>
+								</span>
+							</div>
+						</div>
+						<input type="button" value="add parameter" id="3"/>
+						<div>
+							<div class="function-expression">function(alive</div>
+							<div class="function-expression wrapper"><div class="function-expression" template-id="1" id="1"></div></div>
+							<div class="function-expression">){</div>
+						</div>
+					</div>
+				</div>
+				<textarea id="2"></textarea>}
+			</div>
+		</div>
+		<div class="buttons outer">
+			<div class="inner">
+				<input id="3" type="button" value="Save"/>
+				<input id="6" type="button" value="Close"/>
+			</div>
+		</div>
+	</div>
+</script>
+<script type="text/template" id="runScript">
+	<div id="1" class="dialog run-script">
+		<div class="content outer">
+			<div class="inner">
+				<div template-id="3">
+					<div template-id="1">
+						<span>$(name):</span><span><input type="text" id="1"/></span>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="buttons outer">
+			<div class="inner">
+				<input id="2" type="button" value="OK"/>
+			</div>
+		</div>
+	</div>
+</script>
 <script type="text/template" id="snapshots">
 	<div id="1" class="snapshots">
 		<div id="2" class="button snapshot-close-button fa fa-close"></div>
@@ -53,6 +106,7 @@
 <script type="text/template" id="menu">
 	<div id="1" class="menu">
 		<div id="1" template-id="2" class="option">$(text)</div>
+		<div id="1" template-id="3" class="option">$(text)</div>
 	</div>
 </script>
 <script type="text/template" id="controls">

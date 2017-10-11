@@ -1,4 +1,4 @@
-define(["topRightButtons","body","position","c","menu","rle","input","animation"],function(topRightButtons, body, position, c, menu, rle, input, animation){
+define(["topRightButtons","body","position","c","menu","rle","input","animation","requireElement"],function(topRightButtons, body, position, c, menu, rle, input, animation, requireElement){
 	var clipboard = (function(){
 		var relativePositions, removeMenuOption;
 		var paste = function(x, y){

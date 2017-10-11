@@ -1,4 +1,40 @@
-requirejs(["topRightButtons","menu","coordinates","c","selection","position","snapshots","body","input","settings","rle","counter","speedRange","animation","controls"], function(topRightButtons, menu, coordinates, c, selection, position, snapshots, body, input, settings, rle, counter, speedRange, animation, controls){
+requirejs([
+	"topRightButtons",
+	"menu",
+	"coordinates",
+	"c",
+	"selection",
+	"position",
+	"snapshots",
+	"body",
+	"input",
+	"settings",
+	"rle",
+	"counter",
+	"speedRange",
+	"animation",
+	"controls",
+	"lifescript",
+	"script-editor",
+	"run-script"], function(
+		topRightButtons, 
+		menu, 
+		coordinates, 
+		c, 
+		selection, 
+		position, 
+		snapshots, 
+		body, 
+		input, 
+		settings, 
+		rle, 
+		counter, 
+		speedRange, 
+		animation, 
+		controls, 
+		lifescript, 
+		scriptEditor,
+		runScript){
 	
 	var parsePlaintext = function(text, occupy){
 			var lines = text.match(/[\.O]+/g);
@@ -76,6 +112,7 @@ requirejs(["topRightButtons","menu","coordinates","c","selection","position","sn
 	menu.addOption('save image',function(){
 		c.save();
 	});
+	
 	topRightButtons.attach();
 	snapshots.attach();
 	input(function(){},"Click on a cell to bring it to life. Hit the space bar to get things moving, or to pause them if they already are. Adjust the slider to make them move faster or slower. Shift-click on a cell to make a selection, and then right-click on the selection to find some options.");
@@ -92,10 +129,10 @@ requirejs(["topRightButtons","menu","coordinates","c","selection","position","sn
 			treeSize: treeSize
 		};
 	};
-	window.alive = function(x,y){
-		position.add(x,y);
+	
+	var reactToKeys = function(){
+		return !snapshots.isShowing() && !input.isOpen() && !scriptEditor.isOpen() && !runScript.isOpen();
 	};
-
 	var shortcuts = [
 		{
 			key:"s",
@@ -124,6 +161,9 @@ requirejs(["topRightButtons","menu","coordinates","c","selection","position","sn
 		}
 	];
 	window.addEventListener('keydown',function(e){
+		if(!reactToKeys()){
+			return;
+		}
 		shortcuts.map(function(s){
 			if(e.key == s.key){
 				s.action();
@@ -131,7 +171,7 @@ requirejs(["topRightButtons","menu","coordinates","c","selection","position","sn
 		});
 	});
 	window.addEventListener('wheel',function(e){
-		if(snapshots.isShowing()){
+		if(!reactToKeys()){
 			return;
 		}
 		coordinates.zoom(Math.pow(2, -e.deltaY / 200), e.clientX, e.clientY);

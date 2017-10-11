@@ -1,4 +1,4 @@
-define([],function(){
+define(["requireElement"],function(requireElement){
 	var interpolation = function(y0, x1, c){
 		var a = y0 / (1 - Math.exp(-c*x1)), b = y0 - a;
 		return function(x){

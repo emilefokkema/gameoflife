@@ -1,4 +1,4 @@
-define(["body","position","topRightButtons"],function(body, position, topRightButtons){
+define(["body","position","topRightButtons", "requireElement"],function(body, position, topRightButtons, requireElement){
 	return requireElement(document.getElementById("settings").innerHTML, function(div, number, closeButton){
 			var open = false;
 
