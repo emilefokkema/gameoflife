@@ -1,11 +1,4 @@
 define(["tree/hashlife","coordinates"],function(hashLife, coordinates){
-
-	var fillRect = function(p, context){
-		var rect = coordinates.getScreenRect(p.x,p.y,1,1);
-		context.fillRect(rect.x, rect.y, rect.width, rect.height);
-	};
-
-	
 	var drawHorizontalLine = function(context, y, w){
 		context.beginPath();
 		context.moveTo(0,y);
@@ -43,12 +36,12 @@ define(["tree/hashlife","coordinates"],function(hashLife, coordinates){
 	};
 	coordinates.onDraw(function(context){
 		hashLife.draw(function(p){
-			fillRect(p, context);
+			var rect = coordinates.getScreenRect(p.x,p.y,1,1);
+			context.fillRect(rect.x, rect.y, rect.width, rect.height);
 		});
 		drawLines(context);
 	});
 	return {
-		fillRect:fillRect,
 		mousePositionToPositionLocation:function(x,y){
 			var loc = coordinates.screenPositionToPoint(x,y);
 			return {

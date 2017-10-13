@@ -7,21 +7,24 @@ define(["menu","coordinates","c","position","snapshots","rle","input","tree/hash
 		return coordinates.positionToMousePosition({x:maxX + 1,y:maxY + 1});
 	};
 	var makeDraggerMaker = function(mX, mY, howToDrag){
+		var getScreenPoint = function(){return coordinates.positionToMousePosition({x:mX,y:mY});};
 		var isClose = function(x,y){
-			var d = Math.sqrt(Math.pow(mX - x, 2) + Math.pow(mY - y, 2));
+			var sp = getScreenPoint();
+			var d = Math.sqrt(Math.pow(sp.x - x, 2) + Math.pow(sp.y - y, 2));
 			return d < 10;
 		};
 		var draw = function(context){
+			var sp = getScreenPoint();
 			context.save();
 			context.fillStyle = '#00f';
 			context.beginPath();
-			context.arc(mX, mY, 4, 0, 2*Math.PI);
+			context.arc(sp.x, sp.y, 4, 0, 2*Math.PI);
 			context.fill();
 			context.restore();
 		};
 		var make = function(){
 			var drag = function(x,y){
-				var pos = position.mousePositionToPositionLocation(x,y);
+				var pos = {x:x,y:y};
 				howToDrag(pos);
 				c.drawAll();
 			};
@@ -35,63 +38,63 @@ define(["menu","coordinates","c","position","snapshots","rle","input","tree/hash
 			make:make
 		};
 	};
-	var getDraggerMakers = function(minLoc, maxLoc){
+	var getDraggerMakers = function(){
 		var result = [];
 		result.push(makeDraggerMaker(
-			(minLoc.x + maxLoc.x)/2,
-			minLoc.y,
+			(minX + maxX + 1)/2,
+			minY,
 			function(pos){
 				minY = Math.min(maxY, pos.y);
 			}
 		));
 		result.push(makeDraggerMaker(
-			minLoc.x,
-			(minLoc.y + maxLoc.y) / 2,
+			minX,
+			(minY + maxY + 1) / 2,
 			function(pos){
 				minX = Math.min(maxX, pos.x);
 			}
 		));
 		result.push(makeDraggerMaker(
-			(minLoc.x + maxLoc.x)/2,
-			maxLoc.y,
+			(minX + maxX + 1) / 2,
+			maxY + 1,
 			function(pos){
 				maxY = Math.max(minY, pos.y);
 			}
 		));
 		result.push(makeDraggerMaker(
-			maxLoc.x,
-			(minLoc.y + maxLoc.y) / 2,
+			maxX + 1,
+			(minY + maxY + 1) / 2,
 			function(pos){
 				maxX = Math.max(minX, pos.x);
 			}
 		));
 		result.push(makeDraggerMaker(
-			minLoc.x,
-			minLoc.y,
+			minX,
+			minY,
 			function(pos){
 				minX = Math.min(maxX, pos.x);
 				minY = Math.min(maxY, pos.y);
 			}
 		));
 		result.push(makeDraggerMaker(
-			minLoc.x,
-			maxLoc.y,
+			minX,
+			maxY + 1,
 			function(pos){
 				minX = Math.min(maxX, pos.x);
 				maxY = Math.max(minY, pos.y);
 			}
 		));
 		result.push(makeDraggerMaker(
-			maxLoc.x,
-			minLoc.y,
+			maxX + 1,
+			minY,
 			function(pos){
 				maxX = Math.max(minX, pos.x);
 				minY = Math.min(maxY, pos.y);
 			}
 		));
 		result.push(makeDraggerMaker(
-			maxLoc.x,
-			maxLoc.y,
+			maxX + 1,
+			maxY + 1,
 			function(pos){
 				maxX = Math.max(minX, pos.x);
 				maxY = Math.max(minY, pos.y);
@@ -108,10 +111,9 @@ define(["menu","coordinates","c","position","snapshots","rle","input","tree/hash
 		var width = maxX - minX;
 		var height = maxY - minY;
 		var drag = function(x,y){
-			var toPos = position.mousePositionToPositionLocation(x, y);
-			minX = toPos.x - relativePositionX;
+			minX = x - relativePositionX;
 			maxX = minX + width;
-			minY = toPos.y - relativePositionY;
+			minY = y - relativePositionY;
 			maxY = minY + height;
 		};
 		var getNewPositions = function(){
@@ -121,8 +123,8 @@ define(["menu","coordinates","c","position","snapshots","rle","input","tree/hash
 			context.save();
 			context.fillStyle = 'rgba(0,0,0,0.5)';
 			getNewPositions().map(function(p){
-				
-				position.fillRect(p, context);
+				var rect = coordinates.getScreenRect(p.x,p.y,1,1);
+				context.fillRect(rect.x, rect.y, rect.width, rect.height);
 			});
 		};
 		var end = function(){
@@ -137,7 +139,7 @@ define(["menu","coordinates","c","position","snapshots","rle","input","tree/hash
 		};
 	};
 	var makeDragger = function(mouseX, mouseY){
-		var draggerMakers = getDraggerMakers(getMinLoc(), getMaxLoc());
+		var draggerMakers = getDraggerMakers();
 		for(var i=0;i<draggerMakers.length;i++){
 			var draggerMaker = draggerMakers[i];
 			if(draggerMaker.isClose(mouseX, mouseY)){
@@ -229,20 +231,6 @@ define(["menu","coordinates","c","position","snapshots","rle","input","tree/hash
 		}
 		!removeMenuOption && (removeMenuOption = addMenuOptions());
 	};
-	var draw = function(context){
-		if(!present){return;}
-		context.save();
-		context.strokeStyle = '#00f';
-		context.lineWidth = 2;
-		var minLoc = getMinLoc();
-		var maxLoc = getMaxLoc();
-		context.strokeRect(minLoc.x, minLoc.y, maxLoc.x - minLoc.x, maxLoc.y - minLoc.y);
-		getDraggerMakers(minLoc, maxLoc).map(function(d){d.draw(context);});
-		if(dragger && dragger.draw){
-			dragger.draw(context);
-		}
-		context.restore();
-	};
 	var clear = function(){
 		present = false;
 		dragger = null;
@@ -266,19 +254,33 @@ define(["menu","coordinates","c","position","snapshots","rle","input","tree/hash
 		return pos.x >= minX && pos.x <= maxX && pos.y >= minY && pos.y <= maxY;
 	};
 	addSelectingOption();
-	c.onDraw(draw);
-	c.addEventListener('positiondragmove',function(e){
+	coordinates.onDraw(function(context){
+		if(!present){return;}
+		context.save();
+		context.strokeStyle = '#00f';
+		context.lineWidth = 2;
+		var minLoc = getMinLoc();
+		var maxLoc = getMaxLoc();
+		context.strokeRect(minLoc.x, minLoc.y, maxLoc.x - minLoc.x, maxLoc.y - minLoc.y);
+		getDraggerMakers().map(function(d){d.draw(context);});
+		if(dragger && dragger.draw){
+			dragger.draw(context);
+		}
+		context.restore();
+	});
+	coordinates.onDragMove(function(toX, toY){
 		if(dragger){
-			dragger.drag(e.detail.toX, e.detail.toY);
+
+			dragger.drag(Math.floor(toX), Math.floor(toY));
 		}
 	});
+	
 	c.addEventListener('positiondragend',function(){
 		dragger && dragger.end && dragger.end();
 		dragger = null;
 	});
 	return {
 		select:select,
-		draw:draw,
 		clear:clear,
 		moveLeft:function(){
 			moveInDirection(direction.LEFT);

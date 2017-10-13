@@ -168,6 +168,12 @@ define(["c","sender"],function(c, sender){
 		getViewBox:getViewBox,
 		getNy:function(){return ny;},
 		beginDrag:beginDrag,
+		onDragMove:function(f){
+			c.addEventListener('positiondragmove', function(e){
+				var pos = screenPositionToPoint(e.detail.toX, e.detail.toY);
+				f(pos.x, pos.y);
+			});
+		},
 		zoom:zoom,
 		onDraw:function(f){onDraw.add(f);},
 		onDragStart:function(f){onDragStart.add(f);},
