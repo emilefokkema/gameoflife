@@ -1,4 +1,4 @@
-define(["menu","coordinates","c","position","snapshots","rle","input","tree/hashlife"],function(menu,coordinates,c,position,snapshots,rle,input, hashLife){
+define(["menu","coordinates","c","snapshots","rle","input","tree/hashlife"],function(menu,coordinates,c,snapshots,rle,input, hashLife){
 	var present = false, removeMenuOption = null, removeSelectOption = null, minX, minY, maxX, maxY, dragger;
 	var getMinLoc = function(){
 		return coordinates.positionToMousePosition({x:minX,y:minY});
@@ -7,14 +7,8 @@ define(["menu","coordinates","c","position","snapshots","rle","input","tree/hash
 		return coordinates.positionToMousePosition({x:maxX + 1,y:maxY + 1});
 	};
 	var makeDraggerMaker = function(mX, mY, howToDrag){
-		var getScreenPoint = function(){return coordinates.positionToMousePosition({x:mX,y:mY});};
-		var isClose = function(x,y){
-			var sp = getScreenPoint();
-			var d = Math.sqrt(Math.pow(sp.x - x, 2) + Math.pow(sp.y - y, 2));
-			return d < 10;
-		};
 		var draw = function(context){
-			var sp = getScreenPoint();
+			var sp = coordinates.positionToMousePosition({x:mX,y:mY});
 			context.save();
 			context.fillStyle = '#00f';
 			context.beginPath();
@@ -33,9 +27,10 @@ define(["menu","coordinates","c","position","snapshots","rle","input","tree/hash
 			};
 		};
 		return {
-			isClose:isClose,
 			draw:draw,
-			make:make
+			make:make,
+			x:mX,
+			y:mY
 		};
 	};
 	var getDraggerMakers = function(){
@@ -102,18 +97,20 @@ define(["menu","coordinates","c","position","snapshots","rle","input","tree/hash
 		));
 		return result;
 	};
-	var makeMover = function(mouseX, mouseY){
+	var makeMover = function(x, y){
+		x = Math.floor(x);
+		y = Math.floor(y);
 		var positions = getPositions();
 		var relativePositions = positions.map(function(p){return {x:p.x - minX,y:p.y-minY};});
-		var startPos = position.mousePositionToPositionLocation(mouseX, mouseY);
+		var startPos = {x:x,y:y};
 		var relativePositionX = startPos.x - minX;
 		var relativePositionY = startPos.y - minY;
 		var width = maxX - minX;
 		var height = maxY - minY;
-		var drag = function(x,y){
-			minX = x - relativePositionX;
+		var drag = function(xx,yy){
+			minX = xx - relativePositionX;
 			maxX = minX + width;
-			minY = y - relativePositionY;
+			minY = yy - relativePositionY;
 			maxY = minY + height;
 		};
 		var getNewPositions = function(){
@@ -138,16 +135,16 @@ define(["menu","coordinates","c","position","snapshots","rle","input","tree/hash
 			draw:draw
 		};
 	};
-	var makeDragger = function(mouseX, mouseY){
+	var makeDragger = function(x, y){
 		var draggerMakers = getDraggerMakers();
 		for(var i=0;i<draggerMakers.length;i++){
 			var draggerMaker = draggerMakers[i];
-			if(draggerMaker.isClose(mouseX, mouseY)){
+			if(coordinates.areClose(draggerMakers[i].x, draggerMakers[i].y, x, y)){
 				return draggerMaker.make();
 			}
 		}
-		if(containsMousePosition(mouseX, mouseY)){
-			return makeMover(mouseX, mouseY);
+		if(containsPosition(x, y)){
+			return makeMover(x, y);
 		}
 	};
 	var direction = {UP:0,DOWN:1,LEFT:2,RIGHT:3};
@@ -210,6 +207,8 @@ define(["menu","coordinates","c","position","snapshots","rle","input","tree/hash
 		};
 	};
 	var select = function(x,y){
+		x = Math.floor(x);
+		y = Math.floor(y);
 		if(!present){
 			minX = maxX = x;
 			minY = maxY = y;
@@ -249,12 +248,11 @@ define(["menu","coordinates","c","position","snapshots","rle","input","tree/hash
 			remove();
 		});
 	};
-	var containsMousePosition = function(mouseX, mouseY){
-		var pos = position.mousePositionToPositionLocation(mouseX, mouseY);
-		return pos.x >= minX && pos.x <= maxX && pos.y >= minY && pos.y <= maxY;
+	var containsPosition = function(x, y){
+		return x >= minX && x <= maxX && y >= minY && y <= maxY;
 	};
 	addSelectingOption();
-	coordinates.onDraw(function(context){
+	var draw = function(context){
 		if(!present){return;}
 		context.save();
 		context.strokeStyle = '#00f';
@@ -267,7 +265,8 @@ define(["menu","coordinates","c","position","snapshots","rle","input","tree/hash
 			dragger.draw(context);
 		}
 		context.restore();
-	});
+	};
+	
 	coordinates.onDragMove(function(toX, toY){
 		if(dragger){
 
@@ -294,10 +293,11 @@ define(["menu","coordinates","c","position","snapshots","rle","input","tree/hash
 		moveDown:function(){
 			moveInDirection(direction.DOWN);
 		},
+		draw:draw,
 		isPresent:function(){return present;},
-		containsMousePosition:containsMousePosition,
-		handleDragStart:function(mouseX, mouseY){
-			dragger = makeDragger(mouseX, mouseY);
+		containsPosition:containsPosition,
+		handleDragStart:function(x, y){
+			dragger = makeDragger(x, y);
 			return !!dragger;
 		}
 	};

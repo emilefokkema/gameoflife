@@ -1,4 +1,4 @@
-define(["tree/hashlife","coordinates"],function(hashLife, coordinates){
+define(["tree/hashlife","coordinates","selection"],function(hashLife, coordinates, selection){
 	var drawHorizontalLine = function(context, y, w){
 		context.beginPath();
 		context.moveTo(0,y);
@@ -40,14 +40,6 @@ define(["tree/hashlife","coordinates"],function(hashLife, coordinates){
 			context.fillRect(rect.x, rect.y, rect.width, rect.height);
 		});
 		drawLines(context);
+		selection.draw(context);
 	});
-	return {
-		mousePositionToPositionLocation:function(x,y){
-			var loc = coordinates.screenPositionToPoint(x,y);
-			return {
-				x:Math.floor(loc.x),
-				y:Math.floor(loc.y)
-			};
-		}
-	};
 });

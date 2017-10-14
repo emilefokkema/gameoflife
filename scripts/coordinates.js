@@ -5,6 +5,8 @@ define(["c","sender"],function(c, sender){
 		xShift = 0,
 		yShift = 0,
 		onDraw = sender(),
+		onClick = sender(),
+		onContextMenu = sender(function(a,b){return a && b}, true),
 		onDragStart = sender(function(a,b){return a && b}, true),
 		setSize = function(s){
 			size = s;
@@ -132,6 +134,11 @@ define(["c","sender"],function(c, sender){
 				height:height * size
 			};
 		};
+	c.addEventListener('click',function(e){
+		var pos = screenPositionToPoint(e.clientX, e.clientY);
+		pos.shiftKey = e.shiftKey;
+		onClick(pos);
+	});
 	c.addEventListener('positiondragmove',function(e){
 		moveDrag(e.detail.toX, e.detail.toY);
 		c.drawAll();
@@ -141,7 +148,8 @@ define(["c","sender"],function(c, sender){
 		c.drawAll();
 	});
 	c.addEventListener('positiondragstart',function(e){
-		if(onDragStart(e)){
+		var pos = screenPositionToPoint(e.detail.x, e.detail.y);
+		if(onDragStart(pos.x, pos.y)){
 			beginDrag(e.detail.x, e.detail.y);
 		}
 	});
@@ -158,8 +166,17 @@ define(["c","sender"],function(c, sender){
 	c.onDraw(function(context){
 		onDraw(context);
 	});
+	c.addEventListener('contextmenu',function(e){
+		var pos = screenPositionToPoint(e.clientX, e.clientY);
+		return onContextMenu(e.clientX, e.clientY, pos.x, pos.y);
+	});
 	setSize(15);
-
+	var areClose = function(x1, y1, x2, y2){
+		var screenPoint1 = positionToMousePosition({x:x1,y:y1});
+		var screenPoint2 = positionToMousePosition({x:x2,y:y2});
+		var d = Math.sqrt(Math.pow(screenPoint1.x - screenPoint2.x,2) + Math.pow(screenPoint1.y - screenPoint2.y,2));
+		return d < 15;
+	};
 	return {
 		w:w,
 		h:h,
@@ -176,8 +193,11 @@ define(["c","sender"],function(c, sender){
 		},
 		zoom:zoom,
 		onDraw:function(f){onDraw.add(f);},
+		onClick:function(f){onClick.add(f);},
+		onContextMenu:function(f){onContextMenu.add(f);},
 		onDragStart:function(f){onDragStart.add(f);},
 		screenPositionToPoint:screenPositionToPoint,
-		positionToMousePosition:positionToMousePosition
+		positionToMousePosition:positionToMousePosition,
+		areClose:areClose
 	};
 })

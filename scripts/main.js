@@ -58,16 +58,15 @@ requirejs([
 			});
 		}
 	
-	coordinates.onDragStart(function(e){
-		if(!selection.isPresent() || !selection.handleDragStart(e.detail.x, e.detail.y)){
+	coordinates.onDragStart(function(x, y){
+		if(!selection.isPresent() || !selection.handleDragStart(x, y)){
 			return true;
 		}
 		return false;
 	});
-	c.addEventListener('click',function(e){
-		if(e.shiftKey){
-			var loc = position.mousePositionToPositionLocation(e.clientX, e.clientY);
-			selection.select(loc.x, loc.y);
+	coordinates.onClick(function(pos){
+		if(pos.shiftKey){
+			selection.select(pos.x, pos.y);
 			c.drawAll();
 			return;
 		}
@@ -82,20 +81,19 @@ requirejs([
 		if(selection.isPresent()){
 			selection.clear();
 		}else{
-			var p = position.mousePositionToPositionLocation(e.clientX, e.clientY);
-			
-			if(hashLife.contains(p.x,p.y)){
-				hashLife.remove(p.x,p.y);
+			if(hashLife.contains(pos.x, pos.y)){
+				hashLife.remove(pos.x, pos.y);
 			}else{
-				hashLife.add(p.x,p.y);
+				hashLife.add(pos.x, pos.y);
 			}
 		}
 		c.drawAll();
 	});
-	c.addEventListener('contextmenu',function(e){
-		menu.show(e.clientX, e.clientY);
+	coordinates.onContextMenu(function(screenX, screenY, posX, posY){
+		menu.show(screenX, screenY, {x:posX,y:posY});
 		return false;
 	});
+	
 	menu.addOption('parse RLE',function(x,y){
 		input(function(v){
 			if(!v){return;}
