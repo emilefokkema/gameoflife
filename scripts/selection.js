@@ -1,18 +1,11 @@
-define(["menu","coordinates","c","snapshots","rle","input","tree/hashlife"],function(menu,coordinates,c,snapshots,rle,input, hashLife){
+define(["menu","coordinates","snapshots","rle","input","tree/hashlife"],function(menu,coordinates,snapshots,rle,input, hashLife){
 	var present = false, removeMenuOption = null, removeSelectOption = null, minX, minY, maxX, maxY, dragger;
-	var getMinLoc = function(){
-		return coordinates.positionToMousePosition({x:minX,y:minY});
-	};
-	var getMaxLoc = function(){
-		return coordinates.positionToMousePosition({x:maxX + 1,y:maxY + 1});
-	};
 	var makeDraggerMaker = function(mX, mY, howToDrag){
 		var draw = function(context){
-			var sp = coordinates.positionToMousePosition({x:mX,y:mY});
 			context.save();
 			context.fillStyle = '#00f';
 			context.beginPath();
-			context.arc(sp.x, sp.y, 4, 0, 2*Math.PI);
+			context.arc(mX, mY, 0.25, 0, 2*Math.PI);
 			context.fill();
 			context.restore();
 		};
@@ -20,7 +13,7 @@ define(["menu","coordinates","c","snapshots","rle","input","tree/hashlife"],func
 			var drag = function(x,y){
 				var pos = {x:x,y:y};
 				howToDrag(pos);
-				c.drawAll();
+				coordinates.drawAll();
 			};
 			return {
 				drag:drag
@@ -120,14 +113,13 @@ define(["menu","coordinates","c","snapshots","rle","input","tree/hashlife"],func
 			context.save();
 			context.fillStyle = 'rgba(0,0,0,0.5)';
 			getNewPositions().map(function(p){
-				var rect = coordinates.getScreenRect(p.x,p.y,1,1);
-				context.fillRect(rect.x, rect.y, rect.width, rect.height);
+				context.fillRect(p.x,p.y,1,1);
 			});
 		};
 		var end = function(){
 			positions.map(function(p){hashLife.remove(p.x, p.y);});
 			getNewPositions().map(function(p){hashLife.add(p.x,p.y);});
-			c.drawAll();
+			coordinates.drawAll();
 		};
 		return {
 			drag:drag,
@@ -171,13 +163,13 @@ define(["menu","coordinates","c","snapshots","rle","input","tree/hashlife"],func
 		remove.push(menu.addOption('copy',function(x,y){
 			var positions = getPositions();
 			copyPositions(positions);
-			c.drawAll();
+			coordinates.drawAll();
 		}));
 		remove.push(menu.addOption('cut',function(){
 			var positions = getPositions();
 			copyPositions(positions);
 			positions.map(function(p){hashLife.remove(p.x, p.y);});
-			c.drawAll();
+			coordinates.drawAll();
 		}));
 		remove.push(menu.addOption('alive', function(){
 			for(var x=minX;x<=maxX;x++){
@@ -185,11 +177,11 @@ define(["menu","coordinates","c","snapshots","rle","input","tree/hashlife"],func
 					hashLife.add(x,y);
 				}
 			}
-			c.drawAll();
+			coordinates.drawAll();
 		}));
 		remove.push(menu.addOption('dead', function(){
 			getPositions().map(function(p){hashLife.remove(p.x, p.y);});
-			c.drawAll();
+			coordinates.drawAll();
 		}));
 		remove.push(menu.addOption('random', function(){
 			for(var x=minX;x<=maxX;x++){
@@ -199,7 +191,7 @@ define(["menu","coordinates","c","snapshots","rle","input","tree/hashlife"],func
 					}
 				}
 			}
-			c.drawAll();
+			coordinates.drawAll();
 		}));
 		return function(){
 			remove.map(function(f){f();});
@@ -244,7 +236,7 @@ define(["menu","coordinates","c","snapshots","rle","input","tree/hashlife"],func
 			var height = Math.floor(coordinates.getNy() / 5);
 			select(x,y);
 			select(x + width, y + height);
-			c.drawAll();
+			coordinates.drawAll();
 			remove();
 		});
 	};
@@ -257,9 +249,7 @@ define(["menu","coordinates","c","snapshots","rle","input","tree/hashlife"],func
 		context.save();
 		context.strokeStyle = '#00f';
 		context.lineWidth = 2;
-		var minLoc = getMinLoc();
-		var maxLoc = getMaxLoc();
-		context.strokeRect(minLoc.x, minLoc.y, maxLoc.x - minLoc.x, maxLoc.y - minLoc.y);
+		context.strokeRect(minX, minY, maxX - minX + 1, maxY - minY + 1);
 		getDraggerMakers().map(function(d){d.draw(context);});
 		if(dragger && dragger.draw){
 			dragger.draw(context);
@@ -274,7 +264,7 @@ define(["menu","coordinates","c","snapshots","rle","input","tree/hashlife"],func
 		}
 	});
 	
-	c.addEventListener('positiondragend',function(){
+	coordinates.onDragEnd(function(){
 		dragger && dragger.end && dragger.end();
 		dragger = null;
 	});

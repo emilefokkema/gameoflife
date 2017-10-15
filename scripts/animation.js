@@ -1,4 +1,4 @@
-define(["counter","speedRange","tree/hashlife","c","body"], function(counter,speedRange,hashLife, c, body){
+define(["counter","speedRange","tree/hashlife","coordinates","body"], function(counter,speedRange,hashLife, coordinates, body){
 	speedRange.onInput(function(l){
 		intervalLength = l;
 	});
@@ -24,7 +24,7 @@ define(["counter","speedRange","tree/hashlife","c","body"], function(counter,spe
 			body.addClass('going');
 			going = true;
 			var afterStep = function(){
-				c.drawAll();
+				coordinates.drawAll();
 				window.setTimeout(function(){
 					if(going){
 						doStep(afterStep);
@@ -38,7 +38,7 @@ define(["counter","speedRange","tree/hashlife","c","body"], function(counter,spe
 			hashLife.vacateAll();
 			stepCount = 0;
 			setCounter();
-			c.drawAll();
+			coordinates.drawAll();
 		};
 	setCounter();
 	return {
@@ -47,7 +47,7 @@ define(["counter","speedRange","tree/hashlife","c","body"], function(counter,spe
 		reset:reset,
 		doStep:function(){
 			doStep();
-			c.drawAll();
+			coordinates.drawAll();
 			setCounter();
 		},
 		isGoing:function(){return going;}

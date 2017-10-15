@@ -34,12 +34,11 @@ define(["tree/hashlife","coordinates","selection"],function(hashLife, coordinate
 		}
 		context.restore();
 	};
-	coordinates.onDraw(function(context){
+	coordinates.onDraw(function(context, contextWrapper){
 		hashLife.draw(function(p){
-			var rect = coordinates.getScreenRect(p.x,p.y,1,1);
-			context.fillRect(rect.x, rect.y, rect.width, rect.height);
+			contextWrapper.fillRect(p.x,p.y,1,1);
 		});
 		drawLines(context);
-		selection.draw(context);
+		selection.draw(contextWrapper);
 	});
 });

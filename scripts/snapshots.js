@@ -1,11 +1,11 @@
-define(["topRightButtons","body","c","menu","rle","input","animation","requireElement","tree/hashlife"],function(topRightButtons, body, c, menu, rle, input, animation, requireElement, hashLife){
+define(["topRightButtons","body","coordinates","menu","rle","input","animation","requireElement","tree/hashlife"],function(topRightButtons, body, coordinates, menu, rle, input, animation, requireElement, hashLife){
 	var clipboard = (function(){
 		var relativePositions, removeMenuOption;
 		var paste = function(x, y){
 			relativePositions.map(function(p){
 				hashLife.add(x + p.x,y + p.y);
 			});
-			c.drawAll();
+			coordinates.drawAll();
 		};
 		var copy = function(_relativePositions, makeSnapshot){
 			relativePositions = _relativePositions;
@@ -68,7 +68,7 @@ define(["topRightButtons","body","c","menu","rle","input","animation","requireEl
 					positions.map(function(p){
 						hashLife.add(origMinX + p.x,origMinY + p.y);
 					});
-					c.drawAll();
+					coordinates.drawAll();
 				};
 				var copyToClipboard = function(){
 					clipboard.copy(positions);

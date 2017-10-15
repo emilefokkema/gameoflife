@@ -119,7 +119,7 @@ define(["sender"],function(sender){
 	};
 	var drawAll = function(){
 		clear();
-		onDraw(context);
+		onDraw();
 	};
 	canvas.addEventListener('click',function(e){
 		if(dragHappened){

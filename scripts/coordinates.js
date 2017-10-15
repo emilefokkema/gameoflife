@@ -1,11 +1,13 @@
-define(["c","sender"],function(c, sender){
+define(["c","sender","contextWrapper"],function(c, sender, contextWrapper){
 	var w = c.w,
 		h = c.h,
+		context = c.context,
 		size, nx, ny,
 		xShift = 0,
 		yShift = 0,
 		onDraw = sender(),
 		onClick = sender(),
+		onDragEnd = sender(),
 		onContextMenu = sender(function(a,b){return a && b}, true),
 		onDragStart = sender(function(a,b){return a && b}, true),
 		setSize = function(s){
@@ -133,7 +135,8 @@ define(["c","sender"],function(c, sender){
 				width:width * size,
 				height:height * size
 			};
-		};
+		},
+		cWrapper = contextWrapper(context, positionToMousePosition);
 	c.addEventListener('click',function(e){
 		var pos = screenPositionToPoint(e.clientX, e.clientY);
 		pos.shiftKey = e.shiftKey;
@@ -145,6 +148,7 @@ define(["c","sender"],function(c, sender){
 	});
 	c.addEventListener('positiondragend',function(){
 		endDrag();
+		onDragEnd();
 		c.drawAll();
 	});
 	c.addEventListener('positiondragstart',function(e){
@@ -163,8 +167,8 @@ define(["c","sender"],function(c, sender){
 	c.addEventListener('endzoom',function(e){
 		endZoom();
 	});
-	c.onDraw(function(context){
-		onDraw(context);
+	c.onDraw(function(){
+		onDraw(context, cWrapper);
 	});
 	c.addEventListener('contextmenu',function(e){
 		var pos = screenPositionToPoint(e.clientX, e.clientY);
@@ -192,12 +196,14 @@ define(["c","sender"],function(c, sender){
 			});
 		},
 		zoom:zoom,
+		drawAll:function(){c.drawAll();},
 		onDraw:function(f){onDraw.add(f);},
 		onClick:function(f){onClick.add(f);},
 		onContextMenu:function(f){onContextMenu.add(f);},
 		onDragStart:function(f){onDragStart.add(f);},
-		screenPositionToPoint:screenPositionToPoint,
+		onDragEnd:function(f){onDragEnd.add(f);},
 		positionToMousePosition:positionToMousePosition,
-		areClose:areClose
+		areClose:areClose,
+		save:function(){c.save();}
 	};
 })

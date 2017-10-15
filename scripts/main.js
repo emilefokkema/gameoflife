@@ -2,7 +2,6 @@ requirejs([
 	"topRightButtons",
 	"menu",
 	"coordinates",
-	"c",
 	"selection",
 	"position",
 	"tree/hashlife",
@@ -21,7 +20,6 @@ requirejs([
 		topRightButtons, 
 		menu, 
 		coordinates, 
-		c, 
 		selection, 
 		position,
 		hashLife, 
@@ -67,7 +65,7 @@ requirejs([
 	coordinates.onClick(function(pos){
 		if(pos.shiftKey){
 			selection.select(pos.x, pos.y);
-			c.drawAll();
+			coordinates.drawAll();
 			return;
 		}
 		if(menu.isOpen()){
@@ -87,7 +85,7 @@ requirejs([
 				hashLife.add(pos.x, pos.y);
 			}
 		}
-		c.drawAll();
+		coordinates.drawAll();
 	});
 	coordinates.onContextMenu(function(screenX, screenY, posX, posY){
 		menu.show(screenX, screenY, {x:posX,y:posY});
@@ -99,7 +97,7 @@ requirejs([
 			if(!v){return;}
 			hashLife.vacateAll();
 			rle.parse(v, function(xx,yy){hashLife.add(xx+x,yy+y);});
-			c.drawAll();
+			coordinates.drawAll();
 		});
 	});
 	menu.addOption('parse plaintext',function(x,y){
@@ -107,16 +105,16 @@ requirejs([
 			if(!v){return;}
 			hashLife.vacateAll();
 			parsePlaintext(v, function(xx,yy){hashLife.add(xx+x,yy+y);});
-			c.drawAll();
+			coordinates.drawAll();
 		});
 	});
 	menu.addOption('save image',function(){
-		c.save();
+		coordinates.save();
 	});
 	
 	input(function(){},"Click on a cell to bring it to life. Hit the space bar to get things moving, or to pause them if they already are. Adjust the slider to make them move faster or slower. Shift-click on a cell to make a selection, and then right-click on the selection to find some options.");
 	readHash();
-	c.drawAll();
+	coordinates.drawAll();
 	
 	
 	var reactToKeys = function(){
@@ -164,6 +162,6 @@ requirejs([
 			return;
 		}
 		coordinates.zoom(Math.pow(2, -e.deltaY / 200), e.clientX, e.clientY);
-		c.drawAll();
+		coordinates.drawAll();
 	});
 });
