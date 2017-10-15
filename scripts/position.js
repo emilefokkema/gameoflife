@@ -11,27 +11,38 @@ define(["tree/hashlife","coordinates","selection"],function(hashLife, coordinate
 		context.lineTo(x,h);
 		context.stroke();
 	};
-	var drawLines = function(context){
-		var viewBox = coordinates.getViewBox();
-		if(viewBox.width > 100){
-			return;
+	var integerYPoints = coordinates.getPointSet(function(viewBox){
+		var minY = Math.floor(viewBox.y);
+		var maxY = Math.ceil(minY + viewBox.height);
+		var result = [];
+		for(var y = minY; y <= maxY; y++){
+			result.push({x:0,y:y});
 		}
+		return result;
+	});
+	var integerXPoints = coordinates.getPointSet(function(viewBox){
+		var minX = Math.floor(viewBox.x);
+		var maxX = Math.ceil(minX + viewBox.width);
+		var result = [];
+		for(var x = minX; x <= maxX; x++){
+			result.push({x:x,y:0});
+		}
+		return result;
+	});
+	var drawLines = function(context){
 		context.save();
 		context.strokeStyle = '#ddd';
 		context.strokeWidth = 0.2;
-		var minX = Math.floor(viewBox.x);
-		var maxX = Math.ceil(minX + viewBox.width);
-		var minY = Math.floor(viewBox.y);
-		var maxY = Math.ceil(minY + viewBox.height);
+		
 		var screenPoint;
-		for(var x = minX; x <= maxX; x++){
-			screenPoint = coordinates.positionToMousePosition({x:x,y:0});
+		integerXPoints.map(function(p){
+			screenPoint = coordinates.positionToMousePosition(p);
 			drawVerticalLine(context, screenPoint.x, coordinates.h);
-		}
-		for(var y = minY; y <= maxY; y++){
-			screenPoint = coordinates.positionToMousePosition({x:0,y:y});
+		});
+		integerYPoints.map(function(p){
+			screenPoint = coordinates.positionToMousePosition(p);
 			drawHorizontalLine(context, screenPoint.y, coordinates.w);
-		}
+		});
 		context.restore();
 	};
 	coordinates.onDraw(function(context, contextWrapper){

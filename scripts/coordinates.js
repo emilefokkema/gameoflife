@@ -136,7 +136,15 @@ define(["c","sender","contextWrapper"],function(c, sender, contextWrapper){
 				height:height * size
 			};
 		},
-		cWrapper = contextWrapper(context, positionToMousePosition);
+		cWrapper = contextWrapper(context, positionToMousePosition),
+		getPointSet = function(constr){
+			var map = function(mapper){
+				return constr(getViewBox()).map(mapper);
+			};
+			return {
+				map:map
+			};
+		};
 	c.addEventListener('click',function(e){
 		var pos = screenPositionToPoint(e.clientX, e.clientY);
 		pos.shiftKey = e.shiftKey;
@@ -185,8 +193,7 @@ define(["c","sender","contextWrapper"],function(c, sender, contextWrapper){
 		w:w,
 		h:h,
 		getNx:function(){return nx;},
-		getScreenRect:getScreenRect,
-		getViewBox:getViewBox,
+		getPointSet:getPointSet,
 		getNy:function(){return ny;},
 		beginDrag:beginDrag,
 		onDragMove:function(f){
