@@ -96,16 +96,6 @@ define(["sender"],function(sender){
 			mapper(touchList.item(i));
 		}
 	};
-	var save = function(){
-		var url = canvas.toDataURL("image/png");
-		var a = document.createElement('a');
-		var event = new MouseEvent('click',{});
-		a.setAttribute('href',url);
-		a.setAttribute('download','gameoflife.png');
-		document.body.appendChild(a);
-		a.dispatchEvent(event);
-		document.body.removeChild(a);
-	};
 	var whiteBackground = function(){
 		context.save();
 		context.fillStyle = '#fff';
@@ -195,6 +185,6 @@ define(["sender"],function(sender){
 				canvas.addEventListener(name, handler);
 			}
 		},
-		save:save
+		toDataURL:function(){return canvas.toDataURL.apply(canvas, arguments);}
 	};
 });

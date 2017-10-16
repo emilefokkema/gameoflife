@@ -232,10 +232,8 @@ define(["menu","coordinates","snapshots","rle","input","tree/hashlife"],function
 	
 	var addSelectingOption = function(){
 		removeSelectOption = menu.addOption('select', function(x,y,remove){
-			var width = Math.floor(coordinates.getNx() / 5);
-			var height = Math.floor(coordinates.getNy() / 5);
 			select(x,y);
-			select(x + width, y + height);
+			select(x + 5, y + 5);
 			coordinates.drawAll();
 			remove();
 		});

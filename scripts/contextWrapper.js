@@ -1,5 +1,6 @@
 define([],function(){
-	var wrapper = function(context, positionToMousePosition, getViewBox, w, h){
+	var transformable = ["fillRect","arc"];
+	var wrapper = function(context, getViewBox, setTransform, resetTransform){
 		var constr = function(){};
 		var propertiesObj = {};
 		for(var pp in context){
@@ -18,25 +19,26 @@ define([],function(){
 				}
 			})(pp);
 		}
+		transformable.map(function(name){
+			propertiesObj[name] = {
+				value:function(){
+					setTransform();
+					context[name].apply(context,arguments);
+					resetTransform();
+				}
+			};
+		});
 		propertiesObj["strokeRect"] = {
 			value:function(x, y, width, height){
-				var mouseP1 = positionToMousePosition({x:x,y:y});
-				var mouseP2 = positionToMousePosition({x:x+width,y:y+height});
-				context.strokeRect(mouseP1.x, mouseP1.y, mouseP2.x - mouseP1.x, mouseP2.y - mouseP1.y);
-			}
-		};
-		propertiesObj["fillRect"] = {
-			value:function(x, y, width, height){
-				var mouseP1 = positionToMousePosition({x:x,y:y});
-				var mouseP2 = positionToMousePosition({x:x+width,y:y+height});
-				context.fillRect(mouseP1.x, mouseP1.y, mouseP2.x - mouseP1.x, mouseP2.y - mouseP1.y);
-			}
-		};
-		propertiesObj["arc"] = {
-			value:function(x, y, radius, startAngle, endAngle, anticlockwise){
-				var mouseP = positionToMousePosition({x:x,y:y});
-				var mouseR = positionToMousePosition({x:radius,y:0}).x - positionToMousePosition({x:0,y:0}).x;
-				context.arc(mouseP.x, mouseP.y, mouseR, startAngle, endAngle, anticlockwise);
+				setTransform();
+				context.beginPath();
+				context.moveTo(x,y);
+				context.lineTo(x+width,y);
+				context.lineTo(x+width,y+height);
+				context.lineTo(x,y+height);
+				context.closePath();
+				resetTransform();
+				context.stroke();
 			}
 		};
 		propertiesObj["mapPointSet"] = {
@@ -46,18 +48,22 @@ define([],function(){
 		};
 		propertiesObj["makeHorizontalLine"] = {
 			value:function(y){
-				var screenPoint = positionToMousePosition({x:0,y:y});
+				setTransform();
+				var viewBox = getViewBox();
 				context.beginPath();
-				context.moveTo(0,screenPoint.y);
-				context.lineTo(w,screenPoint.y);
+				context.moveTo(viewBox.x,y);
+				context.lineTo(viewBox.x + viewBox.width, y);
+				resetTransform();
 			}
 		};
 		propertiesObj["makeVerticalLine"] = {
 			value:function(x){
-				var screenPoint = positionToMousePosition({x:x,y:0});
+				setTransform();
+				var viewBox = getViewBox();
 				context.beginPath();
-				context.moveTo(screenPoint.x,0);
-				context.lineTo(screenPoint.x,h);
+				context.moveTo(x, viewBox.y);
+				context.lineTo(x, viewBox.y + viewBox.height);
+				resetTransform();
 			}
 		};
 		constr.prototype = Object.create({},propertiesObj);

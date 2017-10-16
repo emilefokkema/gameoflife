@@ -136,8 +136,14 @@ define(["c","sender","contextWrapper"],function(c, sender, contextWrapper){
 				height:height * size
 			};
 		},
-		cWrapper = contextWrapper(context, positionToMousePosition, getViewBox, w, h),
-		getPointSet = function(constr){
+		setTransform = function(){
+			context.setTransform(size, 0, 0, size, xShift * size, yShift * size);
+		},
+		resetTransform = function(){
+			context.setTransform(1,0,0,1,0,0);
+		},
+		cWrapper = contextWrapper(context, getViewBox, setTransform, resetTransform),
+		getSet = function(constr){
 			var map = function(mapper, getViewBox){
 				return constr(getViewBox()).map(mapper);
 			};
@@ -190,11 +196,7 @@ define(["c","sender","contextWrapper"],function(c, sender, contextWrapper){
 		return d < 15;
 	};
 	return {
-		w:w,
-		h:h,
-		getNx:function(){return nx;},
-		getPointSet:getPointSet,
-		getNy:function(){return ny;},
+		getSet:getSet,
 		onDragMove:function(f){
 			c.addEventListener('positiondragmove', function(e){
 				var pos = screenPositionToPoint(e.detail.toX, e.detail.toY);
@@ -210,6 +212,6 @@ define(["c","sender","contextWrapper"],function(c, sender, contextWrapper){
 		onDragEnd:function(f){onDragEnd.add(f);},
 		positionToMousePosition:positionToMousePosition,
 		areClose:areClose,
-		save:function(){c.save();}
+		toDataURL:function(){return c.toDataURL.apply(null,arguments);}
 	};
 })
