@@ -136,9 +136,9 @@ define(["c","sender","contextWrapper"],function(c, sender, contextWrapper){
 				height:height * size
 			};
 		},
-		cWrapper = contextWrapper(context, positionToMousePosition),
+		cWrapper = contextWrapper(context, positionToMousePosition, getViewBox, w, h),
 		getPointSet = function(constr){
-			var map = function(mapper){
+			var map = function(mapper, getViewBox){
 				return constr(getViewBox()).map(mapper);
 			};
 			return {
@@ -176,7 +176,7 @@ define(["c","sender","contextWrapper"],function(c, sender, contextWrapper){
 		endZoom();
 	});
 	c.onDraw(function(){
-		onDraw(context, cWrapper);
+		onDraw(cWrapper);
 	});
 	c.addEventListener('contextmenu',function(e){
 		var pos = screenPositionToPoint(e.clientX, e.clientY);
@@ -195,7 +195,6 @@ define(["c","sender","contextWrapper"],function(c, sender, contextWrapper){
 		getNx:function(){return nx;},
 		getPointSet:getPointSet,
 		getNy:function(){return ny;},
-		beginDrag:beginDrag,
 		onDragMove:function(f){
 			c.addEventListener('positiondragmove', function(e){
 				var pos = screenPositionToPoint(e.detail.toX, e.detail.toY);
