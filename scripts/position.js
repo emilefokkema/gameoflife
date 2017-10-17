@@ -36,6 +36,10 @@ define(["tree/hashlife","coordinates","selection"],function(hashLife, coordinate
 		context.restore();
 	};
 	coordinates.onDraw(function(context){
+		context.fillStyle = '#fff';
+		context.fillEntire();
+		context.strokeStyle = '#000';
+		context.fillStyle = '#000';
 		hashLife.draw(function(p){
 			context.fillRect(p.x,p.y,1,1);
 		});

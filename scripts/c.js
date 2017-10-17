@@ -4,16 +4,16 @@ define(["sender"],function(sender){
 	var onClick = function(){};
 	var zoomer = null;
 	var dragHappened = false;
-	var w = document.body.offsetWidth,
-		h = document.body.offsetHeight;
-	var canvas = document.createElement("canvas");
+	var canvas = document.getElementById("theCanvas");
+	var rect = canvas.getBoundingClientRect();
+	var w = rect.width,
+		h = rect.height;
 	canvas.setAttribute("width", w);
 	canvas.setAttribute("height", h);
-	document.body.appendChild(canvas);
+	canvas.setAttribute("style","width:"+w+"px;height:"+h+"px;");
 	var context = canvas.getContext("2d");
 	var initializeContext = function(){
-		context.strokeStyle = '#000';
-		context.fillStyle = '#000';
+		
 	};
 	var draggerFactory = (function(){
 		var dispatchDragStart = function(x,y){
@@ -90,25 +90,16 @@ define(["sender"],function(sender){
 		};
 	})();
 	
-	initializeContext();
+	
 	var mapTouchList = function(touchList, mapper){
 		for(var i=0;i<touchList.length;i++){
 			mapper(touchList.item(i));
 		}
 	};
-	var whiteBackground = function(){
-		context.save();
-		context.fillStyle = '#fff';
-		context.fillRect(0,0,w,h);
-		context.restore();
-	};
-	var clear = function(){
-		canvas.width = w;
-		initializeContext();
-		whiteBackground();
-	};
+	
+	
 	var drawAll = function(){
-		clear();
+		canvas.width = w;
 		onDraw();
 	};
 	canvas.addEventListener('click',function(e){
@@ -173,7 +164,6 @@ define(["sender"],function(sender){
 		w:w,
 		h:h,
 		context:context,
-		clear:clear,
 		onDraw:function(f){
 			onDraw.add(f);
 		},

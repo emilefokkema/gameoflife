@@ -66,6 +66,14 @@ define([],function(){
 				resetTransform();
 			}
 		};
+		propertiesObj["fillEntire"] = {
+			value:function(){
+				setTransform();
+				var viewBox = getViewBox();
+				context.fillRect(0,0,viewBox.width, viewBox.height);
+				resetTransform();
+			}
+		};
 		constr.prototype = Object.create({},propertiesObj);
 		return new constr();
 	};
