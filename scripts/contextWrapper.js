@@ -70,7 +70,7 @@ define([],function(){
 			value:function(){
 				setTransform();
 				var viewBox = getViewBox();
-				context.fillRect(0,0,viewBox.width, viewBox.height);
+				context.fillRect(viewBox.x,viewBox.y,viewBox.width, viewBox.height);
 				resetTransform();
 			}
 		};

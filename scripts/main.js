@@ -164,11 +164,11 @@ requirejs([
 			}
 		});
 	});
-	window.addEventListener('wheel',function(e){
-		if(!reactToKeys()){
-			return;
-		}
-		coordinates.zoom(Math.pow(2, -e.deltaY / 200), e.clientX, e.clientY);
-		coordinates.drawAll();
-	});
+	// window.addEventListener('wheel',function(e){
+	// 	if(!reactToKeys()){
+	// 		return;
+	// 	}
+	// 	coordinates.zoom(Math.pow(2, -e.deltaY / 200), e.clientX, e.clientY);
+	// 	coordinates.drawAll();
+	// });
 });
