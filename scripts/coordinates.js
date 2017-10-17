@@ -2,7 +2,7 @@ define(["c","sender","contextWrapper"],function(c, sender, contextWrapper){
 	var w = c.w,
 		h = c.h,
 		context = c.context,
-		size, nx, ny,
+		size,
 		xShift = 0,
 		yShift = 0,
 		onDraw = sender(),
@@ -10,26 +10,15 @@ define(["c","sender","contextWrapper"],function(c, sender, contextWrapper){
 		onDragEnd = sender(),
 		onContextMenu = sender(function(a,b){return a && b}, true),
 		onDragStart = sender(function(a,b){return a && b}, true),
-		setSize = function(s){
-			size = s;
-			nx = w / size;
-			ny = h / size;
-		},
 		zoom = function(factor, centerX, centerY){
 			var pCenterX = centerX / size - xShift;
 			var pCenterY = centerY / size - yShift;
 			var newSize = size * factor;
 			if(newSize != size){
-				setSize(newSize);
-				setXShift(centerX/size - pCenterX);
-				setYShift(centerY/size - pCenterY);
+				size = newSize;
+				xShift = centerX/size - pCenterX;
+				yShift = centerY/size - pCenterY;
 			}
-		},
-		setXShift = function(v){
-			xShift = v;
-		},
-		setYShift = function(v){
-			yShift = v;
 		},
 		makeDrag = function(startMouseX, startMouseY){
 			var origXShift, origYShift, currentMouseX, currentMouseY, origSize;
@@ -45,11 +34,11 @@ define(["c","sender","contextWrapper"],function(c, sender, contextWrapper){
 			resetTo(startMouseX, startMouseY);
 			var origR, currentR;
 			var applyDrag = function(){
-				setXShift(origXShift + (currentMouseX - startMouseX) / size);
-				setYShift(origYShift + (currentMouseY - startMouseY) / size);
+				xShift = origXShift + (currentMouseX - startMouseX) / size;
+				yShift = origYShift + (currentMouseY - startMouseY) / size;
 			};
 			var applyZoomAndDrag = function(){
-				setSize(origSize);
+				size = origSize;
 				applyDrag();
 				zoom(currentR / origR, currentMouseX, currentMouseY);
 			};
@@ -188,7 +177,7 @@ define(["c","sender","contextWrapper"],function(c, sender, contextWrapper){
 		var pos = screenPositionToPoint(e.clientX, e.clientY);
 		return onContextMenu(e.clientX, e.clientY, pos.x, pos.y);
 	});
-	setSize(15);
+	size = 15;
 	var areClose = function(x1, y1, x2, y2){
 		var screenPoint1 = positionToMousePosition({x:x1,y:y1});
 		var screenPoint2 = positionToMousePosition({x:x2,y:y2});
