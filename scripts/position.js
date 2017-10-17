@@ -24,11 +24,11 @@ define(["tree/hashlife","coordinates","selection"],function(hashLife, coordinate
 		context.strokeWidth = 0.2;
 		
 		var screenPoint;
-		context.mapPointSet(integerXPoints, function(x){
+		context.mapSet(integerXPoints, function(x){
 			context.makeVerticalLine(x);
 			context.stroke();
 		});
-		context.mapPointSet(integerYPoints,function(y){
+		context.mapSet(integerYPoints,function(y){
 			context.makeHorizontalLine(y);
 			context.stroke();
 		});

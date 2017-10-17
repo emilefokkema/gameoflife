@@ -41,7 +41,7 @@ define([],function(){
 				context.stroke();
 			}
 		};
-		propertiesObj["mapPointSet"] = {
+		propertiesObj["mapSet"] = {
 			value:function(ps, mapper){
 				ps.map(mapper, getViewBox);
 			}
