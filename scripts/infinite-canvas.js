@@ -133,10 +133,19 @@ define(["wrap-canvas","sender","contextWrapper"],function(wrapCanvas, sender, co
 				context.setTransform(1,0,0,1,0,0);
 			},
 			cWrapper = contextWrapper(context, getViewBox, setTransform, resetTransform),
-			getSet = function(constr){
-				var map = function(mapper, getViewBox){
-					return constr(getViewBox()).map(mapper);
-				};
+			getSet = function(){
+				var firstArgument = arguments[0];
+				var map;
+				if(typeof firstArgument === "function"){
+					map = function(mapper, getViewBox){
+						return firstArgument(getViewBox()).map(mapper);
+					};
+				}else if(typeof firstArgument === "object"){
+
+				}else{
+					throw 'unrecognized argument to getSet'
+				}
+				
 				return {
 					map:map
 				};
