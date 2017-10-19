@@ -1,4 +1,4 @@
-define(["wrap-canvas","sender","contextWrapper"],function(wrapCanvas, sender, contextWrapper){
+define(["wrap-canvas","sender","contextWrapper","transform"],function(wrapCanvas, sender, contextWrapper, transform){
 	var factory = function(c){
 		var w = c.w,
 			h = c.h,
@@ -126,13 +126,35 @@ define(["wrap-canvas","sender","contextWrapper"],function(wrapCanvas, sender, co
 					height:height * size
 				};
 			},
+			currentTransform,
+			currentTransformStack,
+			removeTransform = function(){
+				currentTransform = new transform(1,0,0,1,0,0);
+				currentTransformStack = [];
+			},
+			saveTransform = function(){
+				currentTransformStack.push(currentTransform);
+			},
+			restoreTransform = function(){
+				if(currentTransformStack.length){
+					currentTransform = currentTransformStack.pop();
+				}
+			},
 			setTransform = function(){
-				context.setTransform(size, 0, 0, size, xShift * size, yShift * size);
+				var t = currentTransform.before(new transform(size, 0, 0, size, xShift * size, yShift * size));
+				context.setTransform(t.a, t.b, t.c, t.d, t.e, t.f);
 			},
 			resetTransform = function(){
-				context.setTransform(1,0,0,1,0,0);
+				var t = currentTransform;
+				context.setTransform(t.a, t.b, t.c, t.d, t.e, t.f);
 			},
-			cWrapper = contextWrapper(context, getViewBox, setTransform, resetTransform),
+			setCurrentTransform = function(t){
+				currentTransform = t;
+			},
+			addToCurrentTransform = function(t){
+				currentTransform = currentTransform.before(t);
+			},
+			cWrapper = contextWrapper(context, getViewBox, setTransform, resetTransform, setCurrentTransform, addToCurrentTransform, saveTransform, restoreTransform),
 			getSet = function(){
 				var firstArgument = arguments[0];
 				var map;
@@ -181,6 +203,7 @@ define(["wrap-canvas","sender","contextWrapper"],function(wrapCanvas, sender, co
 			endZoom();
 		});
 		c.onDraw(function(){
+			removeTransform();
 			onDraw(cWrapper);
 		});
 		c.addEventListener('contextmenu',function(e){
