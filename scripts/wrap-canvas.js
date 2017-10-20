@@ -120,6 +120,8 @@ define(["sender"],function(sender){
 					dragger.add(touch.clientX, touch.clientY, touch.identifier);
 				}
 			});
+			e.preventDefault();
+			return false;
 		});
 		canvas.addEventListener('touchend',function(e){
 			if(!dragger){return;}
