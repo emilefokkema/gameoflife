@@ -20,8 +20,8 @@ define(["sender"],function(sender){
 		var getScreenPosition = function(clientX, clientY){
 			var rect = canvas.getBoundingClientRect();
 			return {
-				x:clientX - rect.x,
-				y:clientY - rect.y
+				x:clientX - rect.left,
+				y:clientY - rect.top
 			};
 		};
 		var draggerFactory = (function(){
