@@ -2,7 +2,9 @@ define(["sender"],function(sender){
 	return function(canvas){
 		var dragger = null;
 		var onDraw = sender();
-		var onClick = function(){};
+		var onClick = sender();
+		var onContextMenu = sender(function(a,b){return a && b}, true);
+		var onWheel = sender();
 		var zoomer = null;
 		var dragHappened = false;
 		var rect = canvas.getBoundingClientRect();
@@ -14,6 +16,13 @@ define(["sender"],function(sender){
 		var context = canvas.getContext("2d");
 		var initializeContext = function(){
 			
+		};
+		var getScreenPosition = function(clientX, clientY){
+			var rect = canvas.getBoundingClientRect();
+			return {
+				x:clientX - rect.x,
+				y:clientY - rect.y
+			};
 		};
 		var draggerFactory = (function(){
 			var dispatchDragStart = function(x,y){
@@ -102,22 +111,25 @@ define(["sender"],function(sender){
 			canvas.width = w;
 			onDraw();
 		};
+		
 		canvas.addEventListener('click',function(e){
 			if(dragHappened){
 				dragHappened = false;
 				e.stopPropagation();
 				return false;
 			}else{
-				onClick(e);
+				var screenPos = getScreenPosition(e.clientX, e.clientY);
+				onClick(screenPos.x, screenPos.y, e.shiftKey);
 			}
 			
 		});
 		canvas.addEventListener('touchstart',function(e){
 			mapTouchList(e.changedTouches, function(touch){
+				var screenPos = getScreenPosition(touch.clientX, touch.clientY);
 				if(!dragger){
-					dragger = draggerFactory.make(touch.clientX, touch.clientY, touch.identifier);
+					dragger = draggerFactory.make(screenPos.x, screenPos.y, touch.identifier);
 				}else{
-					dragger.add(touch.clientX, touch.clientY, touch.identifier);
+					dragger.add(screenPos.x, screenPos.y, touch.identifier);
 				}
 			});
 			e.preventDefault();
@@ -134,17 +146,20 @@ define(["sender"],function(sender){
 		});
 		canvas.addEventListener('touchmove',function(e){
 			mapTouchList(e.changedTouches,function(touch){
-				dragger.moveTo(touch.clientX, touch.clientY, touch.identifier);
+				var screenPos = getScreenPosition(touch.clientX, touch.clientY);
+				dragger.moveTo(screenPos.x, screenPos.y, touch.identifier);
 			});
 			dragHappened = true;
 		});
 		canvas.addEventListener('mousedown',function(e){
 			e.preventDefault();
-			dragger = draggerFactory.make(e.clientX, e.clientY);
+			var screenPos = getScreenPosition(e.clientX, e.clientY);
+			dragger = draggerFactory.make(screenPos.x, screenPos.y);
 		});
 		canvas.addEventListener('mousemove',function(e){
 			if(dragger && (e.movementX != 0 || e.movementY != 0) ){
-				dragger.moveTo(e.clientX, e.clientY);
+				var screenPos = getScreenPosition(e.clientX, e.clientY);
+				dragger.moveTo(screenPos.x, screenPos.y);
 				dragHappened = true;
 			}
 			return true;
@@ -160,7 +175,14 @@ define(["sender"],function(sender){
 				dragger.end();
 				dragger = null;
 			}
+			var screenPos = getScreenPosition(e.clientX, e.clientY);
+			return onContextMenu(screenPos.x, screenPos.y, function(){e.preventDefault();});
+		});
+		canvas.addEventListener('wheel',function(e){
+			var screenPos = getScreenPosition(e.clientX, e.clientY);
+			onWheel(screenPos.x, screenPos.y, e.deltaY);
 			e.preventDefault();
+			return false;
 		});
 		return {
 			w:w,
@@ -170,6 +192,9 @@ define(["sender"],function(sender){
 				onDraw.add(f);
 			},
 			drawAll:drawAll,
+			onClick:function(f){onClick.add(f);},
+			onContextMenu:function(f){onContextMenu.add(f);},
+			onWheel:function(f){onWheel.add(f);},
 			addEventListener:function(name, handler){
 				if(name == 'click'){
 					onClick = handler;

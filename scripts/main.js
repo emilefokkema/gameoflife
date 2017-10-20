@@ -87,8 +87,9 @@ requirejs([
 		}
 		coordinates.drawAll();
 	});
-	coordinates.onContextMenu(function(screenX, screenY, posX, posY){
+	coordinates.onContextMenu(function(screenX, screenY, posX, posY, preventDefault){
 		menu.show(screenX, screenY, {x:posX,y:posY});
+		preventDefault();
 		return false;
 	});
 	

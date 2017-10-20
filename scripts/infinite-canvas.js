@@ -172,9 +172,9 @@ define(["wrap-canvas","sender","contextWrapper","transform"],function(wrapCanvas
 					map:map
 				};
 			};
-		c.addEventListener('click',function(e){
-			var pos = screenPositionToPoint(e.clientX, e.clientY);
-			pos.shiftKey = e.shiftKey;
+		c.onClick(function(x,y,shift){
+			var pos = screenPositionToPoint(x, y);
+			pos.shiftKey = shift;
 			onClick(pos);
 		});
 		c.addEventListener('positiondragmove',function(e){
@@ -206,15 +206,13 @@ define(["wrap-canvas","sender","contextWrapper","transform"],function(wrapCanvas
 			removeTransform();
 			onDraw(cWrapper);
 		});
-		c.addEventListener('contextmenu',function(e){
-			var pos = screenPositionToPoint(e.clientX, e.clientY);
-			return onContextMenu(e.clientX, e.clientY, pos.x, pos.y);
+		c.onContextMenu(function(clientX, clientY, preventDefault){
+			var pos = screenPositionToPoint(clientX, clientY);
+			return onContextMenu(clientX, clientY, pos.x, pos.y, preventDefault);
 		});
-		c.addEventListener('wheel',function(e){
-			zoom(Math.pow(2, -e.deltaY / 200), e.clientX, e.clientY);
+		c.onWheel(function(x, y, delta){
+			zoom(Math.pow(2, -delta / 200), x, y);
 			c.drawAll();
-			e.preventDefault();
-			return false;
 		});
 		var areClose = function(x1, y1, x2, y2){
 			var screenPoint1 = positionToMousePosition({x:x1,y:y1});
@@ -240,7 +238,6 @@ define(["wrap-canvas","sender","contextWrapper","transform"],function(wrapCanvas
 			onContextMenu:function(f){onContextMenu.add(f);},
 			onDragStart:function(f){onDragStart.add(f);},
 			onDragEnd:function(f){onDragEnd.add(f);},
-			positionToMousePosition:positionToMousePosition,
 			areClose:areClose,
 			toDataURL:function(){return c.toDataURL.apply(null,arguments);}
 		};
