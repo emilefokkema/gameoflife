@@ -152,7 +152,7 @@ define(["wrap-canvas","sender","contextWrapper","transform"],function(wrapCanvas
 				currentTransform = t;
 			},
 			addToCurrentTransform = function(t){
-				currentTransform = currentTransform.before(t);
+				currentTransform = t.before(currentTransform);
 			},
 			cWrapper = contextWrapper(context, getViewBox, setTransform, resetTransform, setCurrentTransform, addToCurrentTransform, saveTransform, restoreTransform),
 			getSet = function(){
