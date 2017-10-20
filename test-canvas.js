@@ -40,9 +40,11 @@ requirejs(["infinite-canvas","requireElement"], function(infiniteCanvas, require
 	};
 	
 	examples.map(function(e){
-		requireElement(document.getElementById("example"), function(canvas, code){
+		requireElement(document.getElementById("example"), function(canvas1, canvas2, code){
 			code.innerHTML = getBody(e.code).replace(/\n/g,"<br/>");
-			infiniteCanvas(canvas).onDraw(e.code);
+			infiniteCanvas(canvas1).onDraw(e.code);
+			var ctx = canvas2.getContext("2d");
+			e.code(ctx);
 		});
 	})
 })
