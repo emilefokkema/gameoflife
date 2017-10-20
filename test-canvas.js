@@ -36,7 +36,7 @@ requirejs(["infinite-canvas","requireElement"], function(infiniteCanvas, require
 		}
 	];
 	var getBody = function(f){
-		return f.toString().match(/\s*function\s*\([^)]*\)\s*\{([\s\S]*?)\}\s*/)[0];
+		return f.toString().match(/\s*function\s*\([^)]*\)\s*\{([\s\S]*?)\}\s*/)[1];
 	};
 	
 	examples.map(function(e){

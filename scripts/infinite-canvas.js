@@ -213,6 +213,8 @@ define(["wrap-canvas","sender","contextWrapper","transform"],function(wrapCanvas
 		c.addEventListener('wheel',function(e){
 			zoom(Math.pow(2, -e.deltaY / 200), e.clientX, e.clientY);
 			c.drawAll();
+			e.preventDefault();
+			return false;
 		});
 		var areClose = function(x1, y1, x2, y2){
 			var screenPoint1 = positionToMousePosition({x:x1,y:y1});
