@@ -1,4 +1,4 @@
-define(["wrap-canvas","sender","contextWrapper","transform"],function(wrapCanvas, sender, contextWrapper, transform){
+define(["infinitecanvas/wrap-canvas","sender","infinitecanvas/contextWrapper","infinitecanvas/transform"],function(wrapCanvas, sender, contextWrapper, transform){
 	var factory = function(c){
 		var w = c.w,
 			h = c.h,

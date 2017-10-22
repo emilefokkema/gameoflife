@@ -1,4 +1,4 @@
-define(["transform"],function(transform){
+define(["infinitecanvas/transform"],function(transform){
 	var transformable = ["fillRect","arc", "rect", "moveTo", "arcTo", "lineTo","quadraticCurveTo","fillText"];
 	var wrapper = function(context, getViewBox, setTransform, resetTransform, setCurrentTransform, addToCurrentTransform, saveTransform, restoreTransform){
 		var constr = function(){};
