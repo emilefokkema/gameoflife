@@ -132,8 +132,6 @@ define(["sender"],function(sender){
 					dragger.add(screenPos.x, screenPos.y, touch.identifier);
 				}
 			});
-			e.preventDefault();
-			return false;
 		});
 		canvas.addEventListener('touchend',function(e){
 			if(!dragger){return;}
@@ -150,6 +148,8 @@ define(["sender"],function(sender){
 				dragger.moveTo(screenPos.x, screenPos.y, touch.identifier);
 			});
 			dragHappened = true;
+			e.preventDefault();
+			return false;
 		});
 		canvas.addEventListener('mousedown',function(e){
 			e.preventDefault();
