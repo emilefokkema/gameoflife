@@ -1,5 +1,5 @@
 requirejs.config({baseUrl:"./scripts"});
-requirejs(["infinite-canvas","requireElement"], function(infiniteCanvas, requireElement){
+requirejs(["infinitecanvas/infinite-canvas","requireElement"], function(infiniteCanvas, requireElement){
 	var examples = [
 		{
 			code:function(ctx){
