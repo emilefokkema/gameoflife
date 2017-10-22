@@ -12,13 +12,13 @@ define(["infinitecanvas/wrap-canvas","sender","infinitecanvas/contextWrapper","i
 			onContextMenu = sender(function(a,b){return a && b}, true),
 			onDragStart = sender(function(a,b){return a && b}, true),
 			zoom = function(factor, centerX, centerY){
-				var pCenterX = centerX / size - xShift;
-				var pCenterY = centerY / size - yShift;
+				var pCenterX = centerX / size - xShift / size;
+				var pCenterY = centerY / size - yShift / size;
 				var newSize = size * factor;
 				if(newSize != size){
 					size = newSize;
-					xShift = centerX/size - pCenterX;
-					yShift = centerY/size - pCenterY;
+					xShift = centerX - pCenterX * size;
+					yShift = centerY - pCenterY * size;
 				}
 			},
 			makeDrag = function(startMouseX, startMouseY){
@@ -35,8 +35,8 @@ define(["infinitecanvas/wrap-canvas","sender","infinitecanvas/contextWrapper","i
 				resetTo(startMouseX, startMouseY);
 				var origR, currentR;
 				var applyDrag = function(){
-					xShift = origXShift + (currentMouseX - startMouseX) / size;
-					yShift = origYShift + (currentMouseY - startMouseY) / size;
+					xShift = origXShift + (currentMouseX - startMouseX);
+					yShift = origYShift + (currentMouseY - startMouseY);
 				};
 				var applyZoomAndDrag = function(){
 					size = origSize;
@@ -71,14 +71,14 @@ define(["infinitecanvas/wrap-canvas","sender","infinitecanvas/contextWrapper","i
 			currentDrag = null,
 			screenPositionToPoint = function(mX,mY){
 				return {
-					x:mX / size - xShift,
-					y:mY / size - yShift
+					x:mX / size - xShift / size,
+					y:mY / size - yShift / size
 				};
 			},
 			positionToMousePosition = function(p){
 				return {
-					x:(p.x + xShift) * size,
-					y:(p.y + yShift) * size
+					x:(p.x ) * size + xShift,
+					y:(p.y ) * size + yShift
 				};
 			},
 			beginDrag = function(x,y){
@@ -141,7 +141,7 @@ define(["infinitecanvas/wrap-canvas","sender","infinitecanvas/contextWrapper","i
 				}
 			},
 			setTransform = function(){
-				var t = currentTransform.before(new transform(size, 0, 0, size, xShift * size, yShift * size));
+				var t = currentTransform.before(new transform(size, 0, 0, size, xShift, yShift));
 				context.setTransform(t.a, t.b, t.c, t.d, t.e, t.f);
 			},
 			resetTransform = function(){
