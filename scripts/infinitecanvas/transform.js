@@ -16,6 +16,19 @@ define([],function(){
 		var f = this.e * other.b + this.f * other.d + other.f;
 		return new transform(a,b,c,d,e,f);
 	};
+	transform.prototype.inverse = function(){
+		var det = this.a * this.d - this.b * this.c;
+		if(det == 0){
+			throw "error calculating inverse: zero determinant";
+		}
+		var a = this.d / det,
+			b = - this.b / det,
+			c = - this.c / det,
+			d = this.a / det,
+			e = (this.c * this.f - this.d * this.e) / det,
+			f = (this.b * this.e - this.a * this.f) / det;
+		return new transform(a,b,c,d,e,f);
+	};
 	var rotation = function(a){
 		var sin = Math.sin(a);
 		var cos = Math.cos(a);
