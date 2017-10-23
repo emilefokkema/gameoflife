@@ -16,6 +16,12 @@ define([],function(){
 		var f = this.e * other.b + this.f * other.d + other.f;
 		return new transform(a,b,c,d,e,f);
 	};
+	transform.prototype.apply = function(x,y){
+		return {
+			x: this.a * x + this.c * y + this.e,
+			y: this.b * x + this.d * y + this.f
+		};
+	};
 	transform.prototype.inverse = function(){
 		var det = this.a * this.d - this.b * this.c;
 		if(det == 0){

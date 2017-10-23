@@ -1,8 +1,9 @@
-define(["infinitecanvas/wrap-canvas","sender","infinitecanvas/contextWrapper","infinitecanvas/transform"],function(wrapCanvas, sender, contextWrapper, transform){
+define(["infinitecanvas/wrap-canvas","sender","infinitecanvas/contextWrapper","infinitecanvas/transform","infinitecanvas/context-transform"],function(wrapCanvas, sender, contextWrapper, transform, contextTransform){
 	var factory = function(c){
 		var w = c.w,
 			h = c.h,
 			context = c.context,
+			coordinateTransform = contextTransform(c.context),
 			size = 1,
 			xShift = 0,
 			yShift = 0,
@@ -115,15 +116,6 @@ define(["infinitecanvas/wrap-canvas","sender","infinitecanvas/contextWrapper","i
 					y:p1.y,
 					width:p2.x - p1.x,
 					height:p2.y - p1.y
-				};
-			},
-			getScreenRect = function(x,y,width,height){
-				var p = positionToMousePosition({x:x,y:y});
-				return {
-					x:p.x,
-					y:p.y,
-					width:width * size,
-					height:height * size
 				};
 			},
 			currentTransform,
