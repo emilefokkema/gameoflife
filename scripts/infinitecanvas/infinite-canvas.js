@@ -114,7 +114,7 @@ define(["infinitecanvas/wrap-canvas","sender","infinitecanvas/contextWrapper","i
 				}
 			},
 			setTransform = function(){
-				var t = currentTransform.before(coordinateTransform);
+				var t = coordinateTransform.add(currentTransform);
 				context.setTransform(t.a, t.b, t.c, t.d, t.e, t.f);
 			},
 			resetTransform = function(){
@@ -125,7 +125,7 @@ define(["infinitecanvas/wrap-canvas","sender","infinitecanvas/contextWrapper","i
 				currentTransform = t;
 			},
 			addToCurrentTransform = function(t){
-				currentTransform = t.before(currentTransform);
+				currentTransform = currentTransform.add(t);
 			},
 			cWrapper = contextWrapper(context, getViewBox, setTransform, resetTransform, setCurrentTransform, addToCurrentTransform, saveTransform, restoreTransform),
 			getSet = function(){
