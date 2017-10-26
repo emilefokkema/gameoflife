@@ -1,4 +1,5 @@
 define([],function(){
+	var rotation, translation, scale;
 	var transform = function(a,b,c,d,e,f){
 		this.a = a;
 		this.b = b;
@@ -22,6 +23,15 @@ define([],function(){
 			y: this.b * x + this.d * y + this.f
 		};
 	};
+	transform.prototype.translate = function(x,y){
+		return translation(x,y).before(this);
+	};
+	transform.prototype.scale = function(x,y){
+		return scale(x,y).before(this);
+	};
+	transform.prototype.add = function(other){
+		return other.before(this);
+	};
 	transform.prototype.inverse = function(){
 		var det = this.a * this.d - this.b * this.c;
 		if(det == 0){
@@ -35,11 +45,19 @@ define([],function(){
 			f = (this.b * this.e - this.a * this.f) / det;
 		return new transform(a,b,c,d,e,f);
 	};
-	var rotation = function(a){
+	rotation = function(a){
 		var sin = Math.sin(a);
 		var cos = Math.cos(a);
 		return new transform(cos, sin, -sin, cos, 0, 0);
 	};
+	scale = function(x,y){
+		return new transform(x,0,0,y,0,0);
+	};
+	translation = function(x,y){
+		return new transform(1,0,0,1,x,y);
+	};
 	transform.rotation = rotation;
+	transform.translation = translation;
+	transform.scale = scale;
 	return transform;
 });

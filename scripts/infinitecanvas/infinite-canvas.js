@@ -3,7 +3,7 @@ define(["infinitecanvas/wrap-canvas","sender","infinitecanvas/contextWrapper","i
 		var w = c.w,
 			h = c.h,
 			context = c.context,
-			coordinateTransform = contextTransform(c.context),
+			coordinateTransform = new transform(1,0,0,1,0,0),
 			size = 1,
 			xShift = 0,
 			yShift = 0,
@@ -16,15 +16,15 @@ define(["infinitecanvas/wrap-canvas","sender","infinitecanvas/contextWrapper","i
 				var pCenterX = centerX / size - xShift / size;
 				var pCenterY = centerY / size - yShift / size;
 				var newSize = size * factor;
-				if(newSize != size){
-					size = newSize;
-					xShift = centerX - pCenterX * size;
-					yShift = centerY - pCenterY * size;
-				}
+				size = newSize;
+				xShift = centerX - pCenterX * size;
+				yShift = centerY - pCenterY * size;
+				coordinateTransform = coordinateTransform.translate(pCenterX,pCenterY).scale(factor,factor).translate(-pCenterX,-pCenterY);
 			},
 			makeDrag = function(startMouseX, startMouseY){
-				var origXShift, origYShift, currentMouseX, currentMouseY, origSize;
+				var origXShift, origYShift, currentMouseX, currentMouseY, origSize, origTransform;
 				var resetTo = function(x,y){
+					origTransform = coordinateTransform;
 					origXShift = xShift;
 					origYShift = yShift;
 					origSize = size;
@@ -38,10 +38,14 @@ define(["infinitecanvas/wrap-canvas","sender","infinitecanvas/contextWrapper","i
 				var applyDrag = function(){
 					xShift = origXShift + (currentMouseX - startMouseX);
 					yShift = origYShift + (currentMouseY - startMouseY);
+					coordinateTransform = transform.translation(currentMouseX - startMouseX, currentMouseY - startMouseY).add(origTransform);
+
 				};
 				var applyZoomAndDrag = function(){
 					size = origSize;
-					applyDrag();
+					xShift = origXShift + (currentMouseX - startMouseX);
+					yShift = origYShift + (currentMouseY - startMouseY);
+					coordinateTransform = transform.translation(currentMouseX - startMouseX, currentMouseY - startMouseY).add(origTransform);
 					zoom(currentR / origR, currentMouseX, currentMouseY);
 				};
 				return {
@@ -71,16 +75,18 @@ define(["infinitecanvas/wrap-canvas","sender","infinitecanvas/contextWrapper","i
 			},
 			currentDrag = null,
 			screenPositionToPoint = function(mX,mY){
-				return {
-					x:mX / size - xShift / size,
-					y:mY / size - yShift / size
-				};
+				return coordinateTransform.inverse().apply(mX,mY);
+				// return {
+				// 	x:mX / size - xShift / size,
+				// 	y:mY / size - yShift / size
+				// };
 			},
 			positionToMousePosition = function(p){
-				return {
-					x:(p.x ) * size + xShift,
-					y:(p.y ) * size + yShift
-				};
+				return coordinateTransform.apply(p.x,p.y);
+				// return {
+				// 	x:(p.x ) * size + xShift,
+				// 	y:(p.y ) * size + yShift
+				// };
 			},
 			beginDrag = function(x,y){
 				currentDrag = makeDrag(x, y);
@@ -133,7 +139,7 @@ define(["infinitecanvas/wrap-canvas","sender","infinitecanvas/contextWrapper","i
 				}
 			},
 			setTransform = function(){
-				var t = currentTransform.before(new transform(size, 0, 0, size, xShift, yShift));
+				var t = currentTransform.before(coordinateTransform);
 				context.setTransform(t.a, t.b, t.c, t.d, t.e, t.f);
 			},
 			resetTransform = function(){

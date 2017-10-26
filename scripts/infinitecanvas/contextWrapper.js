@@ -58,12 +58,12 @@ define(["infinitecanvas/transform"],function(transform){
 		};
 		propertiesObj["scale"] = {
 			value:function(x,y){
-				addToCurrentTransform(new transform(x,0,0,y,0,0));
+				addToCurrentTransform(transform.scale(x,y));
 			}
 		};
 		propertiesObj["translate"] = {
 			value:function(x,y){
-				addToCurrentTransform(new transform(1,0,0,1,x,y));
+				addToCurrentTransform(transform.translation(x,y));
 			}
 		};
 		propertiesObj["strokeRect"] = {
