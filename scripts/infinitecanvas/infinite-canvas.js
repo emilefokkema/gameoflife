@@ -3,68 +3,18 @@ define(["infinitecanvas/wrap-canvas","sender","infinitecanvas/contextWrapper","i
 		var w = c.w,
 			h = c.h,
 			context = c.context,
-			coordinateTransform = new transform(1,0,0,1,0,0),
+			currentContextTransform = contextTransform(context, w, h),
 			onDraw = sender(),
 			onClick = sender(),
 			onDragEnd = sender(),
 			onContextMenu = sender(function(a,b){return a && b}, true),
 			onDragStart = sender(function(a,b){return a && b}, true),
-			zoom = function(factor, centerX, centerY){
-				var p = coordinateTransform.inverse().apply(centerX, centerY);
-				coordinateTransform = coordinateTransform.translate(p.x,p.y).scale(factor,factor).translate(-p.x,-p.y);
-			},
-			makeDrag = function(startMouseX, startMouseY){
-				var currentMouseX, currentMouseY, origTransform;
-				var resetTo = function(x,y){
-					origTransform = coordinateTransform;
-					currentMouseX = x;
-					currentMouseY = y;
-					startMouseX = x;
-					startMouseY = y;
-				};
-				resetTo(startMouseX, startMouseY);
-				var origR, currentR;
-				var applyDrag = function(){
-					coordinateTransform = transform.translation(currentMouseX - startMouseX, currentMouseY - startMouseY).add(origTransform);
-				};
-				var applyZoomAndDrag = function(){
-					coordinateTransform = transform.translation(currentMouseX - startMouseX, currentMouseY - startMouseY).add(origTransform);
-					zoom(currentR / origR, currentMouseX, currentMouseY);
-				};
-				return {
-					drag:function(toX, toY){
-						currentMouseX = toX;
-						currentMouseY = toY;
-						if(currentR == undefined){
-							applyDrag();
-						}else{
-							applyZoomAndDrag();
-						}
-					},
-					startZoom:function(r){
-						origR = r;
-						currentR = r;
-					},
-					changeZoom:function(r){
-						currentR = r;
-						applyZoomAndDrag();
-					},
-					endZoom:function(){
-						origR = undefined;
-						currentR = undefined;
-						resetTo(currentMouseX, currentMouseY);
-					}
-				};
-			},
+			
+			
 			currentDrag = null,
-			screenPositionToPoint = function(mX,mY){
-				return coordinateTransform.inverse().apply(mX,mY);
-			},
-			positionToMousePosition = function(p){
-				return coordinateTransform.apply(p.x,p.y);
-			},
+			
 			beginDrag = function(x,y){
-				currentDrag = makeDrag(x, y);
+				currentDrag = currentContextTransform.makeDrag(x, y);
 			},
 			moveDrag = function(x, y){
 				if(currentDrag){
@@ -89,45 +39,7 @@ define(["infinitecanvas/wrap-canvas","sender","infinitecanvas/contextWrapper","i
 					currentDrag.endZoom();
 				}
 			},
-			getViewBox = function(){
-				var p1 = screenPositionToPoint(0,0);
-				var p2 = screenPositionToPoint(w,h);
-				return {
-					x:p1.x,
-					y:p1.y,
-					width:p2.x - p1.x,
-					height:p2.y - p1.y
-				};
-			},
-			currentTransform,
-			currentTransformStack,
-			removeTransform = function(){
-				currentTransform = new transform(1,0,0,1,0,0);
-				currentTransformStack = [];
-			},
-			saveTransform = function(){
-				currentTransformStack.push(currentTransform);
-			},
-			restoreTransform = function(){
-				if(currentTransformStack.length){
-					currentTransform = currentTransformStack.pop();
-				}
-			},
-			setTransform = function(){
-				var t = coordinateTransform.add(currentTransform);
-				context.setTransform(t.a, t.b, t.c, t.d, t.e, t.f);
-			},
-			resetTransform = function(){
-				var t = currentTransform;
-				context.setTransform(t.a, t.b, t.c, t.d, t.e, t.f);
-			},
-			setCurrentTransform = function(t){
-				currentTransform = t;
-			},
-			addToCurrentTransform = function(t){
-				currentTransform = currentTransform.add(t);
-			},
-			cWrapper = contextWrapper(context, getViewBox, setTransform, resetTransform, setCurrentTransform, addToCurrentTransform, saveTransform, restoreTransform),
+			cWrapper = contextWrapper(context, currentContextTransform),
 			getSet = function(){
 				var firstArgument = arguments[0];
 				var map;
@@ -146,7 +58,7 @@ define(["infinitecanvas/wrap-canvas","sender","infinitecanvas/contextWrapper","i
 				};
 			};
 		c.onClick(function(x,y,shift){
-			var pos = screenPositionToPoint(x, y);
+			var pos = currentContextTransform.screenPositionToPoint(x, y);
 			pos.shiftKey = shift;
 			onClick(pos);
 		});
@@ -160,7 +72,7 @@ define(["infinitecanvas/wrap-canvas","sender","infinitecanvas/contextWrapper","i
 			c.drawAll();
 		});
 		c.addEventListener('positiondragstart',function(e){
-			var pos = screenPositionToPoint(e.detail.x, e.detail.y);
+			var pos = currentContextTransform.screenPositionToPoint(e.detail.x, e.detail.y);
 			if(onDragStart(pos.x, pos.y)){
 				beginDrag(e.detail.x, e.detail.y);
 			}
@@ -176,20 +88,20 @@ define(["infinitecanvas/wrap-canvas","sender","infinitecanvas/contextWrapper","i
 			endZoom();
 		});
 		c.onDraw(function(){
-			removeTransform();
+			currentContextTransform.removeTransform();
 			onDraw(cWrapper);
 		});
 		c.onContextMenu(function(clientX, clientY, preventDefault){
-			var pos = screenPositionToPoint(clientX, clientY);
+			var pos = currentContextTransform.screenPositionToPoint(clientX, clientY);
 			return onContextMenu(clientX, clientY, pos.x, pos.y, preventDefault);
 		});
 		c.onWheel(function(x, y, delta){
-			zoom(Math.pow(2, -delta / 200), x, y);
+			currentContextTransform.zoom(Math.pow(2, -delta / 200), x, y);
 			c.drawAll();
 		});
 		var areClose = function(x1, y1, x2, y2){
-			var screenPoint1 = positionToMousePosition({x:x1,y:y1});
-			var screenPoint2 = positionToMousePosition({x:x2,y:y2});
+			var screenPoint1 = currentContextTransform.positionToMousePosition({x:x1,y:y1});
+			var screenPoint2 = currentContextTransform.positionToMousePosition({x:x2,y:y2});
 			var d = Math.sqrt(Math.pow(screenPoint1.x - screenPoint2.x,2) + Math.pow(screenPoint1.y - screenPoint2.y,2));
 			return d < 15;
 		};
@@ -197,11 +109,11 @@ define(["infinitecanvas/wrap-canvas","sender","infinitecanvas/contextWrapper","i
 			getSet:getSet,
 			onDragMove:function(f){
 				c.addEventListener('positiondragmove', function(e){
-					var pos = screenPositionToPoint(e.detail.toX, e.detail.toY);
+					var pos = currentContextTransform.screenPositionToPoint(e.detail.toX, e.detail.toY);
 					f(pos.x, pos.y);
 				});
 			},
-			zoom:zoom,
+			zoom:currentContextTransform.zoom,
 			drawAll:function(){c.drawAll();},
 			onDraw:function(f){
 				onDraw.add(f);
