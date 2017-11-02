@@ -1,6 +1,43 @@
 define(["infinitecanvas/transform"],function(transform){
 	var transformable = ["fillRect","arc", "rect", "moveTo", "arcTo", "lineTo","quadraticCurveTo","fillText"];
 	var wrapper = function(context, currentContextTransform){
+		var getRect = function(x,y,width,height){
+			var transformedViewBox = currentContextTransform.getTransformedViewBox();
+			var minusXInf = transformedViewBox.x;
+			var plusXInf = transformedViewBox.x + transformedViewBox.width;
+			var minusYInf = transformedViewBox.y;
+			var plusYInf = transformedViewBox.y + transformedViewBox.height;
+			if(x == Infinity){
+				x = plusXInf;
+			}
+			if(x == -Infinity){
+				x = minusXInf;
+			}
+			if(y == Infinity){
+				x = plusYInf;
+			}
+			if(y == -Infinity){
+				y = minusYInf;
+			}
+			if(width === Infinity){
+				width = plusXInf - x;
+			}
+			if(width == -Infinity){
+				width = minusXInf - x;
+			}
+			if(height === Infinity){
+				height = plusYInf - y;
+			}
+			if(height == -Infinity){
+				height = minusYInf - y;
+			}
+			return {
+				x:x,
+				y:y,
+				width:width,
+				height:height
+			};
+		};
 		var constr = function(){};
 		var propertiesObj = {};
 		for(var pp in context){
@@ -66,11 +103,20 @@ define(["infinitecanvas/transform"],function(transform){
 				currentContextTransform.addToCurrentTransform(transform.translation(x,y));
 			}
 		};
+		propertiesObj["fillRect"] = {
+			value:function(x, y, width, height){
+				currentContextTransform.setTransform();
+				var rect = getRect(x,y,width,height);
+				context.fillRect(rect.x, rect.y, rect.width, rect.height);
+				currentContextTransform.resetTransform();
+			}
+		};
 		propertiesObj["strokeRect"] = {
 			value:function(x, y, width, height){
 				currentContextTransform.setTransform();
+				var rect = getRect(x,y,width,height);
 				context.beginPath();
-				context.rect(x,y,width,height);
+				context.rect(rect.x,rect.y,rect.width,rect.height);
 				context.closePath();
 				currentContextTransform.resetTransform();
 				context.stroke();

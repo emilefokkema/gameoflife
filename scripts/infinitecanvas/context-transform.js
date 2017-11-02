@@ -51,11 +51,14 @@ define(["infinitecanvas/transform"],function(transform){
 			screenPositionToPoint = function(mX,mY){
 				return coordinateTransform.inverse().apply(mX,mY);
 			},
+			screenPositionToTransformedPoint = function(mX, mY){
+				return coordinateTransform.add(currentTransform).inverse().apply(mX,mY);
+			},
 			positionToMousePosition = function(p){
 				return coordinateTransform.apply(p.x,p.y);
 			},
-			currentTransform,
-			currentTransformStack,
+			currentTransform = new transform(1,0,0,1,0,0),
+			currentTransformStack = [],
 			removeTransform = function(){
 				currentTransform = new transform(1,0,0,1,0,0);
 				currentTransformStack = [];
@@ -91,6 +94,22 @@ define(["infinitecanvas/transform"],function(transform){
 					width:p2.x - p1.x,
 					height:p2.y - p1.y
 				};
+			},
+			getTransformedViewBox = function(){
+				var leftTop = screenPositionToTransformedPoint(0,0);
+				var leftBottom = screenPositionToTransformedPoint(0,h);
+				var rightBottom = screenPositionToTransformedPoint(w,h);
+				var rightTop = screenPositionToTransformedPoint(w,0);
+				var minX = Math.min(leftTop.x,leftBottom.x,rightBottom.x,rightTop.x);
+				var maxX = Math.max(leftTop.x,leftBottom.x,rightBottom.x,rightTop.x);
+				var minY = Math.min(leftTop.y,leftBottom.y,rightBottom.y,rightTop.y);
+				var maxY = Math.max(leftTop.y,leftBottom.y,rightBottom.y,rightTop.y);
+				return {
+					x:minX,
+					y:minY,
+					width:maxX - minX,
+					height:maxY - minY
+				};
 			};
 			return {
 				zoom:zoom,
@@ -104,7 +123,8 @@ define(["infinitecanvas/transform"],function(transform){
 				resetTransform:resetTransform,
 				setCurrentTransform:setCurrentTransform,
 				addToCurrentTransform:addToCurrentTransform,
-				getViewBox:getViewBox
+				getViewBox:getViewBox,
+				getTransformedViewBox:getTransformedViewBox
 			};
 
 	};

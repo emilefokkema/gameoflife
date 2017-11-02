@@ -93,6 +93,22 @@ requirejs(["infinitecanvas/infinite-canvas","requireElement"], function(infinite
 				  ctx.fillStyle = 'rgba(255, 128, 255, 0.5)';
 				  ctx.fillRect(0, 50, 100, 100);
 			}
+		},
+		{
+			code:function(ctx){
+				ctx.fillStyle = '#ccc';
+				ctx.fillRect(30,30,-Infinity,-Infinity);
+				ctx.fillStyle = '#000';
+				ctx.rotate(Math.PI/8);
+				ctx.fillRect(0,0,Infinity,10);
+				ctx.fillStyle = '#f00';
+				ctx.beginPath();
+				ctx.arc(0,0,20,0,2*Math.PI);
+				ctx.fill();
+				ctx.strokeStyle = '#0f0';
+				ctx.lineWidth = 3;
+				ctx.strokeRect(20,-Infinity,Infinity,Infinity);
+			}
 		}
 	];
 	var getBody = function(f){
