@@ -21,15 +21,15 @@ define(["tree/hashlife","coordinates","selection"],function(hashLife, coordinate
 	var drawLines = function(context){
 		context.save();
 		context.strokeStyle = '#ddd';
-		context.strokeWidth = 0.2;
+		context.lineWidth = 1;
 		
 		var screenPoint;
 		context.mapSet(integerXPoints, function(x){
-			context.makeVerticalLine(x);
+			context.rect(x, -Infinity, Infinity,Infinity);
 			context.stroke();
 		});
 		context.mapSet(integerYPoints,function(y){
-			context.makeHorizontalLine(y);
+			context.rect(-Infinity,y,Infinity,Infinity);
 			context.stroke();
 		});
 		
@@ -37,7 +37,7 @@ define(["tree/hashlife","coordinates","selection"],function(hashLife, coordinate
 	};
 	coordinates.onDraw(function(context){
 		context.fillStyle = '#fff';
-		context.fillEntire();
+		context.fillRect(-Infinity, -Infinity, Infinity, Infinity);
 		context.strokeStyle = '#000';
 		context.fillStyle = '#000';
 		hashLife.draw(function(p){

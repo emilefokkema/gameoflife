@@ -106,10 +106,15 @@ define(["sender"],function(sender){
 			}
 		};
 		
-		
+		var request;
 		var drawAll = function(){
-			canvas.width = w;
-			onDraw();
+			if(!request){
+				request = window.requestAnimationFrame(function(){
+					canvas.width = w;
+					onDraw();
+					request = 0;
+				});
+			}
 		};
 		
 		canvas.addEventListener('click',function(e){

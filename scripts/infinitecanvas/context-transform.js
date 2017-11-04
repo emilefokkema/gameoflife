@@ -1,9 +1,22 @@
 define(["infinitecanvas/transform"],function(transform){
 	return function(context, w, h){
 		var coordinateTransform = new transform(1,0,0,1,0,0),
+			currentTransform = new transform(1,0,0,1,0,0),
+			currentTransformStack = [],
+			currentTotalTransform,
+			currentTotalTransformInverse,
+			coordinateTransformInverse,
+			currentTransformedViewBox,
+			setCache = function(){
+				coordinateTransformInverse = coordinateTransform.inverse();
+				currentTotalTransform = coordinateTransform.add(currentTransform);
+				currentTotalTransformInverse = currentTotalTransform.inverse();
+				currentTransformedViewBox = getTransformedViewBox();
+			},
 			zoom = function(factor, centerX, centerY){
-				var p = coordinateTransform.inverse().apply(centerX, centerY);
+				var p = coordinateTransformInverse.apply(centerX, centerY);
 				coordinateTransform = coordinateTransform.translate(p.x,p.y).scale(factor,factor).translate(-p.x,-p.y);
+				setCache();
 			},
 			makeDrag = function(startMouseX, startMouseY){
 				var currentMouseX, currentMouseY, origTransform;
@@ -18,6 +31,7 @@ define(["infinitecanvas/transform"],function(transform){
 				var origR, currentR;
 				var applyDrag = function(){
 					coordinateTransform = transform.translation(currentMouseX - startMouseX, currentMouseY - startMouseY).add(origTransform);
+					setCache();
 				};
 				var applyZoomAndDrag = function(){
 					coordinateTransform = transform.translation(currentMouseX - startMouseX, currentMouseY - startMouseY).add(origTransform);
@@ -49,18 +63,14 @@ define(["infinitecanvas/transform"],function(transform){
 				};
 			},
 			screenPositionToPoint = function(mX,mY){
-				return coordinateTransform.inverse().apply(mX,mY);
-			},
-			screenPositionToTransformedPoint = function(mX, mY){
-				return coordinateTransform.add(currentTransform).inverse().apply(mX,mY);
+				return coordinateTransformInverse.apply(mX,mY);
 			},
 			positionToMousePosition = function(p){
 				return coordinateTransform.apply(p.x,p.y);
 			},
-			currentTransform = new transform(1,0,0,1,0,0),
-			currentTransformStack = [],
 			removeTransform = function(){
 				currentTransform = new transform(1,0,0,1,0,0);
+				setCache();
 				currentTransformStack = [];
 			},
 			saveTransform = function(){
@@ -69,10 +79,11 @@ define(["infinitecanvas/transform"],function(transform){
 			restoreTransform = function(){
 				if(currentTransformStack.length){
 					currentTransform = currentTransformStack.pop();
+					setCache();
 				}
 			},
 			setTransform = function(){
-				var t = coordinateTransform.add(currentTransform);
+				var t = currentTotalTransform;
 				context.setTransform(t.a, t.b, t.c, t.d, t.e, t.f);
 			},
 			resetTransform = function(){
@@ -81,9 +92,11 @@ define(["infinitecanvas/transform"],function(transform){
 			},
 			setCurrentTransform = function(t){
 				currentTransform = t;
+				setCache();
 			},
 			addToCurrentTransform = function(t){
 				currentTransform = currentTransform.add(t);
+				setCache();
 			},
 			getViewBox = function(){
 				var p1 = screenPositionToPoint(0,0);
@@ -96,10 +109,11 @@ define(["infinitecanvas/transform"],function(transform){
 				};
 			},
 			getTransformedViewBox = function(){
-				var leftTop = screenPositionToTransformedPoint(0,0);
-				var leftBottom = screenPositionToTransformedPoint(0,h);
-				var rightBottom = screenPositionToTransformedPoint(w,h);
-				var rightTop = screenPositionToTransformedPoint(w,0);
+				var transformInverse = currentTotalTransformInverse;
+				var leftTop = transformInverse.apply(0,0);
+				var leftBottom = transformInverse.apply(0,h);
+				var rightBottom = transformInverse.apply(w,h);
+				var rightTop = transformInverse.apply(w,0);
 				var minX = Math.min(leftTop.x,leftBottom.x,rightBottom.x,rightTop.x);
 				var maxX = Math.max(leftTop.x,leftBottom.x,rightBottom.x,rightTop.x);
 				var minY = Math.min(leftTop.y,leftBottom.y,rightBottom.y,rightTop.y);
@@ -111,6 +125,7 @@ define(["infinitecanvas/transform"],function(transform){
 					height:maxY - minY
 				};
 			};
+			setCache();
 			return {
 				zoom:zoom,
 				makeDrag:makeDrag,
@@ -124,7 +139,7 @@ define(["infinitecanvas/transform"],function(transform){
 				setCurrentTransform:setCurrentTransform,
 				addToCurrentTransform:addToCurrentTransform,
 				getViewBox:getViewBox,
-				getTransformedViewBox:getTransformedViewBox
+				getTransformedViewBox:function(){return currentTransformedViewBox;}
 			};
 
 	};

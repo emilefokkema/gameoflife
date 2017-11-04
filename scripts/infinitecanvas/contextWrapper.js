@@ -103,6 +103,15 @@ define(["infinitecanvas/transform"],function(transform){
 				currentContextTransform.addToCurrentTransform(transform.translation(x,y));
 			}
 		};
+		propertiesObj["rect"] = {
+			value:function(x, y, width, height){
+				currentContextTransform.setTransform();
+				var rect = getRect(x,y,width,height);
+				context.beginPath();
+				context.rect(rect.x, rect.y, rect.width, rect.height);
+				currentContextTransform.resetTransform();
+			}
+		};
 		propertiesObj["fillRect"] = {
 			value:function(x, y, width, height){
 				currentContextTransform.setTransform();
@@ -125,34 +134,6 @@ define(["infinitecanvas/transform"],function(transform){
 		propertiesObj["mapSet"] = {
 			value:function(ps, mapper){
 				ps.map(mapper, currentContextTransform.getViewBox);
-			}
-		};
-		propertiesObj["makeHorizontalLine"] = {
-			value:function(y){
-				currentContextTransform.setTransform();
-				var viewBox = currentContextTransform.getViewBox();
-				context.beginPath();
-				context.moveTo(viewBox.x,y);
-				context.lineTo(viewBox.x + viewBox.width, y);
-				currentContextTransform.resetTransform();
-			}
-		};
-		propertiesObj["makeVerticalLine"] = {
-			value:function(x){
-				currentContextTransform.setTransform();
-				var viewBox = currentContextTransform.getViewBox();
-				context.beginPath();
-				context.moveTo(x, viewBox.y);
-				context.lineTo(x, viewBox.y + viewBox.height);
-				currentContextTransform.resetTransform();
-			}
-		};
-		propertiesObj["fillEntire"] = {
-			value:function(){
-				currentContextTransform.setTransform();
-				var viewBox = currentContextTransform.getViewBox();
-				context.fillRect(viewBox.x,viewBox.y,viewBox.width, viewBox.height);
-				currentContextTransform.resetTransform();
 			}
 		};
 		constr.prototype = Object.create({},propertiesObj);
