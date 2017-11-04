@@ -106,15 +106,9 @@ define(["sender"],function(sender){
 			}
 		};
 		
-		var request;
 		var drawAll = function(){
-			if(!request){
-				request = window.requestAnimationFrame(function(){
-					canvas.width = w;
+		 	canvas.width = w;
 					onDraw();
-					request = 0;
-				});
-			}
 		};
 		
 		canvas.addEventListener('click',function(e){

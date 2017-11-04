@@ -35,6 +35,7 @@ define(["infinitecanvas/transform"],function(transform){
 				};
 				var applyZoomAndDrag = function(){
 					coordinateTransform = transform.translation(currentMouseX - startMouseX, currentMouseY - startMouseY).add(origTransform);
+					setCache();
 					zoom(currentR / origR, currentMouseX, currentMouseY);
 				};
 				return {
