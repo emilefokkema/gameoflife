@@ -4,10 +4,10 @@ define(["infinitecanvas/transform"],function(transform){
 		var absolute = false;
 		var getRect = function(x,y,width,height){
 			var transformedViewBox = currentContextTransform.getTransformedViewBox();
-			var minusXInf = transformedViewBox.x;
-			var plusXInf = transformedViewBox.x + transformedViewBox.width;
-			var minusYInf = transformedViewBox.y;
-			var plusYInf = transformedViewBox.y + transformedViewBox.height;
+			var minusXInf = transformedViewBox.x - transformedViewBox.width;
+			var plusXInf = transformedViewBox.x + 2*transformedViewBox.width;
+			var minusYInf = transformedViewBox.y - transformedViewBox.height;
+			var plusYInf = transformedViewBox.y + 2*transformedViewBox.height;
 			if(x == Infinity){
 				x = plusXInf;
 			}
