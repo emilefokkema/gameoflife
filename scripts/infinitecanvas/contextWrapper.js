@@ -1,6 +1,7 @@
 define(["infinitecanvas/transform"],function(transform){
-	var transformable = ["fillRect","arc", "rect", "moveTo", "arcTo", "lineTo","quadraticCurveTo","fillText"];
+	
 	var wrapper = function(context, currentContextTransform){
+		var absolute = false;
 		var getRect = function(x,y,width,height){
 			var transformedViewBox = currentContextTransform.getTransformedViewBox();
 			var minusXInf = transformedViewBox.x;
@@ -56,16 +57,15 @@ define(["infinitecanvas/transform"],function(transform){
 				}
 			})(pp);
 		}
-		transformable.map(function(name){
-			propertiesObj[name] = {
-				value:function(){
-					currentContextTransform.setTransform();
-					var result = context[name].apply(context,arguments);
-					currentContextTransform.resetTransform();
-					return result;
-				}
-			};
-		});
+
+		propertiesObj["getRelativeSize"] = {
+			value:function(absoluteSize){
+				var p0 = currentContextTransform.screenPositionToPoint(0,0);
+				var p1 = currentContextTransform.screenPositionToPoint(absoluteSize, 0);
+				return Math.abs(p1.x - p0.x);
+			}
+		};
+		
 		propertiesObj["save"] = {
 			value:function(){
 				context.save();
@@ -76,58 +76,58 @@ define(["infinitecanvas/transform"],function(transform){
 			value:function(){
 				context.restore();
 				currentContextTransform.restoreTransform();
+				currentContextTransform.setTransform();
 			}
 		};
 		propertiesObj["setTransform"] = {
 			value:function(a,b,c,d,e,f){
 				currentContextTransform.setCurrentTransform(new transform(a,b,c,d,e,f));
+				currentContextTransform.setTransform();
 			}
 		};
 		propertiesObj["rotate"] = {
 			value:function(a){
 				currentContextTransform.addToCurrentTransform(transform.rotation(a));
+				currentContextTransform.setTransform();
 			}
 		};
 		propertiesObj["transform"] = {
 			value:function(a,b,c,d,e,f){
 				currentContextTransform.addToCurrentTransform(new transform(a,b,c,d,e,f));
+				currentContextTransform.setTransform();
 			}
 		};
 		propertiesObj["scale"] = {
 			value:function(x,y){
 				currentContextTransform.addToCurrentTransform(transform.scale(x,y));
+				currentContextTransform.setTransform();
 			}
 		};
 		propertiesObj["translate"] = {
 			value:function(x,y){
 				currentContextTransform.addToCurrentTransform(transform.translation(x,y));
+				currentContextTransform.setTransform();
 			}
 		};
 		propertiesObj["rect"] = {
 			value:function(x, y, width, height){
-				currentContextTransform.setTransform();
 				var rect = getRect(x,y,width,height);
 				context.beginPath();
 				context.rect(rect.x, rect.y, rect.width, rect.height);
-				currentContextTransform.resetTransform();
 			}
 		};
 		propertiesObj["fillRect"] = {
 			value:function(x, y, width, height){
-				currentContextTransform.setTransform();
 				var rect = getRect(x,y,width,height);
 				context.fillRect(rect.x, rect.y, rect.width, rect.height);
-				currentContextTransform.resetTransform();
 			}
 		};
 		propertiesObj["strokeRect"] = {
 			value:function(x, y, width, height){
-				currentContextTransform.setTransform();
 				var rect = getRect(x,y,width,height);
 				context.beginPath();
 				context.rect(rect.x,rect.y,rect.width,rect.height);
 				context.closePath();
-				currentContextTransform.resetTransform();
 				context.stroke();
 			}
 		};

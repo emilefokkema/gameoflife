@@ -109,6 +109,32 @@ requirejs(["infinitecanvas/infinite-canvas","requireElement"], function(infinite
 				ctx.lineWidth = 3;
 				ctx.strokeRect(20,-Infinity,Infinity,Infinity);
 			}
+		},{
+			code:function(ctx){
+				var gradient = ctx.createLinearGradient(0,0,200,0);
+				gradient.addColorStop(0,"green");
+				gradient.addColorStop(1,"white");
+				ctx.fillStyle = gradient;
+				ctx.fillRect(10,10,200,100);
+			}
+		},{
+			code:function(ctx){
+				ctx.beginPath();
+				ctx.moveTo(150, 20);
+				ctx.arcTo(150, 100, 50, 20, 30);
+				ctx.lineTo(50, 20)
+				ctx.stroke();
+
+				ctx.fillStyle = 'blue';
+				// starting point
+				ctx.fillRect(150, 20, 10, 10);
+
+				ctx.fillStyle = 'red';
+				// control point one
+				ctx.fillRect(150, 100, 10, 10);
+				// control point two
+				ctx.fillRect(50, 20, 10, 10);
+			}
 		}
 	];
 	var getBody = function(f){

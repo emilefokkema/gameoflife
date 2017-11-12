@@ -5,7 +5,7 @@ define(["menu","coordinates","snapshots","rle","input","tree/hashlife"],function
 			context.save();
 			context.fillStyle = '#00f';
 			context.beginPath();
-			context.arc(mX, mY, 0.25, 0, 2*Math.PI);
+			context.arc(mX, mY, context.getRelativeSize(3), 0, 2*Math.PI);
 			context.fill();
 			context.restore();
 		};
@@ -246,7 +246,7 @@ define(["menu","coordinates","snapshots","rle","input","tree/hashlife"],function
 		if(!present){return;}
 		context.save();
 		context.strokeStyle = '#00f';
-		context.lineWidth = 2;
+		context.lineWidth = context.getRelativeSize(2);
 		context.strokeRect(minX, minY, maxX - minX + 1, maxY - minY + 1);
 		getDraggerMakers().map(function(d){d.draw(context);});
 		if(dragger && dragger.draw){

@@ -21,7 +21,7 @@ define(["tree/hashlife","coordinates","selection"],function(hashLife, coordinate
 	var drawLines = function(context){
 		context.save();
 		context.strokeStyle = '#ddd';
-		context.lineWidth = 1;
+		context.lineWidth = context.getRelativeSize(1);
 		
 		var screenPoint;
 		context.mapSet(integerXPoints, function(x){

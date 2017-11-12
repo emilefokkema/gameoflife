@@ -89,7 +89,9 @@ define(["infinitecanvas/wrap-canvas","sender","infinitecanvas/contextWrapper","i
 		});
 		c.onDraw(function(){
 			currentContextTransform.removeTransform();
+			currentContextTransform.setTransform();
 			onDraw(cWrapper);
+			currentContextTransform.resetTransform();
 		});
 		c.onContextMenu(function(clientX, clientY, preventDefault){
 			var pos = currentContextTransform.screenPositionToPoint(clientX, clientY);
