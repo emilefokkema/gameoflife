@@ -1,22 +1,15 @@
 define(["tree/hashlife","coordinates","selection"],function(hashLife, coordinates, selection){
 	
-	var integerYPoints = coordinates.getSet(function(viewBox){
-		var minY = Math.floor(viewBox.y);
-		var maxY = Math.ceil(minY + viewBox.height);
-		var result = [];
-		for(var y = minY; y <= maxY; y++){
-			result.push(y);
-		}
-		return result;
+	
+	var alongIntegerX = coordinates.createMultipleTransformation({
+		minIndex: function(viewBox){return Math.floor(viewBox.x);},
+		maxIndex : function(viewBox){return Math.ceil(viewBox.x + viewBox.width);},
+		transform: function(index, context){context.translate(index, 0);}
 	});
-	var integerXPoints = coordinates.getSet(function(viewBox){
-		var minX = Math.floor(viewBox.x);
-		var maxX = Math.ceil(minX + viewBox.width);
-		var result = [];
-		for(var x = minX; x <= maxX; x++){
-			result.push(x);
-		}
-		return result;
+	var alongIntegerY = coordinates.createMultipleTransformation({
+		minIndex: function(viewBox){return Math.floor(viewBox.y);},
+		maxIndex : function(viewBox){return Math.ceil(viewBox.y + viewBox.height);},
+		transform: function(index, context){context.translate(0, index);}
 	});
 	var drawLines = function(context){
 		context.save();
@@ -24,15 +17,15 @@ define(["tree/hashlife","coordinates","selection"],function(hashLife, coordinate
 		context.lineWidth = context.getRelativeSize(1);
 		
 		var screenPoint;
-		context.mapSet(integerXPoints, function(x){
-			context.rect(x, -Infinity, Infinity,Infinity);
+		alongIntegerX.each(function(){
+			context.rect(0, -Infinity, Infinity,Infinity);
 			context.stroke();
 		});
-		context.mapSet(integerYPoints,function(y){
-			context.rect(-Infinity,y,Infinity,Infinity);
+		alongIntegerY.each(function(){
+			context.rect(-Infinity, 0, Infinity, Infinity);
 			context.stroke();
 		});
-		
+
 		context.restore();
 	};
 	coordinates.onDraw(function(context){

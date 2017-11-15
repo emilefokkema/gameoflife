@@ -1,4 +1,4 @@
-define(["infinitecanvas/wrap-canvas","sender","infinitecanvas/contextWrapper","infinitecanvas/transform","infinitecanvas/context-transform"],function(wrapCanvas, sender, contextWrapper, transform, contextTransform){
+define(["infinitecanvas/wrap-canvas","sender","infinitecanvas/contextWrapper","infinitecanvas/transform","infinitecanvas/context-transform","infinitecanvas/multiple-transformation"],function(wrapCanvas, sender, contextWrapper, transform, contextTransform, multipleTransformation){
 	var factory = function(c){
 		var w = c.w,
 			h = c.h,
@@ -56,6 +56,9 @@ define(["infinitecanvas/wrap-canvas","sender","infinitecanvas/contextWrapper","i
 				return {
 					map:map
 				};
+			},
+			createMultipleTransformation = function(specs){
+				return new multipleTransformation(specs, currentContextTransform);
 			};
 		c.onClick(function(x,y,shift){
 			var pos = currentContextTransform.screenPositionToPoint(x, y);
@@ -109,6 +112,7 @@ define(["infinitecanvas/wrap-canvas","sender","infinitecanvas/contextWrapper","i
 		};
 		return {
 			getSet:getSet,
+			createMultipleTransformation:createMultipleTransformation,
 			onDragMove:function(f){
 				c.addEventListener('positiondragmove', function(e){
 					var pos = currentContextTransform.screenPositionToPoint(e.detail.toX, e.detail.toY);

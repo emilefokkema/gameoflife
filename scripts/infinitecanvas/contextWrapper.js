@@ -1,4 +1,4 @@
-define(["infinitecanvas/transform"],function(transform){
+define(["infinitecanvas/transform","infinitecanvas/multiple-transformation"],function(transform, multipleTransformation){
 	
 	var wrapper = function(context, currentContextTransform){
 		var absolute = false;
