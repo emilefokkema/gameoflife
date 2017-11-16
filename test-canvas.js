@@ -135,18 +135,59 @@ requirejs(["infinitecanvas/infinite-canvas","requireElement"], function(infinite
 				// control point two
 				ctx.fillRect(50, 20, 10, 10);
 			}
+		},
+		{
+			preliminaryCode:function(canvas){
+				var alongIntegerX = canvas.createMultipleTransformation({
+					minIndex: function(viewBox){return Math.floor(viewBox.x / 20);},
+					maxIndex : function(viewBox){return Math.ceil((viewBox.x + viewBox.width) / 20);},
+					transform: function(index, context){context.translate(20 * index, 0);}
+				});
+				var alongIntegerY = canvas.createMultipleTransformation({
+					minIndex: function(viewBox){return Math.floor(viewBox.y / 20);},
+					maxIndex : function(viewBox){return Math.ceil((viewBox.y + viewBox.height) / 20);},
+					transform: function(index, context){context.translate(0, 20 * index);}
+				});
+				return [alongIntegerX,alongIntegerY];
+			},
+			code:function(ctx, alongIntegerX, alongIntegerY){
+				ctx.strokeStyle = '#000';
+				ctx.lineWidth = 1;
+				alongIntegerX.each(function(){
+					ctx.rect(0,-Infinity,Infinity,Infinity);
+					ctx.stroke();
+				});
+				alongIntegerY.each(function(){
+					ctx.rect(-Infinity,0,Infinity,Infinity);
+					ctx.stroke();
+				});
+			}
 		}
 	];
 	var getBody = function(f){
-		return f.toString().match(/\s*function\s*\([^)]*\)\s*\{([\s\S]*?)\}\s*/)[1];
+		return f.toString().match(/^\s*function\s*\([^)]*\)\s*\{([\s\S]*?)\}\s*$/)[1];
 	};
 	
 	examples.map(function(e){
-		requireElement(document.getElementById("example"), function(canvas1, canvas2, code){
-			code.innerHTML = getBody(e.code).replace(/\n/g,"<br/>");
-			infiniteCanvas(canvas1).onDraw(e.code);
-			var ctx = canvas2.getContext("2d");
-			e.code(ctx);
+		requireElement(document.getElementById("example"), function(canvas1, makeCanvas2, code){
+			var preliminaryCodeResult = [];
+			var codeHtml = getBody(e.code).replace(/\n/g,"<br/>");
+			var c = infiniteCanvas(canvas1);
+			if(e.preliminaryCode){
+				var preliminaryCodeBody = getBody(e.preliminaryCode);
+				codeHtml = preliminaryCodeBody.replace(/return \[[^\]]+\];/g,"").replace(/\n/g,"<br/>")+codeHtml;
+				preliminaryCodeResult = e.preliminaryCode(c);
+			}else{
+				makeCanvas2(function(canvas2){
+					var ctx = canvas2.getContext("2d");
+					e.code(ctx);
+				});
+			}
+			
+			
+			code.innerHTML = codeHtml;
+			c.onDraw(function(ctx){e.code.apply(null,[ctx].concat(preliminaryCodeResult))});
+			
 		});
 	})
 })
