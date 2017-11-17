@@ -18,10 +18,12 @@ define(["tree/hashlife","coordinates","selection"],function(hashLife, coordinate
 		
 		var screenPoint;
 		alongIntegerX.each(function(){
+			context.beginPath();
 			context.rect(0, -Infinity, Infinity,Infinity);
 			context.stroke();
 		});
 		alongIntegerY.each(function(){
+			context.beginPath();
 			context.rect(-Infinity, 0, Infinity, Infinity);
 			context.stroke();
 		});

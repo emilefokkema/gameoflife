@@ -106,7 +106,6 @@ define(["infinitecanvas/transform","infinitecanvas/multiple-transformation"],fun
 		propertiesObj["rect"] = {
 			value:function(x, y, width, height){
 				var rect = getRect(x,y,width,height);
-				context.beginPath();
 				context.rect(rect.x, rect.y, rect.width, rect.height);
 			}
 		};
@@ -119,10 +118,7 @@ define(["infinitecanvas/transform","infinitecanvas/multiple-transformation"],fun
 		propertiesObj["strokeRect"] = {
 			value:function(x, y, width, height){
 				var rect = getRect(x,y,width,height);
-				context.beginPath();
-				context.rect(rect.x,rect.y,rect.width,rect.height);
-				context.closePath();
-				context.stroke();
+				context.strokeRect(rect.x,rect.y,rect.width,rect.height);
 			}
 		};
 		constr.prototype = Object.create({},propertiesObj);

@@ -156,10 +156,12 @@ requirejs(["infinitecanvas/infinite-canvas","requireElement"], function(infinite
 				ctx.fillStyle = '#f00';
 				ctx.rotate(Math.PI/4);
 				alongIntegerX.each(function(){
+					ctx.beginPath();
 					ctx.rect(0,-Infinity,Infinity,Infinity);
 					ctx.stroke();
 				});
 				alongIntegerY.each(function(){
+					ctx.beginPath();
 					ctx.rect(-Infinity,0,Infinity,Infinity);
 					ctx.stroke();
 				});

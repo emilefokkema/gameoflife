@@ -30,5 +30,6 @@ define(["infinitecanvas/transform"],function(transform){
 			this.currentContextTransform.restoreTransform();
 		}
 	};
+	
 	return mt;
 })
