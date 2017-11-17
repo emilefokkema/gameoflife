@@ -138,16 +138,26 @@ requirejs(["infinitecanvas/infinite-canvas","requireElement"], function(infinite
 		},
 		{
 			preliminaryCode:function(canvas){
-				var alongIntegerX = canvas.createMultipleTransformation({
-					minIndex: function(viewBox){return Math.floor(viewBox.x / 20);},
-					maxIndex : function(viewBox){return Math.ceil((viewBox.x + viewBox.width) / 20);},
-					transform: function(index, context){context.translate(20 * index, 0);}
-				});
-				var alongIntegerY = canvas.createMultipleTransformation({
-					minIndex: function(viewBox){return Math.floor(viewBox.y / 20);},
-					maxIndex : function(viewBox){return Math.ceil((viewBox.y + viewBox.height) / 20);},
-					transform: function(index, context){context.translate(0, 20 * index);}
-				});
+				var alongIntegerX = {
+					initialIndex:function(viewBox){
+						return Math.ceil(viewBox.x / 20);
+					},
+					includeIndex:function(index, viewBox){
+						var val = 20 * index;
+						return val >= viewBox.x && val <= viewBox.x + viewBox.width;
+					},
+					transform:function(index, context){context.translate(20 * index, 0);}
+				};
+				var alongIntegerY = {
+					initialIndex:function(viewBox){
+						return Math.ceil(viewBox.y / 20);
+					},
+					includeIndex:function(index, viewBox){
+						var val = 20 * index;
+						return val >= viewBox.y && val <= viewBox.y + viewBox.height;
+					},
+					transform:function(index, context){context.translate(0, 20 * index);}
+				};
 				return [alongIntegerX,alongIntegerY];
 			},
 			code:function(ctx, alongIntegerX, alongIntegerY){
