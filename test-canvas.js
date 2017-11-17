@@ -146,7 +146,9 @@ requirejs(["infinitecanvas/infinite-canvas","requireElement"], function(infinite
 						var val = 20 * index;
 						return val >= viewBox.x && val <= viewBox.x + viewBox.width;
 					},
-					transform:function(index, context){context.translate(20 * index, 0);}
+					transform:function(index, context){
+						context.translate(20 * index, 0);
+					}
 				};
 				var alongIntegerY = {
 					initialIndex:function(viewBox){
@@ -156,32 +158,36 @@ requirejs(["infinitecanvas/infinite-canvas","requireElement"], function(infinite
 						var val = 20 * index;
 						return val >= viewBox.y && val <= viewBox.y + viewBox.height;
 					},
-					transform:function(index, context){context.translate(0, 20 * index);}
+					transform:function(index, context){
+						context.translate(0, 20 * index);
+					}
 				};
 				return [alongIntegerX,alongIntegerY];
 			},
 			code:function(ctx, alongIntegerX, alongIntegerY){
 				ctx.strokeStyle = '#000';
 				ctx.lineWidth = 1;
-				ctx.fillStyle = '#f00';
+				
 				ctx.rotate(Math.PI/4);
-				alongIntegerX.each(function(){
+				var i,j;
+				for(i of ctx.transformMultiple(alongIntegerX)){
 					ctx.beginPath();
 					ctx.rect(0,-Infinity,Infinity,Infinity);
 					ctx.stroke();
-				});
-				alongIntegerY.each(function(){
+				}
+				for(j of ctx.transformMultiple(alongIntegerY)){
 					ctx.beginPath();
 					ctx.rect(-Infinity,0,Infinity,Infinity);
 					ctx.stroke();
-				});
-				alongIntegerX.each(function(){
-					alongIntegerY.each(function(){
+				}
+				for(i of ctx.transformMultiple(alongIntegerX)){
+					for(j of ctx.transformMultiple(alongIntegerY)){
+						ctx.fillStyle = 'hsl('+(i+j)*50+',50%,50%)';
 						ctx.beginPath();
 						ctx.arc(0,0,5,0,2*Math.PI);
 						ctx.fill();
-					});
-				})
+					}
+				}
 			}
 		}
 	];

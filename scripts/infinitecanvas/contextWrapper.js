@@ -93,6 +93,12 @@ define(["infinitecanvas/transform","infinitecanvas/multiple-transformation"],fun
 				currentContextTransform.addToCurrentTransform(new transform(a,b,c,d,e,f));
 			}
 		};
+		propertiesObj["transformMultiple"] = {
+			value:function(specs){
+				return new multipleTransformation(specs, currentContextTransform).makeIterable();
+				
+			}
+		};
 		propertiesObj["scale"] = {
 			value:function(x,y){
 				currentContextTransform.addToCurrentTransform(transform.scale(x,y));
