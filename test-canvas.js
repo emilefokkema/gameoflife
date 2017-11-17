@@ -154,6 +154,7 @@ requirejs(["infinitecanvas/infinite-canvas","requireElement"], function(infinite
 				ctx.strokeStyle = '#000';
 				ctx.lineWidth = 1;
 				ctx.fillStyle = '#f00';
+				ctx.rotate(Math.PI/4);
 				alongIntegerX.each(function(){
 					ctx.rect(0,-Infinity,Infinity,Infinity);
 					ctx.stroke();

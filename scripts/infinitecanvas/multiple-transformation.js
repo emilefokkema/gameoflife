@@ -6,9 +6,6 @@ define(["infinitecanvas/transform"],function(transform){
 			transform:function(a,b,c,d,e,f){
 				currentContextTransform.addToCurrentTransform(new transform(a,b,c,d,e,f));
 			},
-			setTransform:function(a,b,c,d,e,f){
-				currentContextTransform.setCurrentTransform(new transform(a,b,c,d,e,f));
-			},
 			rotate:function(a){
 				currentContextTransform.addToCurrentTransform(transform.rotation(a));
 			},
@@ -21,7 +18,7 @@ define(["infinitecanvas/transform"],function(transform){
 		};
 	};
 	mt.prototype.each = function(f){
-		var viewBox = this.currentContextTransform.getViewBox();
+		var viewBox = this.currentContextTransform.getTransformedViewBox();
 		var minIndex = this.specs.minIndex(viewBox);
 		var maxIndex = this.specs.maxIndex(viewBox);
 		
