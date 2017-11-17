@@ -153,6 +153,7 @@ requirejs(["infinitecanvas/infinite-canvas","requireElement"], function(infinite
 			code:function(ctx, alongIntegerX, alongIntegerY){
 				ctx.strokeStyle = '#000';
 				ctx.lineWidth = 1;
+				ctx.fillStyle = '#f00';
 				alongIntegerX.each(function(){
 					ctx.rect(0,-Infinity,Infinity,Infinity);
 					ctx.stroke();
@@ -161,6 +162,13 @@ requirejs(["infinitecanvas/infinite-canvas","requireElement"], function(infinite
 					ctx.rect(-Infinity,0,Infinity,Infinity);
 					ctx.stroke();
 				});
+				alongIntegerX.each(function(){
+					alongIntegerY.each(function(){
+						ctx.beginPath();
+						ctx.arc(0,0,5,0,2*Math.PI);
+						ctx.fill();
+					});
+				})
 			}
 		}
 	];

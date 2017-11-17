@@ -76,37 +76,31 @@ define(["infinitecanvas/transform","infinitecanvas/multiple-transformation"],fun
 			value:function(){
 				context.restore();
 				currentContextTransform.restoreTransform();
-				currentContextTransform.setTransform();
 			}
 		};
 		propertiesObj["setTransform"] = {
 			value:function(a,b,c,d,e,f){
 				currentContextTransform.setCurrentTransform(new transform(a,b,c,d,e,f));
-				currentContextTransform.setTransform();
 			}
 		};
 		propertiesObj["rotate"] = {
 			value:function(a){
 				currentContextTransform.addToCurrentTransform(transform.rotation(a));
-				currentContextTransform.setTransform();
 			}
 		};
 		propertiesObj["transform"] = {
 			value:function(a,b,c,d,e,f){
 				currentContextTransform.addToCurrentTransform(new transform(a,b,c,d,e,f));
-				currentContextTransform.setTransform();
 			}
 		};
 		propertiesObj["scale"] = {
 			value:function(x,y){
 				currentContextTransform.addToCurrentTransform(transform.scale(x,y));
-				currentContextTransform.setTransform();
 			}
 		};
 		propertiesObj["translate"] = {
 			value:function(x,y){
 				currentContextTransform.addToCurrentTransform(transform.translation(x,y));
-				currentContextTransform.setTransform();
 			}
 		};
 		propertiesObj["rect"] = {
@@ -129,11 +123,6 @@ define(["infinitecanvas/transform","infinitecanvas/multiple-transformation"],fun
 				context.rect(rect.x,rect.y,rect.width,rect.height);
 				context.closePath();
 				context.stroke();
-			}
-		};
-		propertiesObj["mapSet"] = {
-			value:function(ps, mapper){
-				ps.map(mapper, currentContextTransform.getViewBox);
 			}
 		};
 		constr.prototype = Object.create({},propertiesObj);

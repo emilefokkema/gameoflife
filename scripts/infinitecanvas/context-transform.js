@@ -81,6 +81,7 @@ define(["infinitecanvas/transform"],function(transform){
 				if(currentTransformStack.length){
 					currentTransform = currentTransformStack.pop();
 					setCache();
+					setTransform();
 				}
 			},
 			setTransform = function(){
@@ -94,10 +95,12 @@ define(["infinitecanvas/transform"],function(transform){
 			setCurrentTransform = function(t){
 				currentTransform = t;
 				setCache();
+				setTransform();
 			},
 			addToCurrentTransform = function(t){
 				currentTransform = currentTransform.add(t);
 				setCache();
+				setTransform();
 			},
 			getViewBox = function(){
 				var p1 = screenPositionToPoint(0,0);
