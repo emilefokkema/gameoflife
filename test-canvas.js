@@ -144,7 +144,7 @@ requirejs(["infinitecanvas/infinite-canvas","requireElement"], function(infinite
 					},
 					includeIndex:function(index, viewBox){
 						var val = 20 * index;
-						return val >= viewBox.x && val <= viewBox.x + viewBox.width;
+						return val >= viewBox.x - 20 && val <= viewBox.x + viewBox.width + 20;
 					},
 					transform:function(index, context){
 						context.translate(20 * index, 0);
@@ -156,7 +156,7 @@ requirejs(["infinitecanvas/infinite-canvas","requireElement"], function(infinite
 					},
 					includeIndex:function(index, viewBox){
 						var val = 20 * index;
-						return val >= viewBox.y && val <= viewBox.y + viewBox.height;
+						return val >= viewBox.y - 20 && val <= viewBox.y + viewBox.height + 20;
 					},
 					transform:function(index, context){
 						context.translate(0, 20 * index);
