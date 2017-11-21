@@ -1,4 +1,7 @@
 define(["infinitecanvas/transform"],function(transform){
+	var boxContainsPoint = function(box, point){
+		return point.x >= box.x && point.x <= box.x + box.width && point.y >= box.y && point.y <= box.y + box.height;
+	};
 	var mt = function(specs, currentContextTransform){
 		this.specs = specs;
 		this.currentContextTransform = currentContextTransform;
@@ -39,12 +42,14 @@ define(["infinitecanvas/transform"],function(transform){
 		var currentIndex = initialIndex;
 		var includeIndex = this.specs.includeIndex || function(){return false;};
 		var transform = this.specs.transform || function(){};
-		var goingup = true, counter = 0, started = false;
+		var goingup = true, counter = 0, started = false, plusLimitPoint = this.specs.plusLimitPoint, minLimitPoint = this.specs.minLimitPoint;
+		var plusEnds = !plusLimitPoint || !boxContainsPoint(viewBox, plusLimitPoint);
+		var minEnds = !minLimitPoint || !boxContainsPoint(viewBox, minLimitPoint);
 		var transformableContext = this.getTransformableContext();
 		var currentContextTransform = this.currentContextTransform;
 		var next = function(){
-			
-			if(includeIndex(currentIndex, viewBox) && counter++ < 30){
+			counter++;
+			if(includeIndex(currentIndex, viewBox) && (counter < 30 || goingup && plusEnds || !goingup && minEnds)){
 				var v = {
 					value:currentIndex,
 					done:false

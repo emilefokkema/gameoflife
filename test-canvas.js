@@ -189,6 +189,42 @@ requirejs(["infinitecanvas/infinite-canvas","requireElement"], function(infinite
 					}
 				}
 			}
+		},
+		{
+			preliminaryCode:function(){
+				var expand = {
+					initialIndex:function(viewBox){
+						if(viewBox.x + viewBox.width > 0){ 
+							return Math.floor(Math.log((viewBox.x + viewBox.width)*(10/9)));
+						}
+						return 0;
+					},
+					includeIndex:function(index, viewBox){
+						var x = Math.exp(index);
+						return x >= viewBox.x - x/10 && x <= viewBox.x + viewBox.width + x/10 && x/10 >= viewBox.y && -x/10 <= viewBox.y + viewBox.height;
+					},
+					transform:function(index, context){
+						var s = Math.exp(index);
+						context.translate(s, 0);
+						context.scale(s/10, s/10);
+					},
+					minLimitPoint: {x:0,y:0}
+				};
+				return [expand];
+			},
+			code:function(ctx, expand){
+				
+				for(var i of ctx.transformMultiple(expand)){
+					ctx.fillStyle = 'hsl('+20*i+',50%,50%)';
+					ctx.beginPath();
+					ctx.arc(0,0,1,0,2*Math.PI);
+					ctx.fill();
+					ctx.fillStyle = '#f00';
+					ctx.beginPath();
+					ctx.arc(0,0,0.5,0,2*Math.PI);
+					ctx.fill();
+				}
+			}
 		}
 	];
 	var getBody = function(f){
