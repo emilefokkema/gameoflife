@@ -192,19 +192,52 @@ requirejs(["infinitecanvas/infinite-canvas","requireElement"], function(infinite
 		},
 		{
 			preliminaryCode:function(){
+				var getRing = function(viewBox){
+					var maxX = viewBox.x + viewBox.width,
+						maxY = viewBox.y + viewBox.height,
+						r1 = Math.sqrt(viewBox.x * viewBox.x + viewBox.y * viewBox.y),
+						r2 = Math.sqrt(maxX * maxX + viewBox.y * viewBox.y),
+						r3 = Math.sqrt(viewBox.x * viewBox.x + maxY * maxY),
+						r4 = Math.sqrt(maxX * maxX + maxY * maxY);
+					if(viewBox.x >= 0){
+						if(viewBox.y >= 0){
+							return {minR:r1,maxR:r4};
+						}else if(viewBox.y < 0 && maxY >=0){
+							return {minR:viewBox.x,maxR:Math.max(r2,r4)};
+						}else{
+							return {minR:r3,maxR:r2};
+						}
+					}else if(viewBox.x < 0 && maxX >= 0){
+						if(viewBox.y >= 0){
+							return {minR:viewBox.y,maxR:Math.max(r3,r4)};
+						}else if(viewBox.y < 0 && maxY >=0){
+							return {minR:0,maxR:Math.max(r1,r2,r3,r4)};
+						}else{
+							return {minR:-maxY,maxR:Math.max(r1,r2)};
+						}
+					}else{
+						if(viewBox.y >= 0){
+							return {minR:r2,maxR:r3};
+						}else if(viewBox.y < 0 && maxY >=0){
+							return {minR:-maxX,maxR:Math.max(r1,r3)};
+						}else{
+							return {minR:r4,maxR:r1};
+						}
+					}
+				};
 				var expand = {
 					initialIndex:function(viewBox){
-						if(viewBox.x + viewBox.width > 0){ 
-							return Math.floor(Math.log((viewBox.x + viewBox.width)*(10/9)));
-						}
-						return 0;
+						var ring = getRing(viewBox);
+						return Math.floor(Math.log(ring.maxR * 10/9) / Math.log(1.1));
 					},
 					includeIndex:function(index, viewBox){
-						var x = Math.exp(index);
-						return x >= viewBox.x - x/10 && x <= viewBox.x + viewBox.width + x/10 && x/10 >= viewBox.y && -x/10 <= viewBox.y + viewBox.height;
+						var r = Math.exp(index * Math.log(1.1));
+						var ring = getRing(viewBox);
+						return 11*r/10 >= ring.minR && 9*r/10 <= ring.maxR;
 					},
 					transform:function(index, context){
-						var s = Math.exp(index);
+						var s = Math.exp(index * Math.log(1.1));
+						context.rotate(index/2);
 						context.translate(s, 0);
 						context.scale(s/10, s/10);
 					},
@@ -228,17 +261,22 @@ requirejs(["infinitecanvas/infinite-canvas","requireElement"], function(infinite
 		}
 	];
 	var getBody = function(f){
-		return f.toString().match(/^\s*function\s*\([^)]*\)\s*\{([\s\S]*?)\}\s*$/)[1];
+		var body = f.toString().match(/^\s*function\s*\([^)]*\)\s*\{([\s\S]*?)\}\s*$/)[1];
+		var lines = body.split(/\n/g).filter(function(l){return l.length > 0 && !l.match(/^\s+$/);});
+		while(!lines.some(function(l){return !l.match(/^\s/);})){
+			lines = lines.map(function(l){return l.replace(/^\s/g,"");});
+		}
+		return lines.join("\n");
 	};
 	
 	examples.map(function(e){
 		requireElement(document.getElementById("example"), function(canvas1, makeCanvas2, code){
 			var preliminaryCodeResult = [];
-			var codeHtml = getBody(e.code).replace(/\n/g,"<br/>");
+			var codeHtml = getBody(e.code);
 			var c = infiniteCanvas(canvas1);
 			if(e.preliminaryCode){
 				var preliminaryCodeBody = getBody(e.preliminaryCode);
-				codeHtml = preliminaryCodeBody.replace(/return \[[^\]]+\];/g,"").replace(/\n/g,"<br/>")+codeHtml;
+				codeHtml = preliminaryCodeBody.replace(/return \[[^\]]+\];/g,"")+codeHtml;
 				preliminaryCodeResult = e.preliminaryCode(c);
 			}else{
 				makeCanvas2(function(canvas2){

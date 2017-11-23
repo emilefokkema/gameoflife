@@ -49,7 +49,7 @@ define(["infinitecanvas/transform"],function(transform){
 		var currentContextTransform = this.currentContextTransform;
 		var next = function(){
 			counter++;
-			if(includeIndex(currentIndex, viewBox) && (counter < 30 || goingup && plusEnds || !goingup && minEnds)){
+			if(includeIndex(currentIndex, viewBox) && (counter < 100 || goingup && plusEnds || !goingup && minEnds)){
 				var v = {
 					value:currentIndex,
 					done:false
