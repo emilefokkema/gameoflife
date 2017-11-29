@@ -240,8 +240,7 @@ requirejs(["infinitecanvas/infinite-canvas","requireElement"], function(infinite
 						context.rotate(index/2);
 						context.translate(s, 0);
 						context.scale(s/10, s/10);
-					},
-					minLimitPoint: {x:0,y:0}
+					}
 				};
 				return [expand];
 			},

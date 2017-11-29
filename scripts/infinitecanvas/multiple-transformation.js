@@ -43,8 +43,8 @@ define(["infinitecanvas/transform"],function(transform){
 		var includeIndex = this.specs.includeIndex || function(){return false;};
 		var transform = this.specs.transform || function(){};
 		var goingup = true, counter = 0, started = false, plusLimitPoint = this.specs.plusLimitPoint, minLimitPoint = this.specs.minLimitPoint;
-		var plusEnds = !plusLimitPoint || !boxContainsPoint(viewBox, plusLimitPoint);
-		var minEnds = !minLimitPoint || !boxContainsPoint(viewBox, minLimitPoint);
+		var plusEnds = !includeIndex(Infinity, viewBox);
+		var minEnds = !includeIndex(-Infinity, viewBox);
 		var transformableContext = this.getTransformableContext();
 		var currentContextTransform = this.currentContextTransform;
 		var next = function(){
