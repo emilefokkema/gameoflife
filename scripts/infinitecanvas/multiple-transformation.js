@@ -1,11 +1,7 @@
 define(["infinitecanvas/transform"],function(transform){
-	var boxContainsPoint = function(box, point){
-		return point.x >= box.x && point.x <= box.x + box.width && point.y >= box.y && point.y <= box.y + box.height;
-	};
 	var mt = function(specs, currentContextTransform){
 		this.specs = specs;
 		this.currentContextTransform = currentContextTransform;
-
 	};
 	mt.prototype.getTransformableContext = function(){
 		var currentContextTransform = this.currentContextTransform;

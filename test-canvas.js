@@ -257,6 +257,41 @@ requirejs(["infinitecanvas/infinite-canvas","requireElement"], function(infinite
 					ctx.fill();
 				}
 			}
+		},
+		{
+			preliminaryCode:function(){
+				var expand = {
+					initialIndex:function(viewBox){
+						var maxR = Math.max(Math.abs(viewBox.x), Math.abs(viewBox.x + viewBox.width), Math.abs(viewBox.y), Math.abs(viewBox.y + viewBox.height));
+						return Math.floor(maxR);
+					},
+					includeIndex:function(index, viewBox){
+						var maxR = Math.max(Math.abs(viewBox.x), Math.abs(viewBox.x + viewBox.width), Math.abs(viewBox.y), Math.abs(viewBox.y + viewBox.height));
+						var minR;
+						if(viewBox.x < 0 && viewBox.x + viewBox.width > 0 && viewBox.y < 0 && viewBox.y + viewBox.height > 0){
+							minR = 0;
+						}else{
+							minR = Math.min(Math.abs(viewBox.x), Math.abs(viewBox.x + viewBox.width), Math.abs(viewBox.y), Math.abs(viewBox.y + viewBox.height));
+						}
+						return index >= minR && index <= maxR;
+					},
+					transform:function(index, context){
+						context.scale(index + 1, index + 1);
+					}
+				};
+				return [expand];
+			},
+			code:function(ctx, expand){
+				
+				for(var i of ctx.transformMultiple(expand)){
+					if(i % 2 === 0){
+						ctx.fillStyle = '#f00';
+					}else{
+						ctx.fillStyle = '#00f';
+					}
+					ctx.fillRect(-1,-1,2,2);
+				}
+			}
 		}
 	];
 	var getBody = function(f){
