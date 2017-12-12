@@ -131,7 +131,8 @@ define(["menu","coordinates","snapshots","rle","input","tree/hashlife"],function
 		var draggerMakers = getDraggerMakers();
 		for(var i=0;i<draggerMakers.length;i++){
 			var draggerMaker = draggerMakers[i];
-			if(coordinates.areClose(draggerMakers[i].x, draggerMakers[i].y, x, y)){
+			var areClose = Math.sqrt(Math.pow(draggerMakers[i].x - x, 2) + Math.pow(draggerMakers[i].y - y, 2)) * coordinates.scale < 15;
+			if(areClose){
 				return draggerMaker.make();
 			}
 		}
