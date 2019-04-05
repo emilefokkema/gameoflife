@@ -2,9 +2,9 @@ requirejs([
 	"topRightButtons",
 	"menu",
 	"coordinates",
-	"c",
 	"selection",
 	"position",
+	"tree/hashlife",
 	"snapshots",
 	"body",
 	"input",
@@ -20,9 +20,9 @@ requirejs([
 		topRightButtons, 
 		menu, 
 		coordinates, 
-		c, 
 		selection, 
-		position, 
+		position,
+		hashLife, 
 		snapshots, 
 		body, 
 		input, 
@@ -52,20 +52,20 @@ requirejs([
 				return;
 			}
 			rle.parse(hash.substr(1), function(x,y){
-				position.add(x,y);
+				hashLife.add(x,y);
 			});
 		}
-	c.addEventListener('positiondragstart',function(e){
-		if(!selection.isPresent() || !selection.handleDragStart(e.detail.x, e.detail.y)){
-			coordinates.beginDrag(e.detail.x, e.detail.y);
-		}
-	});
 	
-	c.addEventListener('click',function(e){
-		if(e.shiftKey){
-			var loc = coordinates.mousePositionToPositionLocation(e.clientX, e.clientY);
-			selection.select(loc.x, loc.y);
-			c.drawAll();
+	coordinates.onDragStart(function(x, y){
+		if(!selection.isPresent() || !selection.handleDragStart(x, y)){
+			return true;
+		}
+		return false;
+	});
+	coordinates.onClick(function(pos){
+		if(pos.shiftKey){
+			selection.select(pos.x, pos.y);
+			coordinates.drawAll();
 			return;
 		}
 		if(menu.isOpen()){
@@ -79,54 +79,51 @@ requirejs([
 		if(selection.isPresent()){
 			selection.clear();
 		}else{
-			var p = coordinates.mousePositionToPositionLocation(e.clientX, e.clientY);
-			
-			if(position.contains(p.x,p.y)){
-				position.remove(p.x,p.y);
+			if(hashLife.contains(pos.x, pos.y)){
+				hashLife.remove(pos.x, pos.y);
 			}else{
-				position.add(p.x,p.y);
+				hashLife.add(pos.x, pos.y);
 			}
 		}
-		c.drawAll();
+		coordinates.drawAll();
 	});
-	c.addEventListener('contextmenu',function(e){
-		menu.show(e.clientX, e.clientY);
+	coordinates.onContextMenu(function(screenX, screenY, posX, posY, preventDefault){
+		menu.show(screenX, screenY, {x:posX,y:posY});
+		preventDefault();
 		return false;
 	});
+	
 	menu.addOption('parse RLE',function(x,y){
 		input(function(v){
 			if(!v){return;}
-			position.vacateAll();
-			rle.parse(v, function(xx,yy){position.add(xx+x,yy+y);});
-			c.drawAll();
+			hashLife.vacateAll();
+			rle.parse(v, function(xx,yy){hashLife.add(xx+x,yy+y);});
+			coordinates.drawAll();
 		});
 	});
 	menu.addOption('parse plaintext',function(x,y){
 		input(function(v){
 			if(!v){return;}
-			position.vacateAll();
-			parsePlaintext(v, function(xx,yy){position.add(xx+x,yy+y);});
-			c.drawAll();
+			hashLife.vacateAll();
+			parsePlaintext(v, function(xx,yy){hashLife.add(xx+x,yy+y);});
+			coordinates.drawAll();
 		});
 	});
 	menu.addOption('save image',function(){
-		c.save();
+		var url = coordinates.toDataURL("image/png");
+		var a = document.createElement('a');
+		var event = new MouseEvent('click',{});
+		a.setAttribute('href',url);
+		a.setAttribute('download','gameoflife.png');
+		document.body.appendChild(a);
+		a.dispatchEvent(event);
+		document.body.removeChild(a);
 	});
 	
 	input(function(){},"Click on a cell to bring it to life. Hit the space bar to get things moving, or to pause them if they already are. Adjust the slider to make them move faster or slower. Shift-click on a cell to make a selection, and then right-click on the selection to find some options.");
 	readHash();
-	c.drawAll();
-	window.health = function(){
-		var all = position.countAll();
-		var alive = position.countAlive();
-		var treeSize = position.getCurrentTreeSize();
-		return {
-			all:all,
-			alive:alive,
-			ratio:all/alive,
-			treeSize: treeSize
-		};
-	};
+	coordinates.drawAll();
+	
 	
 	var reactToKeys = function(){
 		return !snapshots.isShowing() && !input.isOpen() && !scriptEditor.isOpen() && !runScript.isOpen();
@@ -140,7 +137,7 @@ requirejs([
 		},{
 			key: "r",
 			action:function(){
-				snapshots.add(position.getAllAlive());
+				snapshots.add(hashLife.getAllAlive());
 			}
 		},{
 			key:"c",
@@ -168,11 +165,11 @@ requirejs([
 			}
 		});
 	});
-	window.addEventListener('wheel',function(e){
-		if(!reactToKeys()){
-			return;
-		}
-		coordinates.zoom(Math.pow(2, -e.deltaY / 200), e.clientX, e.clientY);
-		c.drawAll();
-	});
+	// window.addEventListener('wheel',function(e){
+	// 	if(!reactToKeys()){
+	// 		return;
+	// 	}
+	// 	coordinates.zoom(Math.pow(2, -e.deltaY / 200), e.clientX, e.clientY);
+	// 	coordinates.drawAll();
+	// });
 });

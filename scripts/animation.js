@@ -1,4 +1,4 @@
-define(["counter","speedRange","position","c","body"], function(counter,speedRange,position, c, body){
+define(["counter","speedRange","tree/hashlife","coordinates","body"], function(counter,speedRange,hashLife, coordinates, body){
 	speedRange.onInput(function(l){
 		intervalLength = l;
 	});
@@ -7,8 +7,8 @@ define(["counter","speedRange","position","c","body"], function(counter,speedRan
 		},
 		stepCount = 0,
 		doStep = function(done){
-			position.doStep();
-			stepCount += 1 << position.getTimePerStepLog();
+			hashLife.doStep();
+			stepCount += 1 << hashLife.getTimePerStepLog();
 			done && done();
 		},
 		going = false,
@@ -24,7 +24,7 @@ define(["counter","speedRange","position","c","body"], function(counter,speedRan
 			body.addClass('going');
 			going = true;
 			var afterStep = function(){
-				c.drawAll();
+				coordinates.drawAll();
 				window.setTimeout(function(){
 					if(going){
 						doStep(afterStep);
@@ -35,10 +35,10 @@ define(["counter","speedRange","position","c","body"], function(counter,speedRan
 			setCounterInterval = window.setInterval(setCounter, 250);
 		},
 		reset = function(){
-			position.vacateAll();
+			hashLife.vacateAll();
 			stepCount = 0;
 			setCounter();
-			c.drawAll();
+			coordinates.drawAll();
 		};
 	setCounter();
 	return {
@@ -47,7 +47,7 @@ define(["counter","speedRange","position","c","body"], function(counter,speedRan
 		reset:reset,
 		doStep:function(){
 			doStep();
-			c.drawAll();
+			coordinates.drawAll();
 			setCounter();
 		},
 		isGoing:function(){return going;}

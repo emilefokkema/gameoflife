@@ -1,11 +1,17 @@
 define(function(){
-	return function(){
+	return function(reducer, initialValue){
+		if(reducer && arguments.length == 1){
+			throw 'when making a sender with a reducer, please supply an initial value';
+		}
 		var todo= [];
 		var f = function(){
 			var args = arguments;
-			todo.map(function(g){
-				g.apply(null, args);
+			var mapped = todo.map(function(g){
+				return g.apply(null, args);
 			});
+			if(reducer){
+				return mapped.reduce(reducer, initialValue);
+			}
 		};
 		f.add = function(g){todo.push(g);return f;};
 		f.remove = function(g){

@@ -1,4 +1,4 @@
-define(["body","position","evaluator","c","requireElement"],function(body, position, evaluator, c, requireElement){
+define(["body","tree/hashlife","evaluator","coordinates","requireElement"],function(body, hashLife, evaluator, coordinates, requireElement){
 	var literalPattern = /^(?:|'[^']+(?:\\'[^']+)*'|"[^"]+(?:\\"[^"]+)*"|-?\d+(?:\.\d+)?(?:e[+\-]?\d+)?|0x[0-9a-f]+|0b[01]+|true|false|null|undefined)$/i;
 	var toLiteralString = function(a){
 		if(typeof a === "string"){
@@ -23,7 +23,7 @@ define(["body","position","evaluator","c","requireElement"],function(body, posit
 			}
 			xx = Math.floor(xx);
 			yy = Math.floor(yy);
-			position.add(x + xx, y + yy);
+			hashLife.add(x + xx, y + yy);
 		};
 	};
 	return requireElement(document.getElementById("runScript").innerHTML,function(div, okButton, makeArgumentListElement){
@@ -87,7 +87,7 @@ define(["body","position","evaluator","c","requireElement"],function(body, posit
 		var runWithValues = function(x, y, script, namesAndValues, onError){
 			var alive = getAlive(x,y);
 			evaluator.execute(script.body, namesAndValues, alive, onError);
-			c.drawAll();
+			coordinates.drawAll();
 		};
 		var f = function(x, y, script, onError){
 			if(script.signature.length == 0){

@@ -1,9 +1,8 @@
-define(["coordinates","sender","requireElement"],function(coordinates, sender, requireElement){
+define(["sender","requireElement"],function(sender, requireElement){
 	var currentX, currentY;
 	var setCell = function(x, y){
-		var loc = coordinates.mousePositionToPositionLocation(x,y);
-		currentX = loc.x;
-		currentY = loc.y;
+		currentX = x;
+		currentY = y;
 	};
 	var menuFactory = function(){
 		return requireElement(document.getElementById("menu").innerHTML, function(div, optionDiv, subMenuDiv){
@@ -54,8 +53,8 @@ define(["coordinates","sender","requireElement"],function(coordinates, sender, r
 					};
 				},{text:title});
 			};
-			var show = function(x,y){
-				onOpen && onOpen(x,y);
+			var show = function(x,y, coordP){
+				onOpen && onOpen(coordP.x,coordP.y);
 				div.style.display = "initial";
 				div.style.left = x + "px";
 				div.style.top = y + "px";
